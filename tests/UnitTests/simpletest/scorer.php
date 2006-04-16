@@ -371,7 +371,7 @@
          *    @access public
          *    @static
          */
-        static function inCli() {
+        function inCli() {
             return php_sapi_name() == 'cli';
         }
     }

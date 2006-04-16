@@ -131,7 +131,7 @@ class TControl extends TApplicationComponent implements IRenderable, IBindable
 	/**
 	 * @var string control unique ID
 	 */
-	private $_uid=null;
+	private $_uid='';
 	/**
 	 * @var TControl parent of the control
 	 */
@@ -367,9 +367,8 @@ class TControl extends TApplicationComponent implements IRenderable, IBindable
 	 */
 	public function getUniqueID()
 	{
-		if($this->_uid==='' || $this->_uid===null)	// need to build the UniqueID
+		if($this->_uid==='')	// need to build the UniqueID
 		{
-			$this->_uid='';  // set to not-null, so that clearCachedUniqueID() may take action
 			if($namingContainer=$this->getNamingContainer())
 			{
 				if($this->getPage()===$namingContainer)
@@ -1093,7 +1092,6 @@ class TControl extends TApplicationComponent implements IRenderable, IBindable
 				$control->generateAutomaticID();
 			else
 				$namingContainer->clearNameTable();
-			$control->clearCachedUniqueID($control instanceof INamingContainer);
 		}
 
 		if($this->_stage>=self::CS_CHILD_INITIALIZED)
@@ -1488,11 +1486,10 @@ class TControl extends TApplicationComponent implements IRenderable, IBindable
 
 	/**
 	 * Loads state (viewstate and controlstate) into a control and its children.
-	 * This method should only be used by framework developers.
-	 * @param array the collection of the state
+	 * @param TMap the collection of the state
 	 * @param boolean whether the viewstate should be loaded
 	 */
-	protected function loadStateRecursive(&$state,$needViewState=true)
+	final protected function loadStateRecursive(&$state,$needViewState=true)
 	{
 		if($state!==null)
 		{
@@ -1535,24 +1532,25 @@ class TControl extends TApplicationComponent implements IRenderable, IBindable
 			}
 			if(!empty($state))
 				$this->_rf[self::RF_CHILD_STATE]=&$state;
+			$this->_stage=self::CS_STATE_LOADED;
 		}
-		$this->_stage=self::CS_STATE_LOADED;
+		else
+			$this->_stage=self::CS_STATE_LOADED;
 		if(isset($this->_rf[self::RF_ADAPTER]))
-			$this->_rf[self::RF_ADAPTER]->loadState();
+			$this->_rf[self::RF_ADAPTER]->loadState(null);
 		else
 			$this->loadState();
 	}
 
 	/**
 	 * Saves all control state (viewstate and controlstate) as a collection.
-	 * This method should only be used by framework developers.
 	 * @param boolean whether the viewstate should be saved
 	 * @return array the collection of the control state (including its children's state).
 	 */
-	protected function &saveStateRecursive($needViewState=true)
+	final protected function &saveStateRecursive($needViewState=true)
 	{
 		if(isset($this->_rf[self::RF_ADAPTER]))
-			$this->_rf[self::RF_ADAPTER]->saveState();
+			$this->_rf[self::RF_ADAPTER]->saveState(null);
 		else
 			$this->saveState();
 		$needViewState=($needViewState && !($this->_flags & self::IS_DISABLE_VIEWSTATE));
@@ -1599,13 +1597,13 @@ class TControl extends TApplicationComponent implements IRenderable, IBindable
 	 */
 	private function clearCachedUniqueID($recursive)
 	{
-		if($recursive && $this->_uid!==null && isset($this->_rf[self::RF_CONTROLS]))
+		$this->_uid='';
+		if($recursive && isset($this->_rf[self::RF_CONTROLS]))
 		{
 			foreach($this->_rf[self::RF_CONTROLS] as $control)
 				if($control instanceof TControl)
 					$control->clearCachedUniqueID($recursive);
 		}
-		$this->_uid=null;
 	}
 
 	/**
@@ -1761,18 +1759,6 @@ class TEmptyControlCollection extends TControlCollection
 	public function __construct(TControl $owner)
 	{
 		parent::__construct($owner,true);
-	}
-
-	/**
-	 * Inserts an item at the specified position.
-	 * This overrides the parent implementation by ignoring new addition.
-	 * @param integer the speicified position.
-	 * @param mixed new item
-	 */
-	public function insertAt($index,$item)
-	{
-		if(!is_string($item))  // string is possible if property tag is used. we simply ignore it in this case
-			parent::insertAt($index,$item);  // this will generate an exception in parent implementation
 	}
 }
 
