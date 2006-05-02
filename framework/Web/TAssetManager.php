@@ -161,14 +161,14 @@ class TAssetManager extends TModule
 			$dir=$this->hash(dirname($fullpath));
 			$fileName=basename($fullpath);
 			$dst=$this->_basePath.'/'.$dir;
-			if($this->getApplication()->getMode()!==TApplication::STATE_PERFORMANCE || $checkTimestamp || !is_file($dst.'/'.$fileName))
+			if(!is_file($dst.'/'.$fileName) || $checkTimestamp || $this->getApplication()->getMode()!==TApplication::STATE_PERFORMANCE)
 				$this->copyFile($fullpath,$dst);
 			return $this->_published[$path]=$this->_baseUrl.'/'.$dir.'/'.$fileName;
 		}
 		else
 		{
 			$dir=$this->hash($fullpath);
-			if($this->getApplication()->getMode()!==TApplication::STATE_PERFORMANCE || $checkTimestamp || !is_dir($this->_basePath.'/'.$dir))
+			if(!is_dir($this->_basePath.'/'.$dir) || $checkTimestamp || $this->getApplication()->getMode()!==TApplication::STATE_PERFORMANCE)
 			{
 				Prado::trace("Publishing directory $fullpath",'System.Web.UI.TAssetManager');
 				$this->copyDirectory($fullpath,$this->_basePath.'/'.$dir);
@@ -255,7 +255,7 @@ class TAssetManager extends TModule
 			$dir=$this->hash(dirname($fullpath));
 			$fileName=basename($fullpath);
 			$dst=$this->_basePath.'/'.$dir;
-			if($this->getApplication()->getMode()!==TApplication::STATE_PERFORMANCE || $checkTimestamp || !is_file($dst.'/'.$fileName))
+			if(!is_file($dst.'/'.$fileName) || $checkTimestamp || $this->getApplication()->getMode()!==TApplication::STATE_PERFORMANCE)
 			{
 				if(@filemtime($dst.'/'.$fileName)<@filemtime($fullpath))
 				{

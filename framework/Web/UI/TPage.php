@@ -36,7 +36,7 @@ class TPage extends TTemplateControl
 	const FIELD_PAGESTATE='PRADO_PAGESTATE';
 	const FIELD_CALLBACK_TARGET='PRADO_CALLBACK_TARGET';
 	const FIELD_CALLBACK_PARAMETER='PRADO_CALLBACK_PARAMETER';
-//	const FIELD_CALLBACK_ID='PRADO_CALLBACK_ID';
+	const FIELD_CALLBACK_ID='PRADO_CALLBACK_ID';
 	/**
 	 * @var array system post fields
 	 */
@@ -46,8 +46,8 @@ class TPage extends TTemplateControl
 		'PRADO_LASTFOCUS'=>true,
 		'PRADO_PAGESTATE'=>true,
 		'PRADO_CALLBACK_TARGET'=>true,
-		'PRADO_CALLBACK_PARAMETER'=>true
-		//'PRADO_CALLBACK_ID'=>true
+		'PRADO_CALLBACK_PARAMETER'=>true,
+		'PRADO_CALLBACK_ID'=>true
 	);
 	/**
 	 * @var TForm form instance
@@ -141,19 +141,7 @@ class TPage extends TTemplateControl
 	 * @var mixed page state persister
 	 */
 	private $_statePersister=null;
-	/**
-	 * @var TStack stack used to store currently active caching controls
-	 */
-	private $_cachingStack=null;
-	/**
-	 * @var string state string to be stored on the client side
-	 */
-	private $_clientState='';
-	/**
-	 * @var array post data loader IDs.
-	 */
-	private $_postDataLoaders=array();
-	
+
 	/**
 	 * Constructor.
 	 * Sets the page object to itself.
@@ -263,158 +251,10 @@ class TPage extends TTemplateControl
 		$this->unloadRecursive();
 	}
 
-	/**
-	 * Sets Adapter to TActivePageAdapter and calls apter to process the
-	 * callback request.
-	 */
 	protected function processCallbackRequest($writer)
 	{
-		$this->setAdapter(new TActivePageAdapter($this));
-		
-		Prado::trace("Page onPreInit()",'System.Web.UI.TPage');
-		$this->onPreInit(null);
-
-		Prado::trace("Page initRecursive()",'System.Web.UI.TPage');
-		$this->initRecursive();
-
-		Prado::trace("Page onInitComplete()",'System.Web.UI.TPage');
-		$this->onInitComplete(null);
-
-		$this->_restPostData=new TMap;
-		Prado::trace("Page loadPageState()",'System.Web.UI.TPage');
-		$this->loadPageState();
-		Prado::trace("Page processPostData()",'System.Web.UI.TPage');
-		$this->processPostData($this->_postData,true);
-		Prado::trace("Page onPreLoad()",'System.Web.UI.TPage');
-		$this->onPreLoad(null);
-		Prado::trace("Page loadRecursive()",'System.Web.UI.TPage');
-		$this->loadRecursive();
-		Prado::trace("Page processPostData()",'System.Web.UI.TPage');
-		$this->processPostData($this->_restPostData,false);
-		Prado::trace("Page raiseChangedEvents()",'System.Web.UI.TPage');
-		$this->raiseChangedEvents();
-
-		$this->getAdapter()->processCallbackEvent($writer); 
-
-/*		
-		Prado::trace("Page raisePostBackEvent()",'System.Web.UI.TPage');
-		$this->raisePostBackEvent();
-*/		
-		Prado::trace("Page onLoadComplete()",'System.Web.UI.TPage');
-		$this->onLoadComplete(null);
-
-		Prado::trace("Page preRenderRecursive()",'System.Web.UI.TPage');
-		$this->preRenderRecursive();
-		Prado::trace("Page onPreRenderComplete()",'System.Web.UI.TPage');
-		$this->onPreRenderComplete(null);
-
-/*		Prado::trace("Page savePageState()",'System.Web.UI.TPage');
-		$this->savePageState();
-		Prado::trace("Page onSaveStateComplete()",'System.Web.UI.TPage');
-		$this->onSaveStateComplete(null);
-
-		Prado::trace("Page renderControl()",'System.Web.UI.TPage');
-		$this->renderControl($writer);
-*/
-		$this->getAdapter()->renderCallbackResponse($writer);
-		
-		Prado::trace("Page unloadRecursive()",'System.Web.UI.TPage');
-		$this->unloadRecursive();			
-	}
-	
-	/**
-	 * Gets the callback response handler that permits changing the callback
-	 * response headers and contents.
-	 * @return TCallbackResponse callback response handler.
-	 */
-	public function getCallbackResponse()
-	{
-		return $this->getAdapter()->getCallbackResponseHandler();
-	}
-	
-	/**
-	 * Set a new callback respond handler.
-	 * @param TCallbackResponse a different callback response handler.
-	 */
-	public function setCallbackResponse($responder)
-	{
-		$this->getAdapter()->setCallbackResponseHandler($responder);
-	}
-	
-	/**
-	 * Gets the callback client script handler that allows javascript functions
-	 * to be executed during the callback response. 
-	 * @return TCallbackClientScript interface to client-side javascript code.
-	 */
-	public function getCallbackClient()
-	{
-		return $this->getAdapter()->getCallbackClientHandler();
-	}
-	
-	/**
-	 * Set a new callback client handler.
-	 * @param TCallbackClientScript new callback client script handler.
-	 */
-	public function setCallbackClient($client)
-	{
-		$this->getAdapter()->setCallbackClientHandler($client);
-	}
-	
-	/**
-	 * @return TControl the control responsible for the current callback event,
-	 * null if nonexistent
-	 */
-	public function getCallbackEventTarget()
-	{
-		return $this->getAdapter()->getCallbackEventTarget();
 	}
 
-	/**
-	 * Registers a control to raise callback event in the current request.
-	 * @param TControl control registered to raise callback event.
-	 */
-	public function setCallbackEventTarget(TControl $control)
-	{
-		$this->getAdapter()->setCallbackEventTarget($control);
-	}
-
-	/**
-	 * Callback parameter is decoded assuming JSON encoding. 
-	 * @return string callback event parameter
-	 */
-	public function getCallbackEventParameter()
-	{
-		return $this->getAdapter()->getCallbackEventParameter();
-	}
-	
-	/**
-	 * @param mixed callback event parameter
-	 */
-	public function setCallbackEventParameter($value)
-	{
-		$this->getAdapter()->setCallbackEventParameter($value);
-	}
-	
-	/**
-	 * Register post data loaders for Callback to collect post data.
-	 * This method should only be called by framework developers.
-	 * @param TControl control that requires post data.
-	 * @see TControl::preRenderRecursive();
-	 */
-	public function registerPostDataLoader($control)
-	{
-		$this->_postDataLoaders[] = $control->getUniqueID();
-	}
-	
-	/**
-	 * Get a list of IDs of controls that are enabled and require post data.
-	 * @return array list of IDs implementing IPostBackDataHandler
-	 */
-	public function getPostDataLoaders()
-	{
-		return $this->_postDataLoaders;
-	}
-	
 	/**
 	 * @return TForm the form on the page
 	 */
@@ -693,11 +533,12 @@ class TPage extends TTemplateControl
 	}
 
 	/**
+	 * TBD
 	 * @return boolean whether this is a callback request
 	 */
 	public function getIsCallback()
 	{
-		return $this->getIsPostBack() && $this->getRequest()->contains(self::FIELD_CALLBACK_TARGET);
+		return false;
 	}
 
 	/**
@@ -758,13 +599,9 @@ class TPage extends TTemplateControl
 	 * if not checked, will not have a post value.
 	 * @param TControl control registered for loading post data
 	 */
-	public function registerRequiresPostData($control)
+	public function registerRequiresPostData(TControl $control)
 	{
-		$id=is_string($control)?$control:$control->getUniqueID();
-		$this->_controlsRegisteredForPostData[$id]=true;
-		$params=func_get_args();
-		foreach($this->getCachingStack() as $item)
-			$item->registerAction('Page','registerRequiresPostData',$id);
+		$this->_controlsRegisteredForPostData[$control->getUniqueID()]=true;
 	}
 
 	/**
@@ -882,7 +719,7 @@ class TPage extends TTemplateControl
 	public function ensureRenderInForm($control)
 	{
 		if(!$this->_inFormRender)
-			throw new TConfigurationException('page_control_outofform',get_class($control),$control->getUniqueID());
+			throw new TConfigurationException('page_control_outofform',$control->getUniqueID());
 	}
 
 	/**
@@ -895,7 +732,6 @@ class TPage extends TTemplateControl
 		$this->_formRendered=true;
 		$this->_inFormRender=true;
 		$cs=$this->getClientScript();
-		$cs->registerHiddenField(self::FIELD_PAGESTATE,$this->getClientState());
 		$cs->renderHiddenFields($writer);
 		$cs->renderScriptFiles($writer);
 		$cs->renderBeginScripts($writer);
@@ -911,11 +747,8 @@ class TPage extends TTemplateControl
 		{
 			if($this->_focus)
 			{
-				if(($this->_focus instanceof TControl) && $this->_focus->getVisible(true))
-					$focus=$this->_focus->getClientID();
-				else
-					$focus=$this->_focus;
-				$cs->registerFocusControl($focus);
+				if(($this->_focus instanceof TControl) && $this->_focus->getVisible(true) || is_string($this->_focus))
+					$cs->registerFocusControl($this->_focus);
 			}
 			else if($this->_postData && ($lastFocus=$this->_postData->itemAt(self::FIELD_LASTFOCUS))!==null)
 				$cs->registerFocusControl($lastFocus);
@@ -998,34 +831,6 @@ class TPage extends TTemplateControl
 	}
 
 	/**
-	 * Returns the state to be stored on the client side.
-	 * This method should only be used by framework and control developers.
-	 * @return string the state to be stored on the client side
-	 */
-	public function getClientState()
-	{
-		return $this->_clientState;
-	}
-
-	/**
-	 * Sets the state to be stored on the client side.
-	 * This method should only be used by framework and control developers.
-	 * @param string the state to be stored on the client side
-	 */
-	public function setClientState($state)
-	{
-		$this->_clientState=$state;
-	}
-
-	/**
-	 * @return string the state postback from client side
-	 */
-	public function getRequestClientState()
-	{
-		return $this->getRequest()->itemAt(self::FIELD_PAGESTATE);
-	}
-
-	/**
 	 * @return string class name of the page state persister. Defaults to TPageStatePersister.
 	 */
 	public function getStatePersisterClass()
@@ -1103,13 +908,6 @@ class TPage extends TTemplateControl
 	{
 		$this->_pagePath=$value;
 	}
-
-	public function getCachingStack()
-	{
-		if(!$this->_cachingStack)
-			$this->_cachingStack=new TStack;
-		return $this->_cachingStack;
-	}
 }
 
 /**
@@ -1121,7 +919,7 @@ class TPage extends TTemplateControl
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @version $Revision: $  $Date: $
  * @package System.Web.UI
- * @since 3.1
+ * @since 3.0
  */
 interface IPageStatePersister
 {
@@ -1143,75 +941,6 @@ interface IPageStatePersister
 	 * @return mixed the restored state
 	 */
 	public function load();
-}
-
-
-/**
- * TPageStateFormatter class.
- *
- * TPageStateFormatter is a utility class to transform the page state
- * into and from a string that can be properly saved in persistent storage.
- *
- * Depending on the {@link TPage::getEnableStateValidation() EnableStateValidation}
- * and {@link TPage::getEnableStateEncryption() EnableStateEncryption},
- * TPageStateFormatter may do HMAC validation and encryption to prevent
- * the state data from being tampered or viewed.
- * The private keys and hashing/encryption methods are determined by
- * {@link TApplication::getSecurityManager() SecurityManager}.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Revision: $  $Date: $
- * @package System.Web.UI
- * @since 3.1
- */
-class TPageStateFormatter
-{
-	/**
-	 * @param TPage
-	 * @param mixed state data
-	 * @return string serialized data
-	 */
-	public static function serialize($page,$data)
-	{
-		$sm=$page->getApplication()->getSecurityManager();
-		if($page->getEnableStateValidation())
-			$str=$sm->hashData(Prado::serialize($data));
-		else
-			$str=Prado::serialize($data);
-		if($page->getEnableStateEncryption())
-			$str=$sm->encrypt($str);
-		if(extension_loaded('zlib'))
-			$str=gzcompress($str);
-		return base64_encode($str);
-	}
-
-	/**
-	 * @param TPage
-	 * @param string serialized data
-	 * @return mixed unserialized state data, null if data is corrupted
-	 */
-	public static function unserialize($page,$data)
-	{
-		$str=base64_decode($data);
-		if($str==='')
-			return null;
-		if(extension_loaded('zlib'))
-			$str=gzuncompress($str);
-		if($str!==false)
-		{
-			$sm=$page->getApplication()->getSecurityManager();
-			if($page->getEnableStateEncryption())
-				$str=$sm->decrypt($str);
-			if($page->getEnableStateValidation())
-			{
-				if(($str=$sm->validateData($str))!==false)
-					return Prado::unserialize($str);
-			}
-			else
-				return $str;
-		}
-		return null;
-	}
 }
 
 ?>

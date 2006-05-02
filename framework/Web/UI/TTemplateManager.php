@@ -11,11 +11,6 @@
  */
 
 /**
- * Includes TOutputCache class file
- */
-Prado::using('System.Web.UI.WebControls.TOutputCache');
-
-/**
  * TTemplateManager class
  *
  * TTemplateManager manages the loading and parsing of control templates.
@@ -198,10 +193,6 @@ class TTemplate extends TApplicationComponent implements ITemplate
 	 * @var boolean whether this template is a source template
 	 */
 	private $_sourceTemplate=true;
-	/**
-	 * @var string hash code of the template
-	 */
-	private $_hashCode='';
 	private $_tplControl=null;
 
 
@@ -222,7 +213,6 @@ class TTemplate extends TApplicationComponent implements ITemplate
 		$this->_tplFile=$tplFile;
 		$this->_startingLine=$startingLine;
 		$this->_content=$template;
-		$this->_hashCode=md5($template);
 		$this->parse($template);
 		$this->_content=null; // reset to save memory
 	}
@@ -253,14 +243,6 @@ class TTemplate extends TApplicationComponent implements ITemplate
 	}
 
 	/**
-	 * @return string hash code that can be used to identify the template
-	 */
-	public function getHashCode()
-	{
-		return $this->_hashCode;
-	}
-
-	/**
 	 * @return array the parsed template
 	 */
 	public function &getItems()
@@ -282,11 +264,8 @@ class TTemplate extends TApplicationComponent implements ITemplate
 		$controls=array();
 		foreach($this->_tpl as $key=>$object)
 		{
-			if($object[0]===-1)
-				$parent=$tplControl;
-			else if(isset($controls[$object[0]]))
-				$parent=$controls[$object[0]];
-			else
+			$parent=isset($controls[$object[0]])?$controls[$object[0]]:$tplControl;
+			if(!$parent->getAllowChildControls())
 				continue;
 			if(isset($object[2]))	// component
 			{
@@ -294,8 +273,7 @@ class TTemplate extends TApplicationComponent implements ITemplate
 				$properties=&$object[2];
 				if($component instanceof TControl)
 				{
-					if($component instanceof TOutputCache)
-						$component->setCacheKeyPrefix($this->_hashCode.$key);
+					$controls[$key]=$component;
 					$component->setTemplateControl($tplControl);
 					if(isset($properties['id']))
 					{
@@ -316,8 +294,6 @@ class TTemplate extends TApplicationComponent implements ITemplate
 					foreach($properties as $name=>$value)
 						$this->configureControl($component,$name,$value);
 					$component->createdOnTemplate($parent);
-					if($component->getAllowChildControls())
-						$controls[$key]=$component;
 				}
 				else if($component instanceof TComponent)
 				{
@@ -334,16 +310,18 @@ class TTemplate extends TApplicationComponent implements ITemplate
 					$parent->addParsedObject($component);
 				}
 			}
-			else if(is_string($object[1]))
-				$parent->addParsedObject($object[1]);
-			else if($object[1] instanceof TCompositeLiteral)
+			else	// string
 			{
-				$o=clone $object[1];
-				$o->setContainer($tplControl);
-				$parent->addParsedObject($o);
+				if($object[1] instanceof TCompositeLiteral)
+				{
+					// need to clone a new object because the one in template is reused
+					$o=clone $object[1];
+					$o->setContainer($tplControl);
+					$parent->addParsedObject($o);
+				}
+				else
+					$parent->addParsedObject($object[1]);
 			}
-			else
-				throw new TConfigurationException('template_content_unexpected',(string)$object[1]);
 		}
 	}
 

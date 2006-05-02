@@ -1,10 +1,3 @@
-Version 3.1.0 To be released
-============================
-NEW: TOutputCache (Qiang)
-NEW: TQueue (Qiang)
-NEW: TSessionPageStatePersister (Qiang)
-NEW: SQLMap (Wei)
-
 Version 3.0.0 May 1, 2006
 =========================
 BUG: Ticket#68  - 2 TButtons with THtmlArea causes second button to fail to function (Wei)
