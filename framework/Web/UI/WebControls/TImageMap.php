@@ -109,7 +109,7 @@ class TImageMap extends TImage implements IPostBackEventHandler
 					$options['EventParameter']="$i";
 					$options['CausesValidation']=$hotspot->getCausesValidation();
 					$options['ValidationGroup']=$hotspot->getValidationGroup();
-					$cs->renderClientControlScript($writer,$options);
+					$cs->registerPostBackControl('Prado.WebUI.TImageMap',$options);
 				}
 				$hotspot->render($writer);
 				$writer->writeLine();
@@ -117,15 +117,6 @@ class TImageMap extends TImage implements IPostBackEventHandler
 			}
 			$writer->renderEndTag();
 		}
-	}
-	
-	/**
-	 * Renders the client-script code.
-	 */
-	protected function renderClientControlScript($writer,$options)
-	{
-		$cs = $this->getPage()->getClientScript(); 
-		$cs->registerPostBackControl(get_class($this),$options);
 	}
 
 	/**

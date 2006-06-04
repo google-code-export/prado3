@@ -4,7 +4,7 @@ require_once 'phing/Task.php';
 /**
  * A PHP lint task. Checking syntax of one or more PHP source file.
  *
- * @author   Knut Urdalen <knut.urdalen@gmail.com>
+ * @author   Knut Urdalen <knut.urdalen@telio.no>
  * @package  phing.tasks.ext
  */
 class PhpLintTask extends Task {

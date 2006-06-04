@@ -110,15 +110,6 @@ class THtmlWriter extends TApplicationComponent implements ITextWriter
 		$this->_writer=$writer;
 	}
 
-	public function getWriter()
-	{
-		return $this->_writer;
-	}
-	
-	public function setWriter($writer)
-	{
-		$this->_writer = $writer;
-	}
 	/**
 	 * Adds a list of attributes to be rendered.
 	 * @param array list of attributes to be rendered

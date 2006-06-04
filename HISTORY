@@ -1,12 +1,3 @@
-Version 3.1.0 To be released
-============================
-ENH: Ticket#99 - TXmlTransform control (Knut)
-ENH: Ticket#117 - added support to configure subproperties in a group. (Qiang)
-NEW: TOutputCache (Qiang)
-NEW: TQueue (Qiang)
-NEW: TSessionPageStatePersister (Qiang)
-NEW: SQLMap (Wei)
-
 Version 3.0.1 June 4, 2006
 ==========================
 BUG: Ticket#28 - OnClick does not work with Safari/KHTML (Wei)

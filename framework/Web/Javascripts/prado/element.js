@@ -61,27 +61,6 @@ Prado.Element =
 		if(typeof(obj) != "undefined" && typeof(obj.focus) != "undefined")
 			setTimeout(function(){ obj.focus(); }, 100);
 		return false;
-	},
-	
-	replace : function(element, method, content, boundary, transport)
-	{
-		if(boundary)
-		{
-			result = Prado.Element.extractContent(transport.responseText, boundary);
-			if(result != null)
-				content = result;
-		}
-		method.toFunction().apply(this,[element,content]);
-	},
-	
-	extractContent : function(text, boundary)
-	{
-		f = RegExp('(<!--'+boundary+'-->)([\\s\\S\\w\\W]*)(<!--//'+boundary+'-->)',"m");
-		result = text.match(f);
-		if(result && result.length >= 2)
-			return result[2];
-		else
-			return null;
 	}
 }
 

@@ -81,22 +81,15 @@ class TLinkButton extends TWebControl implements IPostBackEventHandler, IButtonC
 		parent::addAttributesToRender($writer);
 
 		if($this->getEnabled(true))
-			$this->renderClientControlScript($writer);
+		{
+			//create unique no-op url references
+			$nop = "#".$this->getClientID();
+			$writer->addAttribute('href', $nop);
+			$this->getPage()->getClientScript()->registerPostBackControl('Prado.WebUI.TLinkButton',$this->getPostBackOptions());
+		}
 		else if($this->getEnabled()) // in this case, parent will not render 'disabled'
 			$writer->addAttribute('disabled','disabled');
 	}
-	
-	/**
-	 * Renders the client-script code.
-	 */
-	protected function renderClientControlScript($writer)
-	{
-		//create unique no-op url references
-		$nop = "#".$this->getClientID();
-		$writer->addAttribute('href', $nop);
-		$cs = $this->getPage()->getClientScript(); 
-		$cs->registerPostBackControl(get_class($this),$this->getPostBackOptions());
-	}	
 
 	/**
 	 * Returns postback specifications for the button.
