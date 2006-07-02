@@ -10,10 +10,18 @@ require_once(SIMPLETEST_DIR.'/mock_objects.php');
 require_once(SIMPLETEST_DIR.'/reporter.php');
 require_once(SIMPLETEST_DIR.'/HtmlReporterWithCoverage.php');
 
-require_once(FRAMEWORK_DIR.'/prado.php');
+require_once(FRAMEWORK_DIR.'/core.php');
 
 set_include_path(get_include_path().";".FRAMEWORK_DIR);
 
+class Prado extends PradoBase
+{
+}
+
+function __autoload($className)
+{
+	require_once($className.Prado::CLASS_FILE_EXT);
+}
 
 error_reporting(E_ALL);
 restore_error_handler();

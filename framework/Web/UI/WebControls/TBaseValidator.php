@@ -80,9 +80,9 @@ abstract class TBaseValidator extends TLabel implements IValidator
 	 */
 	private $_registered=false;
 	/**
-	 * @var TClientSideValidatorOptions validator client-script options.
+	 * @var TValidatorClientScript validator client-script options.
 	 */
-	private $_clientSide;
+	private $_clientScript;
 	/**
 	 * Controls for which the client-side validation3.js file needs to handle
 	 * them specially.
@@ -124,8 +124,7 @@ abstract class TBaseValidator extends TLabel implements IValidator
 	}
 
 	/**
-	 * Adds attributes to renderer. Calls parent implementation and renders the
-	 * client control scripts.
+	 * Adds attributes to renderer.
 	 * @param THtmlWriter the renderer
 	 */
 	protected function addAttributesToRender($writer)
@@ -138,7 +137,6 @@ abstract class TBaseValidator extends TLabel implements IValidator
 			$writer->addStyleAttribute('visibility','hidden');
 		$writer->addAttribute('id',$this->getClientID());
 		parent::addAttributesToRender($writer);
-		$this->renderClientControlScript($writer);
 	}
 
 	/**
@@ -163,8 +161,8 @@ abstract class TBaseValidator extends TLabel implements IValidator
 
 		$options['ControlType'] = $this->getClientControlClass($control);
 
-		if(!is_null($this->_clientSide))
-			$options = array_merge($options,$this->_clientSide->getOptions()->toArray());
+		if(!is_null($this->_clientScript))
+			$options = array_merge($options,$this->_clientScript->getOptions());
 
 		return $options;
 	}
@@ -185,7 +183,7 @@ abstract class TBaseValidator extends TLabel implements IValidator
 	}
 
 	/**
-	 * Gets the TClientSideValidatorOptions that allows modification of the client-
+	 * Gets the TValidatorClientScript that allows modification of the client-
 	 * side validator events.
 	 *
 	 * The client-side validator supports the following events.
@@ -198,31 +196,32 @@ abstract class TBaseValidator extends TLabel implements IValidator
 	 *
 	 * You can attach custom javascript code to each of these events
 	 *
-	 * @return TClientSideValidatorOptions javascript validator event options.
+	 * @return TValidatorClientScript javascript validator event options.
 	 */
 	public function getClientSide()
 	{
-		if(is_null($this->_clientSide))
-			$this->_clientSide = $this->createClientSideOptions();
-		return $this->_clientSide;
+		if(is_null($this->_clientScript))
+			$this->_clientScript = $this->createClientScript();
+		return $this->_clientScript;
 	}
 
 	/**
-	 * @return TClientSideValidatorOptions javascript validator event options.
+	 * @return TValidatorClientScript javascript validator event options.
 	 */
-	protected function createClientSideOptions()
+	protected function createClientScript()
 	{
-		return new TClientSideValidatorOptions;
+		return new TValidatorClientScript;
 	}
 
 	/**
 	 * Renders the javascript code to the end script.
 	 * If you override this method, be sure to call the parent implementation
 	 * so that the event handlers can be invoked.
-	 * @param THtmlWriter the renderer
+	 * @param TEventParameter event parameter to be passed to the event handlers
 	 */
-	public function renderClientControlScript($writer)
+	public function onPreRender($param)
 	{
+		parent::onPreRender($param);
 		$scripts = $this->getPage()->getClientScript();
 		$formID=$this->getPage()->getForm()->getClientID();
 		$scriptKey = "TBaseValidator:$formID";
@@ -556,11 +555,11 @@ abstract class TBaseValidator extends TLabel implements IValidator
 }
 
 /**
- * TClientSideValidatorOptions class.
+ * TValidatorClientScript class.
  *
  * Client-side validator events can be modified through the {@link
  * TBaseValidator::getClientSide ClientSide} property of a validator. The
- * subproperties of ClientSide are those of the TClientSideValidatorOptions
+ * subproperties of ClientSide are those of the TValidatorClientScript
  * properties. The client-side validator supports the following events.
  *
  * The <tt>OnValidate</tt> event is raise before the validator validation
@@ -578,14 +577,27 @@ abstract class TBaseValidator extends TLabel implements IValidator
  * @package System.Web.UI.WebControls
  * @since 3.0
  */
-class TClientSideValidatorOptions extends TClientSideOptions
+class TValidatorClientScript extends TComponent
 {
+	/**
+	 * @var TMap client-side validator event javascript code.
+	 */
+	private $_options;
+
+	/**
+	 * Constructor.
+	 */
+	public function __construct()
+	{
+		$this->_options = new TMap;
+	}
+
 	/**
 	 * @return string javascript code for client-side OnValidate event.
 	 */
 	public function getOnValidate()
 	{
-		return $this->getOption('OnValidate');
+		return $this->_options->itemAt['OnValidate'];
 	}
 
 	/**
@@ -595,7 +607,7 @@ class TClientSideValidatorOptions extends TClientSideOptions
 	 */
 	public function setOnValidate($javascript)
 	{
-		$this->setFunction('OnValidate', $javascript);
+		$this->_options->add('OnValidate', $this->ensureFunction($javascript));
 	}
 
 	/**
@@ -605,7 +617,7 @@ class TClientSideValidatorOptions extends TClientSideOptions
 	 */
 	public function setOnSuccess($javascript)
 	{
-		$this->setFunction('OnSuccess', $javascript);
+		$this->_options->add('OnSuccess', $this->ensureFunction($javascript));
 	}
 
 	/**
@@ -613,7 +625,7 @@ class TClientSideValidatorOptions extends TClientSideOptions
 	 */
 	public function getOnSuccess()
 	{
-		return $this->getOption('OnSuccess');
+		return $this->_options->itemAt('OnSuccess');
 	}
 
 	/**
@@ -623,7 +635,7 @@ class TClientSideValidatorOptions extends TClientSideOptions
 	 */
 	public function setOnError($javascript)
 	{
-		$this->setFunction('OnError', $javascript);
+		$this->_options->add('OnError', $this->ensureFunction($javascript));
 	}
 
 	/**
@@ -631,7 +643,7 @@ class TClientSideValidatorOptions extends TClientSideOptions
 	 */
 	public function getOnError()
 	{
-		return $this->getOption('OnError');
+		return $this->_options->itemAt('OnError');
 	}
 
 	/**
@@ -639,7 +651,7 @@ class TClientSideValidatorOptions extends TClientSideOptions
 	 */
 	public function setObserveChanges($value)
 	{
-		$this->setOption('ObserveChanges', TPropertyValue::ensureBoolean($value));
+		$this->_options->add('ObserveChanges', TPropertyValue::ensureBoolean($value));
 	}
 
 	/**
@@ -647,11 +659,18 @@ class TClientSideValidatorOptions extends TClientSideOptions
 	 */
 	public function getObserveChanges()
 	{
-		if(($option=$this->getOption('ObserveChanges'))!==null)
-			return $option;
-		else
-			return true;
+		$changes =  $this->_options->itemAt('ObserveChanges');
+		return is_null($changes) ? true : $changes;
 	}
+
+	/**
+	 * @return array list of client-side event code.
+	 */
+	public function getOptions()
+	{
+		return $this->_options->toArray();
+	}
+	
 
 	/**
 	 * Ensure the string is a valid javascript function. If the string begins
@@ -660,9 +679,15 @@ class TClientSideValidatorOptions extends TClientSideOptions
 	 * @param string javascript code.
 	 * @return string javascript function code.
 	 */
-	protected function ensureFunction($javascript)
+	private function ensureFunction($javascript)
 	{
-		return "function(validator, sender){ {$javascript} }";
+		if(TJavascript::isFunction($javascript))
+			return $javascript;
+		else
+		{
+			$code = "function(validator, sender){ {$javascript} }";
+			return TJavascript::quoteFunction($code);
+		}
 	}
 }
 

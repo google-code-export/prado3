@@ -11,11 +11,6 @@
  */
 
 /**
- * Includes the THttpResponse adapter.
- */
-Prado::using('System.Web.THttpResponseAdapter');
-
-/**
  * THttpResponse class
  *
  * THttpResponse implements the mechanism for sending output to client users.
@@ -75,43 +70,15 @@ class THttpResponse extends TModule implements ITextWriter
 	 * @var string character set, e.g. UTF-8
 	 */
 	private $_charset='';
-	/**
-	 * @var THttpResponseAdapter adapter.
-	 */
-	private $_adapter;
-	
+
 	/**
 	 * Destructor.
 	 * Flushes any existing content in buffer.
 	 */
 	public function __destruct()
 	{
-		//if($this->_bufferOutput)
-		//	@ob_end_flush();
-	}
-	
-	/**
-	 * @param THttpResponseAdapter response adapter
-	 */
-	public function setAdapter(THttpResponseAdapter $adapter)
-	{
-		$this->_adapter=$adapter;
-	}
-	
-	/**
-	 * @return THttpResponseAdapter response adapter, null if not exist.
-	 */
-	public function getAdapter()
-	{
-		return $this->_adapter;
-	}
-	
-	/**
-	 * @return boolean true if adapter exists, false otherwise.
-	 */
-	public function getHasAdapter()
-	{
-		return !is_null($this->_adapter);
+		if($this->_bufferOutput)
+			@ob_end_flush();
 	}
 
 	/**
@@ -248,7 +215,7 @@ class THttpResponse extends TModule implements ITextWriter
 	{
 		echo $str;
 	}
-	
+
 	/**
 	 * Sends a file back to user.
 	 * Make sure not to output anything else after calling this method.
@@ -331,25 +298,14 @@ class THttpResponse extends TModule implements ITextWriter
 	}
 
 	/**
-	 * Flush the response contents and headers.
-	 */
-	public function flush()
-	{
-		if($this->getHasAdapter())
-			$this->_adapter->flushContent();
-		else
-			$this->flushContent();
-	}
-	
-	/**
 	 * Outputs the buffered content, sends content-type and charset header.
 	 */
-	public function flushContent()
+	public function flush()
 	{
 		Prado::trace("Flushing output",'System.Web.THttpResponse');
 		$this->sendContentTypeHeader();
 		if($this->_bufferOutput)
-			ob_flush();		
+			ob_flush();
 	}
 
 	/**
@@ -466,21 +422,8 @@ class THttpResponse extends TModule implements ITextWriter
 	public function createHtmlWriter($type=null)
 	{
 		if($type===null)
-			$type=$this->getHtmlWriterType();
-		if($this->getHasAdapter())
-			return $this->_adapter->createNewHtmlWriter($type, $this);
-		else
-		 	return $this->createNewHtmlWriter($type, $this);
-	}
-	
-	/**
-	 * Create a new html writer intance.
-	 * @param string type of HTML writer to be created.
-	 * @param ITextWriter text writer holding the contents.
-	 */
-	public function createNewHtmlWriter($type, $writer)
-	{
-		return Prado::createComponent($type, $writer);
+			$type=$this->_htmlWriterType;
+		return Prado::createComponent($type,$this);
 	}
 }
 
