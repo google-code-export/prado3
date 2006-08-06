@@ -89,7 +89,6 @@ $requirements = array(
 		extension_loaded("mcrypt"),
 		'Mcrypt extension check',
 		'Mcrypt extension optional'),
-	array(false,'extension_loaded("xsl")','XSL extension check','XSL extension optional'),
 );
 
 $results = "<table class=\"result\">\n";

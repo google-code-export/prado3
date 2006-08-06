@@ -68,7 +68,7 @@ class PradoBase
 	 */
 	public static function getVersion()
 	{
-		return '3.1.0b';
+		return '3.0.3';
 	}
 
 	/**
@@ -266,7 +266,7 @@ class PradoBase
 			$className=substr($namespace,$pos+1);
 			if($className==='*')  // a directory
 			{
-				if((self::$_application && self::$_application->getMode()===TApplication::STATE_PERFORMANCE) || is_dir($path))
+				if(is_dir($path))
 				{
 					self::$_usings[$namespace]=$path;
 					set_include_path(get_include_path().PATH_SEPARATOR.$path);
@@ -276,7 +276,7 @@ class PradoBase
 			}
 			else  // a file
 			{
-				if((self::$_application && self::$_application->getMode()===TApplication::STATE_PERFORMANCE) || is_file($path))
+				if(is_file($path))
 				{
 					self::$_usings[$namespace]=$path;
 					if(!class_exists($className,false))
@@ -465,7 +465,7 @@ class PradoBase
 	{
 		if(self::$_application && self::$_application->getMode()===TApplication::STATE_PERFORMANCE)
 			return;
-		if(self::$_application && self::$_application->getMode()===TApplication::STATE_DEBUG)
+		if(!self::$_application || self::$_application->getMode()===TApplication::STATE_DEBUG)
 		{
 			$trace=debug_backtrace();
 			if(isset($trace[0]['file']) && isset($trace[0]['line']))

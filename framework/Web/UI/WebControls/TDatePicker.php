@@ -745,8 +745,11 @@ class TDatePicker extends TTextBox
 				$spacer = $this->publishIFrameSpacer();
 				$code = "Prado.WebUI.TDatePicker.spacer = '$spacer';";
 				$cs->registerEndScript('TDatePicker.spacer', $code);
-			}
-			$cs->registerPostBackControl('Prado.WebUI.TDatePicker', $this->getDatePickerOptions());
+			}	
+
+			$options = TJavaScript::encode($this->getDatePickerOptions());
+			$code = "new Prado.WebUI.TDatePicker($options);";
+			$cs->registerEndScript("prado:".$this->getClientID(), $code);
 		}
 	}
 }

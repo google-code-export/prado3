@@ -90,15 +90,6 @@ Object.extend(Prado.Validation,
 	},
 
 	/**
-	 * @return string first form ID.
-	 */
-	getForm : function()
-	{
-		var keys = $H(this.managers).keys();
-		return keys[0];
-	},
-	
-	/**
 	 * Check if the validators are valid for a particular form (and group).
 	 * The validators states will not be changed.
 	 * The <tt>validate</tt> function should be called first.
