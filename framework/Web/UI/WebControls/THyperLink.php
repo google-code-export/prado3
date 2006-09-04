@@ -68,25 +68,14 @@ class THyperLink extends TWebControl
 		}
 		else
 		{
-			$this->createImage($imageUrl)->renderControl($writer);
+			$image=Prado::createComponent('System.Web.UI.WebControls.TImage');
+			$image->setImageUrl($imageUrl);
+			if(($toolTip=$this->getToolTip())!=='')
+				$image->setToolTip($toolTip);
+			if(($text=$this->getText())!=='')
+				$image->setAlternateText($text);
+			$image->renderControl($writer);
 		}
-	}
-	
-	/** 
-	 * Gets the TImage for rendering the ImageUrl property. This is not for
-	 * creating dynamic images.
-	 * @param string image url.
-	 * @return TImage image control for rendering.
-	 */
-	protected function createImage($imageUrl)
-	{
-		$image=Prado::createComponent('System.Web.UI.WebControls.TImage');
-		$image->setImageUrl($imageUrl);
-		if(($toolTip=$this->getToolTip())!=='')
-			$image->setToolTip($toolTip);
-		if(($text=$this->getText())!=='')
-			$image->setAlternateText($text);
-		return $image;
 	}
 
 	/**

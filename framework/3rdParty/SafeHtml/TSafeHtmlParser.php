@@ -267,8 +267,7 @@ class TSafeHtmlParser
      * @var array
      * @access public
      */
-    public $attributes = array('dynsrc');
-    //public $attributes = array('dynsrc', 'id', 'name', ); //id and name are dangerous?
+    public $attributes = array('dynsrc', 'id', 'name', );
 
     /**
      * List of allowed "namespaced" attributes

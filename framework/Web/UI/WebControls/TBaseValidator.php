@@ -85,9 +85,9 @@ abstract class TBaseValidator extends TLabel implements IValidator
 	 */
 	private $_registered=false;
 	/**
-	 * @var TValidatorClientSide validator client-script options.
+	 * @var TValidatorClientSideOptions validator client-script options.
 	 */
-	private $_clientSide;
+	private $_clientScript;
 	/**
 	 * Controls for which the client-side validation3.js file needs to handle
 	 * them specially.
@@ -129,8 +129,7 @@ abstract class TBaseValidator extends TLabel implements IValidator
 	}
 
 	/**
-	 * Adds attributes to renderer. Calls parent implementation and renders the
-	 * client control scripts.
+	 * Adds attributes to renderer.
 	 * @param THtmlWriter the renderer
 	 */
 	protected function addAttributesToRender($writer)
@@ -143,7 +142,6 @@ abstract class TBaseValidator extends TLabel implements IValidator
 			$writer->addStyleAttribute('visibility','hidden');
 		$writer->addAttribute('id',$this->getClientID());
 		parent::addAttributesToRender($writer);
-		$this->renderClientControlScript($writer);
 	}
 
 	/**
@@ -172,8 +170,9 @@ abstract class TBaseValidator extends TLabel implements IValidator
 		if($control instanceof TDatePicker)
 			$options['DateFormat'] = $control->getDateFormat();
 
-		if(!is_null($this->_clientSide))
-			$options = array_merge($options,$this->_clientSide->getOptions()->toArray());
+		if(!is_null($this->_clientScript))
+			$options = array_merge($options,
+				$this->_clientScript->getOptions()->toArray());
 
 		return $options;
 	}
@@ -211,13 +210,13 @@ abstract class TBaseValidator extends TLabel implements IValidator
 	 */
 	public function getClientSide()
 	{
-		if(is_null($this->_clientSide))
-			$this->_clientSide = $this->createClientSide();
-		return $this->_clientSide;
+		if(is_null($this->_clientScript))
+			$this->_clientScript = $this->createClientSide();
+		return $this->_clientScript;
 	}
 
 	/**
-	 * @return TValidatorClientSide javascript validator event options.
+	 * @return TValidatorClientScript javascript validator event options.
 	 */
 	protected function createClientSide()
 	{
@@ -228,10 +227,11 @@ abstract class TBaseValidator extends TLabel implements IValidator
 	 * Renders the javascript code to the end script.
 	 * If you override this method, be sure to call the parent implementation
 	 * so that the event handlers can be invoked.
-	 * @param THtmlWriter the renderer
+	 * @param TEventParameter event parameter to be passed to the event handlers
 	 */
-	public function renderClientControlScript($writer)
+	public function onPreRender($param)
 	{
+		parent::onPreRender($param);
 		$scripts = $this->getPage()->getClientScript();
 		$formID=$this->getPage()->getForm()->getClientID();
 		$scriptKey = "TBaseValidator:$formID";
@@ -658,20 +658,8 @@ class TValidatorClientSide extends TClientSideOptions
 	 */
 	public function getObserveChanges()
 	{
-		$changes = $this->getOption('ObserveChanges');
+		$changes =  $this->getOption('ObserveChanges');
 		return is_null($changes) ? true : $changes;
-	}
-
-	/**
-	 * Ensure the string is a valid javascript function. If the string begins
-	 * with "javascript:" valid javascript function is assumed, otherwise the
-	 * code block is enclosed with "function(validator, sender){ }" block.
-	 * @param string javascript code.
-	 * @return string javascript function code.
-	 */
-	protected function ensureFunction($javascript)
-	{
-		return "function(validator, sender){ {$javascript} }";
 	}
 }
 

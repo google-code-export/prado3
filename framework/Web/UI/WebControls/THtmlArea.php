@@ -325,16 +325,6 @@ class THtmlArea extends TTextBox
 
 		return 'en';
 	}
-
-	/**
-	 * Gets the name of the javascript class responsible for performing postback for this control.
-	 * This method overrides the parent implementation.
-	 * @return string the javascript class name
-	 */
-	protected function getClientClassName()
-	{
-		return 'Prado.WebUI.THtmlArea';
-	}
 }
 
 ?>

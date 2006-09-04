@@ -1,6 +1,6 @@
 <?php
 /**
- * TClientScriptManager and TClientSideOptions class file.
+ * TClientScriptManager class file
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.pradosoft.com/
@@ -72,9 +72,9 @@ class TClientScriptManager extends TApplicationComponent
 	 */
 	private $_registeredPradoScripts=array();
 	/**
-	 * @var array published PRADO script files
+	 * @var array registered PRADO script files
 	 */
-	private $_publishedPradoFiles=array();
+	private $_registeredPradoFiles=array();
 	/**
 	 * Client-side javascript library dependencies
 	 * @var array
@@ -116,30 +116,18 @@ class TClientScriptManager extends TApplicationComponent
 	 */
 	public function registerPradoScript($name)
 	{
-		$this->registerPradoScriptInternal($name);
-
-		$params=func_get_args();
-		$this->_page->registerCachingAction('Page.ClientScript','registerPradoScript',$params);
-	}
-
-	/**
-	 * Registers a prado javascript library to be loaded.
-	 */
-	private function registerPradoScriptInternal($name)
-	{
 		if(!isset($this->_registeredPradoScripts[$name]))
 		{
-			if(isset(self::$_pradoScripts[$name]))
-				$this->_registeredPradoScripts[$name]=true;
-			else
+			$this->_registeredPradoScripts[$name]=true;
+			if(!isset(self::$_pradoScripts[$name]))
 				throw new TInvalidOperationException('csmanager_pradoscript_invalid',$name);
 			$basePath=$this->getPradoScriptBasePath();
 			foreach(self::$_pradoScripts[$name] as $script)
 			{
-				if(!isset($this->_publishedPradoFiles[$script]))
+				if(!isset($this->_registeredPradoFiles[$script]))
 				{
 					$this->publishFilePath($basePath.'/'.$script.'.js');
-					$this->_publishedPradoFiles[$script]=true;
+					$this->_registeredPradoFiles[$script]=false;
 				}
 			}
 		}
@@ -163,7 +151,15 @@ class TClientScriptManager extends TApplicationComponent
 	 */
 	protected function renderPradoScripts($writer)
 	{
-		$files=implode(',',array_keys($this->_publishedPradoFiles));
+		$files='';
+		foreach($this->_registeredPradoFiles as $file=>$rendered)
+		{
+			if(!$rendered)
+			{
+				$files.=','.$file;
+				$this->_registeredPradoFiles[$file]=true;
+			}
+		}
 		if($files!=='')
 		{
 			$basePath=$this->getPradoScriptBasePath();
@@ -176,60 +172,22 @@ class TClientScriptManager extends TApplicationComponent
 	}
 
 	/**
-	 * Returns javascript statement that create a new callback request object.
-	 * @param ICallbackEventHandler callback response handler
-	 * @param array additional callback options
-	 * @return string javascript statement that creates a new callback request.
-	 */
-	public function getCallbackReference(ICallbackEventHandler $callbackHandler, $options=null)
-	{
-		$options = !is_array($options) ? array() : $options;
-		$class = new TReflectionClass($callbackHandler);
-		$clientSide = $callbackHandler->getActiveControl()->getClientSide();
-		$options = array_merge($options, $clientSide->getOptions()->toArray());
-		$optionString = TJavascript::encode($options);
-		$this->registerPradoScriptInternal('ajax');
-		$id = $callbackHandler->getUniqueID();
-		return "new Prado.CallbackRequest('{$id}',{$optionString})";
-	}
-
-	/**
-	 * Registers callback javascript for a control.
-	 * @param string javascript class responsible for the control being registered for callback
-	 * @param array callback options
-	 */
-	public function registerCallbackControl($class, $options)
-	{
-		$optionString=TJavaScript::encode($options);
-		$code="new {$class}({$optionString});";
-		$this->_endScripts[sprintf('%08X', crc32($code))]=$code;
-		$this->registerPradoScriptInternal('ajax');
-
-		$params=func_get_args();
-		$this->_page->registerCachingAction('Page.ClientScript','registerCallbackControl',$params);
-	}
-
-	/**
-	 * Registers postback javascript for a control. A null class parameter will prevent
-	 * the javascript code registration.
+	 * Registers postback javascript for a control.
 	 * @param string javascript class responsible for the control being registered for postback
 	 * @param array postback options
 	 */
-	public function registerPostBackControl($class,$options)
+	public function registerPostBackControl($jsClass,$options)
 	{
-		if(is_null($class)) return;
-		if(!isset($options['FormID']) && ($form=$this->_page->getForm())!==null)
-			$options['FormID']=$form->getClientID();
+		if(!isset($options['FormID']))
+			$options['FormID']=$this->_page->getForm()->getClientID();
 		$optionString=TJavaScript::encode($options);
-		$code="new {$class}({$optionString});";
+		$code="new $jsClass($optionString);";
+		$this->registerEndScript(sprintf('%08X', crc32($code)), $code);
 
-		$this->_endScripts[sprintf('%08X', crc32($code))]=$code;
-		$this->_hiddenFields[TPage::FIELD_POSTBACK_TARGET]='';
-		$this->_hiddenFields[TPage::FIELD_POSTBACK_PARAMETER]='';
-		$this->registerPradoScriptInternal('prado');
+		$this->registerHiddenField(TPage::FIELD_POSTBACK_TARGET,'');
+		$this->registerHiddenField(TPage::FIELD_POSTBACK_PARAMETER,'');
 
-		$params=func_get_args();
-		$this->_page->registerCachingAction('Page.ClientScript','registerPostBackControl',$params);
+		$this->registerPradoScript('prado');
 	}
 
 	/**
@@ -242,34 +200,26 @@ class TClientScriptManager extends TApplicationComponent
 	{
 		$options = TJavaScript::encode($this->getDefaultButtonOptions($panel, $button));
 		$code = "new Prado.WebUI.DefaultButton($options);";
-
-		$this->_endScripts['prado:'.$panel->getClientID()]=$code;
-		$this->_hiddenFields[TPage::FIELD_POSTBACK_TARGET]='';
-		$this->registerPradoScriptInternal('prado');
-
-		$params=func_get_args();
-		$this->_page->registerCachingAction('Page.ClientScript','registerDefaultButton',$params);
+		$this->registerEndScript("prado:".$panel->getClientID(), $code);
+		$this->registerHiddenField(TPage::FIELD_POSTBACK_TARGET,'');
+		$this->registerPradoScript('prado');
 	}
 
 	/**
 	 * Registers the control to receive default focus.
-	 * @param string the client ID of the control to receive default focus
+	 * @param TControl|string the control or the client ID of the HTML element to receive default focus
 	 */
 	public function registerFocusControl($target)
 	{
-		$this->registerPradoScriptInternal('effects');
+		$this->registerPradoScript('effects');
 		if($target instanceof TControl)
 			$target=$target->getClientID();
 		$id = TJavaScript::quoteString($target);
-		$this->_endScripts['prado:focus'] = 'new Effect.ScrollTo("'.$id.'"); Prado.Element.focus("'.$id.'");';
-
-		$params=func_get_args();
-		$this->_page->registerCachingAction('Page.ClientScript','registerFocusControl',$params);
+		$script = 'new Effect.ScrollTo("'.$id.'"); Prado.Element.focus("'.$id.'");';
+		$this->registerEndScript('prado:focus',$script);
 	}
 
 	/**
-	 * @param TControl container control
-	 * @param IButtonControl button control
 	 * @return array default button options.
 	 */
 	protected function getDefaultButtonOptions($panel, $button)
@@ -293,9 +243,6 @@ class TClientScriptManager extends TApplicationComponent
 			$this->_styleSheetFiles[$key]=$url;
 		else
 			$this->_styleSheetFiles[$key]=array($url,$media);
-
-		$params=func_get_args();
-		$this->_page->registerCachingAction('Page.ClientScript','registerStyleSheetFile',$params);
 	}
 
 	/**
@@ -306,9 +253,6 @@ class TClientScriptManager extends TApplicationComponent
 	public function registerStyleSheet($key,$css,$media='')
 	{
 		$this->_styleSheets[$key]=$css;
-
-		$params=func_get_args();
-		$this->_page->registerCachingAction('Page.ClientScript','registerStyleSheet',$params);
 	}
 
 	/**
@@ -319,9 +263,6 @@ class TClientScriptManager extends TApplicationComponent
 	public function registerHeadScriptFile($key,$url)
 	{
 		$this->_headScriptFiles[$key]=$url;
-
-		$params=func_get_args();
-		$this->_page->registerCachingAction('Page.ClientScript','registerHeadScriptFile',$params);
 	}
 
 	/**
@@ -332,9 +273,6 @@ class TClientScriptManager extends TApplicationComponent
 	public function registerHeadScript($key,$script)
 	{
 		$this->_headScripts[$key]=$script;
-
-		$params=func_get_args();
-		$this->_page->registerCachingAction('Page.ClientScript','registerHeadScript',$params);
 	}
 
 	/**
@@ -344,10 +282,8 @@ class TClientScriptManager extends TApplicationComponent
 	 */
 	public function registerScriptFile($key,$url)
 	{
-		$this->_scriptFiles[$key]=$url;
-
-		$params=func_get_args();
-		$this->_page->registerCachingAction('Page.ClientScript','registerScriptFile',$params);
+		if(!isset($this->_scriptFiles[$key]))
+			$this->_scriptFiles[$key]=$url;
 	}
 
 	/**
@@ -358,9 +294,6 @@ class TClientScriptManager extends TApplicationComponent
 	public function registerBeginScript($key,$script)
 	{
 		$this->_beginScripts[$key]=$script;
-
-		$params=func_get_args();
-		$this->_page->registerCachingAction('Page.ClientScript','registerBeginScript',$params);
 	}
 
 	/**
@@ -371,9 +304,6 @@ class TClientScriptManager extends TApplicationComponent
 	public function registerEndScript($key,$script)
 	{
 		$this->_endScripts[$key]=$script;
-
-		$params=func_get_args();
-		$this->_page->registerCachingAction('Page.ClientScript','registerEndScript',$params);
 	}
 
 	/**
@@ -384,10 +314,8 @@ class TClientScriptManager extends TApplicationComponent
 	 */
 	public function registerHiddenField($name,$value)
 	{
-		$this->_hiddenFields[$name]=$value;
-
-		$params=func_get_args();
-		$this->_page->registerCachingAction('Page.ClientScript','registerHiddenField',$params);
+		if(!isset($this->_hiddenFields[$name]))
+			$this->_hiddenFields[$name]=$value;
 	}
 
 	/**
@@ -454,22 +382,6 @@ class TClientScriptManager extends TApplicationComponent
 	}
 
 	/**
-	 * @return boolean true if any end scripts are registered.
-	 */
-	public function hasEndScripts()
-	{
-		return count($this->_endScripts) > 0;
-	}
-
-	/**
-	 * @return boolean true if any begin scripts are registered.
-	 */
-	public function hasBeginScripts()
-	{
-		return count($this->_beginScripts) > 0;
-	}
-
-	/**
 	 * @param string a unique key
 	 * @return boolean whether there is a hidden field registered with the specified key
 	 */
@@ -525,8 +437,17 @@ class TClientScriptManager extends TApplicationComponent
 	public function renderScriptFiles($writer)
 	{
 		$this->renderPradoScripts($writer);
-		if(!empty($this->_scriptFiles))
-			$writer->write(TJavaScript::renderScriptFiles($this->_scriptFiles));
+		$files=array();
+		foreach($this->_scriptFiles as $key=>$file)
+		{
+			if($file!==true)
+			{
+				$files[]=$file;
+				$this->_scriptFiles[$key]=true;
+			}
+		}
+		if(!empty($files))
+			$writer->write(TJavaScript::renderScriptFiles($files));
 	}
 
 	/**
@@ -553,14 +474,20 @@ class TClientScriptManager extends TApplicationComponent
 		$str='';
 		foreach($this->_hiddenFields as $name=>$value)
 		{
-			if(is_array($value))
+			if($value!==true)
 			{
-				foreach($value as $v)
-					$str.='<input type="hidden" name="'.$name.'[]" id="'.$name.'" value="'.THttpUtility::htmlEncode($value)."\" />\n";
-			}
-			else
-			{
-				$str.='<input type="hidden" name="'.$name.'" id="'.$name.'" value="'.THttpUtility::htmlEncode($value)."\" />\n";
+				if(is_array($value))
+				{
+					foreach($value as $v)
+						$str.='<input type="hidden" name="'.$name.'[]" id="'.$name.'" value="'.THttpUtility::htmlEncode($value)."\" />\n";
+				}
+				else
+				{
+					$str.='<input type="hidden" name="'.$name.'" id="'.$name.'" value="'.THttpUtility::htmlEncode($value)."\" />\n";
+				}
+				// set hidden field value to true to indicate this field is rendered
+				// Note, hidden field rendering is invoked twice (at the beginning and ending of TForm)
+				$this->_hiddenFields[$name]=true;
 			}
 		}
 		if($str!=='')
