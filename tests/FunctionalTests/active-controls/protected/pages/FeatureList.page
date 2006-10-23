@@ -1,3 +1,0 @@
-<com:TForm ID="form1">
-	<com:TBulletedList ID="List" DisplayMode="HyperLink"/>	
-</com:TForm>

@@ -6,37 +6,24 @@
 {
 	display: none;
 }
-
 .TRatingList_blocks td
 {
-	width: 18px;
-	height: 9px;
-	padding: 1px;
-}
-
-.TRatingList_blocks td.rating
-{
-	background-image: url(blocks_combined.gif);
+	width: 17px;
+	height: 18px;
+	background-image: url(blocks_blank.gif);
 	background-repeat: no-repeat;
 	cursor: pointer;
-	background-position: 1px 0px;
 }
 .TRatingList_blocks td.rating_selected
 {
-	background-position: 1px -100px;
-}
-
-.TRatingList_blocks td.rating_half
-{
-	background-position: 1px -200px;
+	background-image: url(blocks_selected.gif);
 }
 
 .TRatingList_blocks td.rating_hover
 {
-	background-position: 1px -300px;
+	background-image: url(blocks_hover.gif);
 }
-
-.TRatingList_blocks td.rating_disabled
+.TRatingList_blocks td.rating_half
 {
-	cursor: default !important;
+	background-image: url(blocks_half.gif);
 }

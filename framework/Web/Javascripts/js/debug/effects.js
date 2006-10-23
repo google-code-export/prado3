@@ -958,11 +958,3 @@ Element.Methods.visualEffect = function(element, effect, options) {
 
 Element.addMethods();
 
-Prado.Effect =
-{
-	Highlight : function(element, options)
-	{
-		new Effect.Highlight(element,options||{});
-	}
-}
-

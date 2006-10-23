@@ -65,22 +65,6 @@ class TLinkButton extends TWebControl implements IPostBackEventHandler, IButtonC
 	}
 
 	/**
-	 * @return boolean whether to render javascript.
-	 */
-	public function getEnableClientScript()
-	{
-		return $this->getViewState('EnableClientScript',true);
-	}
-
-	/**
-	 * @param boolean whether to render javascript.
-	 */
-	public function setEnableClientScript($value)
-	{
-		$this->setViewState('EnableClientScript',TPropertyValue::ensureBoolean($value),true);
-	}
-
-	/**
 	 * Adds attribute name-value pairs to renderer.
 	 * This overrides the parent implementation with additional button specific attributes.
 	 * @param THtmlWriter the writer used for the rendering purpose
@@ -96,44 +80,16 @@ class TLinkButton extends TWebControl implements IPostBackEventHandler, IButtonC
 		// may be overwritten in the following
 		parent::addAttributesToRender($writer);
 
-		if($this->getEnabled(true) && $this->getEnableClientScript())
+		if($this->getEnabled(true))
 		{
-			$this->renderLinkButtonHref($writer);
-			$this->renderClientControlScript($writer);
+			//create unique no-op url references
+			//$nop = "#".$this->getClientID();
+			$nop = "javascript:;//".$this->getClientID();
+			$writer->addAttribute('href', $nop);
+			$this->getPage()->getClientScript()->registerPostBackControl('Prado.WebUI.TLinkButton',$this->getPostBackOptions());
 		}
 		else if($this->getEnabled()) // in this case, parent will not render 'disabled'
 			$writer->addAttribute('disabled','disabled');
-	}
-
-	/**
-	 * Renders the client-script code.
-	 * @param THtmlWriter renderer
-	 */
-	protected function renderClientControlScript($writer)
-	{
-		$cs = $this->getPage()->getClientScript();
-		$cs->registerPostBackControl($this->getClientClassName(),$this->getPostBackOptions());
-	}
-
-	/**
-	 * Renders the Href for link button.
-	 * @param THtmlWriter renderer
-	 */
-	protected function renderLinkButtonHref($writer)
-	{
-		//create unique no-op url references
-		$nop = "javascript:;//".$this->getClientID();
-		$writer->addAttribute('href', $nop);
-	}
-
-	/**
-	 * Gets the name of the javascript class responsible for performing postback for this control.
-	 * This method overrides the parent implementation.
-	 * @return string the javascript class name
-	 */
-	protected function getClientClassName()
-	{
-		return 'Prado.WebUI.TLinkButton';
 	}
 
 	/**

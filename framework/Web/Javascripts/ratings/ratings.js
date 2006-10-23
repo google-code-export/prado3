@@ -1,178 +1,60 @@
-Prado.WebUI.TRatingList = Base.extend(
+Prado.WebUI.TRatingList = Class.create();	
+Prado.WebUI.TRatingList.prototype = 
 {
 	selectedIndex : -1,
-	rating: -1,
-	enabled : true,
-	readOnly : false,
 
-	constructor : function(options)
+	initialize : function(options)
 	{
-		var cap = $(options.CaptionID);
-		this.options = Object.extend(
+		this.options = options;
+		this.element = $(options['ID']);
+		Element.addClassName(this.element,options.cssClass);
+		this.radios = document.getElementsByName(options.field);
+		for(var i = 0; i<this.radios.length; i++)
 		{
-			caption : cap ? cap.innerHTML : ''
-		}, options || {});
-
-		Prado.WebUI.TRatingList.register(this);
-		this._init();
-		this.selectedIndex = options.SelectedIndex;
-		this.rating = options.Rating;
-		if(options.Rating <= 0 && options.SelectedIndex >= 0)
-			this.rating = options.SelectedIndex+1;
-		this.showRating(this.rating);
+			Event.observe(this.radios[i].parentNode, "mouseover", this.hover.bindEvent(this,i));
+			Event.observe(this.radios[i].parentNode, "mouseout", this.recover.bindEvent(this,i));
+			Event.observe(this.radios[i].parentNode, "click", this.click.bindEvent(this, i));
+		}		
+		this.caption = CAPTION();
+		this.element.appendChild(this.caption);
+		this.selectedIndex = options.selectedIndex;
+		this.setRating(this.selectedIndex);
 	},
-
-	_init: function(options)
-	{
-		Element.addClassName($(this.options.ListID),this.options.Style);
-		this.radios = new Array();
-		var index=0;
-		for(var i = 0; i<this.options.ItemCount; i++)
-		{
-			var radio = $(this.options.ListID+'_c'+i);
-			var td = radio.parentNode;
-			if(radio && td.tagName.toLowerCase()=='td')
-			{
-				this.radios.push(radio);
-				Event.observe(td, "mouseover", this.hover.bindEvent(this,index));
-				Event.observe(td, "mouseout", this.recover.bindEvent(this,index));
-				Event.observe(td, "click", this.click.bindEvent(this, index));
-				index++;
-				Element.addClassName(td,"rating");
-			}
-		}
-	},
-
+	
 	hover : function(ev,index)
 	{
-		if(this.enabled==false) return;
 		for(var i = 0; i<this.radios.length; i++)
-		{
-			var node = this.radios[i].parentNode;
-			var action = i <= index ? 'addClassName' : 'removeClassName'
-			Element[action](node,"rating_hover");
-			Element.removeClassName(node,"rating_selected");
-			Element.removeClassName(node,"rating_half");
-		}
-		this.showCaption(this.getIndexCaption(index));
+			this.radios[i].parentNode.className = (i<=index) ? "rating_hover" : "";
+		this.setCaption(index);
 	},
-
+	
 	recover : function(ev,index)
 	{
-		if(this.enabled==false) return;
-		this.showRating(this.rating);
-		this.showCaption(this.options.caption);
+		for(var i = 0; i<=index; i++)
+			Element.removeClassName(this.radios[i].parentNode, "rating_hover");
+		this.setRating(this.selectedIndex);
 	},
-
+	
 	click : function(ev, index)
 	{
-		if(this.enabled==false) return;
 		for(var i = 0; i<this.radios.length; i++)
 			this.radios[i].checked = (i == index);
-
 		this.selectedIndex = index;
-		this.setRating(index+1);
-
-		this.dispatchRequest(ev);
+		this.setRating(index);
+		if(isFunction(this.options.onChange))
+			this.options.onChange(this,index);		
 	},
-
-	dispatchRequest : function(ev)
+	
+	setRating: function(index)
 	{
-		var requestOptions = Object.extend(
-		{
-			ID : this.options.ListID+"_c"+this.selectedIndex,
-			EventTarget : this.options.ListName+"$c"+this.selectedIndex
-		},this.options);
-		var request = new Prado.CallbackRequest(requestOptions.EventTarget, requestOptions);
-		if(request.dispatch()==false)
-			Event.stop(ev);
+		for(var i = 0; i<=index; i++)
+			this.radios[i].parentNode.className = "rating_selected";
+		this.setCaption(index);
 	},
-
-	setRating : function(value)
+	
+	setCaption : function(index)
 	{
-		this.rating = value;
-		var base = Math.floor(value-1);
-		var remainder = value - base-1;
-		var halfMax = this.options.HalfRating["1"];
-		var index = remainder > halfMax ? base+1 : base;
-		for(var i = 0; i<this.radios.length; i++)
-			this.radios[i].checked = (i == index);
-
-		var caption = this.getIndexCaption(index);
-		this.setCaption(caption);
-		this.showCaption(caption);
-
-		this.showRating(value);
-	},
-
-	showRating: function(value)
-	{
-		var base = Math.floor(value-1);
-		var remainder = value - base-1;
-		var halfMin = this.options.HalfRating["0"];
-		var halfMax = this.options.HalfRating["1"];
-		var index = remainder > halfMax ? base+1 : base;
-		var hasHalf = remainder >= halfMin && remainder <= halfMax;
-		for(var i = 0; i<this.radios.length; i++)
-		{
-			var node = this.radios[i].parentNode;
-			var action = i > index ? 'removeClassName' : 'addClassName';
-			Element[action](node, "rating_selected");
-			if(i==index+1 && hasHalf)
-				Element.addClassName(node, "rating_half");
-			else
-				Element.removeClassName(node, "rating_half");
-			Element.removeClassName(node,"rating_hover");
-		}
-	},
-
-	getIndexCaption : function(index)
-	{
-		return index > -1 ? this.radios[index].value : this.options.caption;
-	},
-
-	showCaption : function(value)
-	{
-		var caption = $(this.options.CaptionID);
-		if(caption) caption.innerHTML = value;
-		$(this.options.ListID).title = value;
-	},
-
-	setCaption : function(value)
-	{
-		this.options.caption = value;
-		this.showCaption(value);
-	},
-
-	setEnabled : function(value)
-	{
-		this.enabled = value;
-		for(var i = 0; i<this.radios.length; i++)
-		{
-			var action = value ? 'removeClassName' : 'addClassName'
-			Element[action](this.radios[i].parentNode, "rating_disabled");
-		}
+		this.caption.innerHTML = index > -1 ? 
+			this.radios[index].value : this.options.caption;	
 	}
-},
-{
-ratings : {},
-register : function(rating)
-{
-	Prado.WebUI.TRatingList.ratings[rating.options.ListID] = rating;
-},
-
-setEnabled : function(id,value)
-{
-	Prado.WebUI.TRatingList.ratings[id].setEnabled(value);
-},
-
-setRating : function(id,value)
-{
-	Prado.WebUI.TRatingList.ratings[id].setRating(value);
-},
-
-setCaption : function(id,value)
-{
-	Prado.WebUI.TRatingList.ratings[id].setCaption(value);
 }
-});

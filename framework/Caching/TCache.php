@@ -44,44 +44,18 @@
 abstract class TCache extends TModule implements ICache
 {
 	private $_prefix=null;
-	private $_primary=true;
 
 	/**
 	 * Initializes the cache module.
 	 * This method initializes the cache key prefix and registers the cache module
-	 * with the application if the cache is primary.
+	 * with the application.
 	 * @param TXmlElement the module configuration
 	 */
 	public function init($config)
 	{
 		if($this->_prefix===null)
 			$this->_prefix=$this->getApplication()->getUniqueID();
-		if($this->_primary)
-		{
-			if($this->getApplication()->getCache()===null)
-				$this->getApplication()->setCache($this);
-			else
-				throw new TConfigurationException('cache_primary_duplicated',get_class($this));
-		}
-	}
-
-	/**
-	 * @return boolean whether this cache module is used as primary/system cache.
-	 * A primary cache is used by PRADO core framework to cache data such as
-	 * parsed templates, themes, etc.
-	 */
-	public function getPrimaryCache()
-	{
-		return $this->_primary;
-	}
-
-	/**
-	 * @param boolean whether this cache module is used as primary/system cache. Defaults to false.
-	 * @see getPrimaryCache
-	 */
-	public function setPrimaryCache($value)
-	{
-		$this->_primary=TPropertyValue::ensureBoolean($value);
+		$this->getApplication()->setCache($this);
 	}
 
 	/**

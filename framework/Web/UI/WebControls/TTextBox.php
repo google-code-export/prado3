@@ -76,22 +76,6 @@ class TTextBox extends TWebControl implements IPostBackDataHandler, IValidatable
 	}
 
 	/**
-	 * @return boolean whether to render javascript.
-	 */
-	public function getEnableClientScript()
-	{
-		return $this->getViewState('EnableClientScript',true);
-	}
-
-	/**
-	 * @param boolean whether to render javascript.
-	 */
-	public function setEnableClientScript($value)
-	{
-		$this->setViewState('EnableClientScript',TPropertyValue::ensureBoolean($value),true);
-	}
-
-	/**
 	 * Adds attribute name-value pairs to renderer.
 	 * This method overrides the parent implementation with additional textbox specific attributes.
 	 * @param THtmlWriter the writer used for the rendering purpose
@@ -154,34 +138,12 @@ class TTextBox extends TWebControl implements IPostBackDataHandler, IValidatable
 		$isEnabled=$this->getEnabled(true);
 		if(!$isEnabled && $this->getEnabled())  // in this case parent will not render 'disabled'
 			$writer->addAttribute('disabled','disabled');
-		if($isEnabled
-			&& $this->getEnableClientScript()
-			&& $this->getAutoPostBack()
-			&& $page->getClientSupportsJavaScript())
+		if($isEnabled && $this->getAutoPostBack() && $page->getClientSupportsJavaScript())
 		{
-			$this->renderClientControlScript($writer);
+			$writer->addAttribute('id',$this->getClientID());
+			$this->getPage()->getClientScript()->registerPostBackControl('Prado.WebUI.TTextBox',$this->getPostBackOptions());
 		}
 		parent::addAttributesToRender($writer);
-	}
-
-	/**
-	 * Renders the javascript for textbox.
-	 */
-	protected function renderClientControlScript($writer)
-	{
-		$writer->addAttribute('id',$this->getClientID());
-		$cs = $this->getPage()->getClientScript();
-		$cs->registerPostBackControl($this->getClientClassName(),$this->getPostBackOptions());
-	}
-
-	/**
-	 * Gets the name of the javascript class responsible for performing postback for this control.
-	 * This method overrides the parent implementation.
-	 * @return string the javascript class name
-	 */
-	protected function getClientClassName()
-	{
-		return 'Prado.WebUI.TTextBox';
 	}
 
 	/**

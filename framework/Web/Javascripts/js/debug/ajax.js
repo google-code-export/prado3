@@ -116,7 +116,7 @@ Ajax.Request.prototype = Object.extend(new Ajax.Base(), {
     var requestHeaders = 
       ['X-Requested-With', 'XMLHttpRequest',
        'X-Prototype-Version', Prototype.Version,
-       'Accept', 'text/javascript, text/html, application/xml, text/xml'];
+       'Accept', 'text/javascript, text/html, application/xml, text/xml, */*'];
 
     if (this.options.method == 'post') {
       requestHeaders.push('Content-type', this.options.contentType);
@@ -285,971 +285,6 @@ Ajax.PeriodicalUpdater.prototype = Object.extend(new Ajax.Base(), {
   }
 });
 
-
-/**
- * Override Prototype's response implementation.
- */
-Object.extend(Ajax.Request.prototype,
-{
-	/**
-	 * Customize the response, dispatch onXXX response code events, and
-	 * tries to execute response actions (javascript statements).
-	 */
-	respondToReadyState : function(readyState)
-	{
-	    var event = Ajax.Request.Events[readyState];
-	    var transport = this.transport, json = this.getHeaderData(Prado.CallbackRequest.DATA_HEADER);
-
-	    if (event == 'Complete')
-	    {
-	      if ((this.header('Content-type') || '').match(/^text\/javascript/i))
-	      {
-	        try
-			{
-	           json = eval('(' + transport.responseText + ')');
-	        }catch (e)
-			{
-				if(typeof(json) == "string")
-					json = Prado.CallbackRequest.decode(result);
-			}
-	      }
-
-	      try
-	      {
-	      	Prado.CallbackRequest.updatePageState(this,transport);
-			Ajax.Responders.dispatch('on' + transport.status, this, transport, json);
-			Prado.CallbackRequest.dispatchActions(transport,this.getHeaderData(Prado.CallbackRequest.ACTION_HEADER));
-
-	        (this.options['on' + this.transport.status]
-	         || this.options['on' + (this.responseIsSuccess() ? 'Success' : 'Failure')]
-	         || Prototype.emptyFunction)(this, json);
-	  	      } catch (e) {
-	        this.dispatchException(e);
-	      }
-	    }
-
-	    try {
-	      (this.options['on' + event] || Prototype.emptyFunction)(this, json);
-	      Ajax.Responders.dispatch('on' + event, this, transport, json);
-	    } catch (e) {
-	      this.dispatchException(e);
-	    }
-
-	    /* Avoid memory leak in MSIE: clean up the oncomplete event handler */
-	    if (event == 'Complete')
-	      this.transport.onreadystatechange = Prototype.emptyFunction;
-	},
-
-	/**
-	 * Gets header data assuming JSON encoding.
-	 * @param string header name
-	 * @return object header data as javascript structures.
-	 */
-	getHeaderData : function(name)
-	{
-		try
-		{
-			var json = this.header(name);
-			return eval('(' + json + ')');
-		}
-		catch (e)
-		{
-			if(typeof(json) == "string")
-				return Prado.CallbackRequest.decode(json);
-		}
-	}
-});
-
-/**
- * Prado Callback client-side request handler.
- */
-Prado.CallbackRequest = Class.create();
-
-/**
- * Static definitions.
- */
-Object.extend(Prado.CallbackRequest,
-{
-	/**
-	 * Callback request target POST field name.
-	 */
-	FIELD_CALLBACK_TARGET : 'PRADO_CALLBACK_TARGET',
-	/**
-	 * Callback request parameter POST field name.
-	 */
-	FIELD_CALLBACK_PARAMETER : 'PRADO_CALLBACK_PARAMETER',
-	/**
-	 * Callback request page state field name,
-	 */
-	FIELD_CALLBACK_PAGESTATE : 'PRADO_PAGESTATE',
-
-	FIELD_POSTBACK_TARGET : 'PRADO_POSTBACK_TARGET',
-
-	FIELD_POSTBACK_PARAMETER : 'PRADO_POSTBACK_PARAMETER',
-
-	/**
-	 * List of form fields that will be collected during callback.
-	 */
-	PostDataLoaders : [],
-	/**
-	 * Response data header name.
-	 */
-	DATA_HEADER : 'X-PRADO-DATA',
-	/**
-	 * Response javascript execution statement header name.
-	 */
-	ACTION_HEADER : 'X-PRADO-ACTIONS',
-	/**
-	 * Response errors/exceptions header name.
-	 */
-	ERROR_HEADER : 'X-PRADO-ERROR',
-	/**
-	 * Page state header name.
-	 */
-	PAGESTATE_HEADER : 'X-PRADO-PAGESTATE',
-	/**
-	 * Current requests in progress.
-	 */
-	currentRequest : null,
-
-	requestQueue : [],
-
-	/**
-	 * Add ids of inputs element to post in the request.
-	 */
-	addPostLoaders : function(ids)
-	{
-		var self = Prado.CallbackRequest;
-		self.PostDataLoaders = self.PostDataLoaders.concat(ids);
-		var list = [];
-		self.PostDataLoaders.each(function(id)
-		{
-			if(list.indexOf(id) < 0)
-				list.push(id);
-		});
-		self.PostDataLoaders = list;
-	},
-
-	/**
-	 * Dispatch callback response actions.
-	 */
-	dispatchActions : function(transport,actions)
-	{
-		var self = Prado.CallbackRequest;
-		if(actions && actions.length > 0)
-			actions.each(self.__run.bind(self,transport));
-	},
-
-	/**
-	 * Prase and evaluate a Callback clien-side action
-	 */
-	__run : function(transport, command)
-	{
-		var self = Prado.CallbackRequest;
-		self.transport = transport;
-		for(var method in command)
-		{
-			try
-			{
-				method.toFunction().apply(self,command[method]);
-			}
-			catch(e)
-			{
-				if(typeof(Logger) != "undefined")
-					self.Exception.onException(null,e);
-			}
-		}
-	},
-
-	/**
-	 * Respond to Prado Callback request exceptions.
-	 */
-	Exception :
-	{
-		/**
-		 * Server returns 500 exception. Just log it.
-		 */
-		"on500" : function(request, transport, data)
-		{
-			var e = request.getHeaderData(Prado.CallbackRequest.ERROR_HEADER);
-			Logger.error("Callback Server Error "+e.code, this.formatException(e));
-		},
-
-		/**
-		 * Callback OnComplete event,logs reponse and data to console.
-		 */
-		'on200' : function(request, transport, data)
-		{
-			if(transport.status < 500)
-			{
-				var msg = 'HTTP '+transport.status+" with response : \n";
-				if(transport.responseText.trim().length >0)
-					msg += transport.responseText + "\n";
-				if(typeof(data)!="undefined" && data != null)
-					msg += "Data : \n"+inspect(data)+"\n";
-				data = request.getHeaderData(Prado.CallbackRequest.ACTION_HEADER);
-				if(data && data.length > 0)
-				{
-					msg += "Actions : \n";
-					data.each(function(action)
-					{
-						msg += inspect(action)+"\n";
-					});
-				}
-				Logger.info(msg);
-			}
-		},
-
-		/**
-		 * Uncaught exceptions during callback response.
-		 */
-		onException : function(request,e)
-		{
-			msg = "";
-			$H(e).each(function(item)
-			{
-				msg += item.key+": "+item.value+"\n";
-			})
-			Logger.error('Uncaught Callback Client Exception:', msg);
-		},
-
-		/**
-		 * Formats the exception message for display in console.
-		 */
-		formatException : function(e)
-		{
-			var msg = e.type + " with message \""+e.message+"\"";
-			msg += " in "+e.file+"("+e.line+")\n";
-			msg += "Stack trace:\n";
-			var trace = e.trace;
-			for(var i = 0; i<trace.length; i++)
-			{
-				msg += "  #"+i+" "+trace[i].file;
-				msg += "("+trace[i].line+"): ";
-				msg += trace[i]["class"]+"->"+trace[i]["function"]+"()"+"\n";
-			}
-			msg += e.version+" "+e.time+"\n";
-			return msg;
-		}
-	},
-
-	/**
-	 * @return string JSON encoded data.
-	 */
-	encode : function(data)
-	{
-		return Prado.JSON.stringify(data);
-	},
-
-	/**
-	 * @return mixed javascript data decoded from string using JSON decoding.
-	 */
-	decode : function(data)
-	{
-		if(typeof(data) == "string" && data.trim().length > 0)
-			return Prado.JSON.parse(data);
-		else
-			return null;
-	},
-
-	/**
-	 * Dispatch a priority request, it will call abortRequestInProgress first.
-	 */
-	dispatchPriorityRequest : function(callback)
-	{
-		var self = Prado.CallbackRequest;
-
-		callback.request = new Ajax.Request(callback.url, callback.options);
-		callback.timeout = setTimeout(function()
-		{
-			//Logger.warn("priority timeout");
-			self.abortCurrentRequest();
-		},callback.options.RequestTimeOut);
-
-		//Logger.info("dispatched "+this.currentRequest)
-		self.currentRequest = callback;
-		return true;
-	},
-
-	/**
-	 * Dispatch a normal request, no timeouts or aborting of requests.
-	 */
-	dispatchNormalRequest : function(callback)
-	{
-		//Logger.info("dispatching normal request");
-		new Ajax.Request(callback.url, callback.options);
-		return true;
-	},
-
-	/**
-	 * Abort the current priority request in progress.
-	 */
-	abortCurrentRequest : function()
-	{
-		var self = Prado.CallbackRequest;
-		var inProgress = self.currentRequest;
-		//Logger.info("aborting ... "+inProgress);
-		if(inProgress)
-		{
-			clearTimeout(inProgress.timeout);
-			self.currentRequest = null;
-			//Logger.info("aborted");
-			//abort if not ready.
-			if(inProgress.request.transport.readyState < 4)
-				inProgress.request.transport.abort();
-			return self.dispatchQueue();
-		}
-		else
-			return self.dispatchQueue();
-	},
-
-	/**
-	 * Updates the page state. It will update only if EnablePageStateUpdate and
-	 * HasPriority options are both true.
-	 */
-	updatePageState : function(request, transport)
-	{
-		var self = Prado.CallbackRequest;
-		var pagestate = $(self.FIELD_CALLBACK_PAGESTATE);
-		var enabled = request.options.EnablePageStateUpdate && request.options.HasPriority;
-		var aborted = self.currentRequest == null;
-		if(enabled && !aborted && pagestate)
-		{
-			var data = request.header(self.PAGESTATE_HEADER);
-			if(typeof(data) == "string" && data.length > 0)
-				pagestate.value = data;
-			else
-			{
-				if(typeof(Logger) != "undefined")
-					Logger.warn("Missing page state:"+data);
-				return false;
-			}
-		}
-		return true;
-	},
-
-	enqueue : function(callback)
-	{
-		var self = Prado.CallbackRequest;
-		if(self.currentRequest==null)
-			self.dispatchPriorityRequest(callback);
-		else
-			self.requestQueue.push(callback);
-		//Logger.info("current queque length="+self.requestQueue.length);
-	},
-
-	dispatchQueue : function()
-	{
-		var self = Prado.CallbackRequest;
-		//Logger.info("dispatching queque, length="+self.requestQueue.length+" request="+self.currentRequest);
-		if(self.requestQueue.length > 0)
-		{
-			var callback = self.requestQueue.shift();
-			//Logger.info("do dispatch request");
-			return self.dispatchPriorityRequest(callback);
-		}
-		return false;
-	},
-
-	abortRequest : function(id)
-	{
-		//Logger.info("abort id="+id);
-		var self = Prado.CallbackRequest;
-		if(self.currentRequest != null && self.currentRequest.id == id)
-			self.abortCurrentRequest();
-		else
-		{
-			var queque = [];
-			self.requestQueue.each(function(callback)
-			{
-				if(callback.id != id)
-					queque.push(callback);
-			});
-			self.requestQueue = queque;
-		}
-	}
-})
-
-/**
- * Automatically aborts the current request when a priority request has returned.
- */
-Ajax.Responders.register({onComplete : function(request)
-{
-	if(request.options.HasPriority)
-		Prado.CallbackRequest.abortCurrentRequest();
-}});
-
-//Add HTTP exception respones when logger is enabled.
-Event.OnLoad(function()
-{
-	if(typeof Logger != "undefined")
-		Ajax.Responders.register(Prado.CallbackRequest.Exception);
-});
-
-/**
- * Create and prepare a new callback request.
- * Call the dispatch() method to start the callback request.
- * <code>
- * request = new Prado.CallbackRequest(UniqueID, callback);
- * request.dispatch();
- * </code>
- */
-Prado.CallbackRequest.prototype =
-{
-	/**
-	 * Callback URL, same url as the current page.
-	 */
-	url : window.location.href,
-
-	/**
-	 * Callback options, including onXXX events.
-	 */
-	options : {	},
-
-	/**
-	 * Callback target ID. E.g. $control->getUniqueID();
-	 */
-	id : null,
-
-	/**
-	 * Current callback request.
-	 */
-	request : null,
-
-	Enabled : true,
-
-	/**
-	 * Prepare and inititate a callback request.
-	 */
-	initialize : function(id, options)
-	{
-		this.id = id;
-		this.options = Object.extend(
-		{
-			RequestTimeOut : 30000, // 30 second timeout.
-			EnablePageStateUpdate : true,
-			HasPriority : true,
-			CausesValidation : true,
-			ValidationGroup : null,
-			PostInputs : true
-		}, options || {});
-	},
-
-	/**
-	 * Sets the request parameter
-	 * @param {Object} parameter value
-	 */
-	setCallbackParameter : function(value)
-	{
-		this.options['params'] = value;
-	},
-
-	/**
-	 * @return {Object} request paramater value.
-	 */
-	getCallbackParameter : function()
-	{
-		return this.options['params'];
-	},
-
-	/**
-	 * Sets the callback request timeout.
-	 * @param {integer} timeout in  milliseconds
-	 */
-	setRequestTimeOut : function(timeout)
-	{
-		this.options['RequestTimeOut'] = timeout;
-	},
-
-	/**
-	 * @return {integer} request timeout in milliseconds
-	 */
-	getRequestTimeOut : function()
-	{
-		return this.options['RequestTimeOut'];
-	},
-
-	/**
-	 * Set true to enable validation on callback dispatch.
-	 * @param {boolean} true to validate
-	 */
-	setCausesValidation : function(validate)
-	{
-		this.options['CausesValidation'] = validate;
-	},
-
-	/**
-	 * @return {boolean} validate on request dispatch
-	 */
-	getCausesValidation : function()
-	{
-		return this.options['CausesValidation'];
-	},
-
-	/**
-	 * Sets the validation group to validate during request dispatch.
-	 * @param {string} validation group name
-	 */
-	setValidationGroup : function(group)
-	{
-		this.options['ValidationGroup'] = group;
-	},
-
-	/**
-	 * @return {string} validation group name.
-	 */
-	getValidationGroup : function()
-	{
-		return this.options['ValidationGroup'];
-	},
-
-	/**
-	 * Dispatch the callback request.
-	 */
-	dispatch : function()
-	{
-		//Logger.info("dispatching request");
-		//trigger tinyMCE to save data.
-		if(typeof tinyMCE != "undefined")
-			tinyMCE.triggerSave();
-
-		//override parameter and postBody options.
-		Object.extend(this.options,
-		{
-			postBody : this._getPostData(),
-			parameters : ''
-		});
-
-		if(this.options.CausesValidation && typeof(Prado.Validation) != "undefined")
-		{
-			var form =  this.options.Form || Prado.Validation.getForm();
-			if(Prado.Validation.validate(form,this.options.ValidationGroup,this) == false)
-				return false;
-		}
-
-		if(this.options.onPreDispatch)
-			this.options.onPreDispatch(this,null);
-
-		if(!this.Enabled)
-			return;
-
-		if(this.options.HasPriority)
-		{
-			return Prado.CallbackRequest.enqueue(this);
-			//return Prado.CallbackRequest.dispatchPriorityRequest(this);
-		}
-		else
-			return Prado.CallbackRequest.dispatchNormalRequest(this);
-	},
-
-	abort : function()
-	{
-		return Prado.CallbackRequest.abortRequest(this.id);
-	},
-
-	/**
-	 * Collects the form inputs, encode the parameters, and sets the callback
-	 * target id. The resulting string is the request content body.
-	 * @return string request body content containing post data.
-	 */
-	_getPostData : function()
-	{
-		var data = {};
-		var callback = Prado.CallbackRequest;
-		if(this.options.PostInputs != false)
-		{
-			callback.PostDataLoaders.each(function(name)
-			{
-				$A(document.getElementsByName(name)).each(function(element)
-				{
-					//IE will try to get elements with ID == name as well.
-					if(element.type && element.name == name)
-					{
-						value = $F(element);
-						if(typeof(value) != "undefined")
-							data[name] = value;
-					}
-				})
-			})
-		}
-		if(typeof(this.options.params) != "undefined")
-			data[callback.FIELD_CALLBACK_PARAMETER] = callback.encode(this.options.params);
-		var pageState = $F(callback.FIELD_CALLBACK_PAGESTATE);
-		if(typeof(pageState) != "undefined")
-			data[callback.FIELD_CALLBACK_PAGESTATE] = pageState;
-		data[callback.FIELD_CALLBACK_TARGET] = this.id;
-		if(this.options.EventTarget)
-			data[callback.FIELD_POSTBACK_TARGET] = this.options.EventTarget;
-		if(this.options.EventParameter)
-			data[callback.FIELD_POSTBACK_PARAMETER] = this.options.EventParameter;
-		return $H(data).toQueryString();
-	}
-}
-
-/**
- * Create a new callback request using default settings.
- * @param string callback handler unique ID.
- * @param mixed parameter to pass to callback handler on the server side.
- * @param function client side onSuccess event handler.
- * @param object additional request options.
- * @return boolean always false.
- */
-Prado.Callback = function(UniqueID, parameter, onSuccess, options)
-{
-	var callback =
-	{
-		'params' : parameter || '',
-		'onSuccess' : onSuccess || Prototype.emptyFunction
-	};
-
-	Object.extend(callback, options || {});
-
-	request = new Prado.CallbackRequest(UniqueID, callback);
-	request.dispatch();
-	return false;
-}
-
-
-/*
-Copyright (c) 2005 JSON.org
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The Software shall be used for Good, not Evil.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
-Array.prototype.______array = '______array';
-
-Prado.JSON = {
-    org: 'http://www.JSON.org',
-    copyright: '(c)2005 JSON.org',
-    license: 'http://www.crockford.com/JSON/license.html',
-
-    stringify: function (arg) {
-        var c, i, l, s = '', v;
-
-        switch (typeof arg) {
-        case 'object':
-            if (arg) {
-                if (arg.______array == '______array') {
-                    for (i = 0; i < arg.length; ++i) {
-                        v = this.stringify(arg[i]);
-                        if (s) {
-                            s += ',';
-                        }
-                        s += v;
-                    }
-                    return '[' + s + ']';
-                } else if (typeof arg.toString != 'undefined') {
-                    for (i in arg) {
-                        v = arg[i];
-                        if (typeof v != 'undefined' && typeof v != 'function') {
-                            v = this.stringify(v);
-                            if (s) {
-                                s += ',';
-                            }
-                            s += this.stringify(i) + ':' + v;
-                        }
-                    }
-                    return '{' + s + '}';
-                }
-            }
-            return 'null';
-        case 'number':
-            return isFinite(arg) ? String(arg) : 'null';
-        case 'string':
-            l = arg.length;
-            s = '"';
-            for (i = 0; i < l; i += 1) {
-                c = arg.charAt(i);
-                if (c >= ' ') {
-                    if (c == '\\' || c == '"') {
-                        s += '\\';
-                    }
-                    s += c;
-                } else {
-                    switch (c) {
-                        case '\b':
-                            s += '\\b';
-                            break;
-                        case '\f':
-                            s += '\\f';
-                            break;
-                        case '\n':
-                            s += '\\n';
-                            break;
-                        case '\r':
-                            s += '\\r';
-                            break;
-                        case '\t':
-                            s += '\\t';
-                            break;
-                        default:
-                            c = c.charCodeAt();
-                            s += '\\u00' + Math.floor(c / 16).toString(16) +
-                                (c % 16).toString(16);
-                    }
-                }
-            }
-            return s + '"';
-        case 'boolean':
-            return String(arg);
-        default:
-            return 'null';
-        }
-    },
-    parse: function (text) {
-        var at = 0;
-        var ch = ' ';
-
-        function error(m) {
-            throw {
-                name: 'JSONError',
-                message: m,
-                at: at - 1,
-                text: text
-            };
-        }
-
-        function next() {
-            ch = text.charAt(at);
-            at += 1;
-            return ch;
-        }
-
-        function white() {
-            while (ch) {
-                if (ch <= ' ') {
-                    next();
-                } else if (ch == '/') {
-                    switch (next()) {
-                        case '/':
-                            while (next() && ch != '\n' && ch != '\r') {}
-                            break;
-                        case '*':
-                            next();
-                            for (;;) {
-                                if (ch) {
-                                    if (ch == '*') {
-                                        if (next() == '/') {
-                                            next();
-                                            break;
-                                        }
-                                    } else {
-                                        next();
-                                    }
-                                } else {
-                                    error("Unterminated comment");
-                                }
-                            }
-                            break;
-                        default:
-                            error("Syntax error");
-                    }
-                } else {
-                    break;
-                }
-            }
-        }
-
-        function string() {
-            var i, s = '', t, u;
-
-            if (ch == '"') {
-outer:          while (next()) {
-                    if (ch == '"') {
-                        next();
-                        return s;
-                    } else if (ch == '\\') {
-                        switch (next()) {
-                        case 'b':
-                            s += '\b';
-                            break;
-                        case 'f':
-                            s += '\f';
-                            break;
-                        case 'n':
-                            s += '\n';
-                            break;
-                        case 'r':
-                            s += '\r';
-                            break;
-                        case 't':
-                            s += '\t';
-                            break;
-                        case 'u':
-                            u = 0;
-                            for (i = 0; i < 4; i += 1) {
-                                t = parseInt(next(), 16);
-                                if (!isFinite(t)) {
-                                    break outer;
-                                }
-                                u = u * 16 + t;
-                            }
-                            s += String.fromCharCode(u);
-                            break;
-                        default:
-                            s += ch;
-                        }
-                    } else {
-                        s += ch;
-                    }
-                }
-            }
-            error("Bad string");
-        }
-
-        function array() {
-            var a = [];
-
-            if (ch == '[') {
-                next();
-                white();
-                if (ch == ']') {
-                    next();
-                    return a;
-                }
-                while (ch) {
-                    a.push(value());
-                    white();
-                    if (ch == ']') {
-                        next();
-                        return a;
-                    } else if (ch != ',') {
-                        break;
-                    }
-                    next();
-                    white();
-                }
-            }
-            error("Bad array");
-        }
-
-        function object() {
-            var k, o = {};
-
-            if (ch == '{') {
-                next();
-                white();
-                if (ch == '}') {
-                    next();
-                    return o;
-                }
-                while (ch) {
-                    k = string();
-                    white();
-                    if (ch != ':') {
-                        break;
-                    }
-                    next();
-                    o[k] = value();
-                    white();
-                    if (ch == '}') {
-                        next();
-                        return o;
-                    } else if (ch != ',') {
-                        break;
-                    }
-                    next();
-                    white();
-                }
-            }
-            error("Bad object");
-        }
-
-        function number() {
-            var n = '', v;
-            if (ch == '-') {
-                n = '-';
-                next();
-            }
-            while (ch >= '0' && ch <= '9') {
-                n += ch;
-                next();
-            }
-            if (ch == '.') {
-                n += '.';
-                while (next() && ch >= '0' && ch <= '9') {
-                    n += ch;
-                }
-            }
-            if (ch == 'e' || ch == 'E') {
-                n += 'e';
-                next();
-                if (ch == '-' || ch == '+') {
-                    n += ch;
-                    next();
-                }
-                while (ch >= '0' && ch <= '9') {
-                    n += ch;
-                    next();
-                }
-            }
-            v = +n;
-            if (!isFinite(v)) {
-                ////error("Bad number");
-            } else {
-                return v;
-            }
-        }
-
-        function word() {
-            switch (ch) {
-                case 't':
-                    if (next() == 'r' && next() == 'u' && next() == 'e') {
-                        next();
-                        return true;
-                    }
-                    break;
-                case 'f':
-                    if (next() == 'a' && next() == 'l' && next() == 's' &&
-                            next() == 'e') {
-                        next();
-                        return false;
-                    }
-                    break;
-                case 'n':
-                    if (next() == 'u' && next() == 'l' && next() == 'l') {
-                        next();
-                        return null;
-                    }
-                    break;
-            }
-            error("Syntax error");
-        }
-
-        function value() {
-            white();
-            switch (ch) {
-                case '{':
-                    return object();
-                case '[':
-                    return array();
-                case '"':
-                    return string();
-                case '-':
-                    return number();
-                default:
-                    return ch >= '0' && ch <= '9' ? number() : word();
-            }
-        }
-
-        return value();
-    }
-};
 
 // Copyright (c) 2005 Thomas Fuchs (http://script.aculo.us, http://mir.aculo.us)
 //           (c) 2005 Ivan Krstic (http://blogs.law.harvard.edu/ivan)
@@ -2074,816 +1109,1228 @@ Form.Element.DelayedObserver.prototype = {
 };
 
 
-/**
- * Generic postback control.
- */
-Prado.WebUI.CallbackControl = Class.extend(Prado.WebUI.PostBackControl,
-{
-	onPostBack : function(event, options)
-	{
-		var request = new Prado.CallbackRequest(options.EventTarget, options);
-		request.dispatch();
-		Event.stop(event);
-	}
-});
-
-/**
- * TActiveButton control.
- */
-Prado.WebUI.TActiveButton = Class.extend(Prado.WebUI.CallbackControl);
-/**
- * TActiveLinkButton control.
- */
-Prado.WebUI.TActiveLinkButton = Class.extend(Prado.WebUI.CallbackControl);
-
-Prado.WebUI.TActiveImageButton = Class.extend(Prado.WebUI.TImageButton,
-{
-	onPostBack : function(event, options)
-	{
-		this.addXYInput(event,options);
-		var request = new Prado.CallbackRequest(options.EventTarget, options);
-		request.dispatch();
-		Event.stop(event);
-	}
-});
-/**
- * Active check box.
- */
-Prado.WebUI.TActiveCheckBox = Class.extend(Prado.WebUI.CallbackControl,
-{
-	onPostBack : function(event, options)
-	{
-		var request = new Prado.CallbackRequest(options.EventTarget, options);
-		if(request.dispatch()==false)
-			Event.stop(event);
-	}
-});
-
-/**
- * TActiveRadioButton control.
- */
-Prado.WebUI.TActiveRadioButton = Class.extend(Prado.WebUI.TActiveCheckBox);
-
-
-Prado.WebUI.TActiveCheckBoxList = Base.extend(
-{
-	constructor : function(options)
-	{
-		for(var i = 0; i<options.ItemCount; i++)
-		{
-			var checkBoxOptions = Object.extend(
-			{
-				ID : options.ListID+"_c"+i,
-				EventTarget : options.ListName+"$c"+i
-			}, options);
-			new Prado.WebUI.TActiveCheckBox(checkBoxOptions);
-		}
-	}
-});
-
-Prado.WebUI.TActiveRadioButtonList = Prado.WebUI.TActiveCheckBoxList;
-
-/**
- * TActiveTextBox control, handles onchange event.
- */
-Prado.WebUI.TActiveTextBox = Class.extend(Prado.WebUI.TTextBox,
-{
-	onInit : function(options)
-	{
-		if(options['TextMode'] != 'MultiLine')
-			Event.observe(this.element, "keydown", this.handleReturnKey.bind(this));
-		Event.observe(this.element, "change", this.doCallback.bindEvent(this,options));
-	},
-
-	doCallback : function(event, options)
-	{
-		var request = new Prado.CallbackRequest(options.EventTarget, options);
-		request.dispatch();
-		Event.stop(event);
-	}
-});
-
-/**
- * TAutoComplete control.
- */
-Prado.WebUI.TAutoComplete = Class.extend(Autocompleter.Base, Prado.WebUI.TActiveTextBox.prototype);
-Prado.WebUI.TAutoComplete = Class.extend(Prado.WebUI.TAutoComplete,
-{
-	initialize : function(options)
-	{
-		this.options = options;
-		this.baseInitialize(options.ID, options.ResultPanel, options);
-		Object.extend(this.options,
-		{
-			onSuccess : this.onComplete.bind(this)
-		});
-
-		if(options.AutoPostBack)
-			this.onInit(options);
-	},
-
-	doCallback : function(event, options)
-	{
-		if(!this.active)
-		{
-			var request = new Prado.CallbackRequest(this.options.EventTarget, options);
-			request.dispatch();
-			Event.stop(event);
-		}
-	},
-
-	 //Overrides parent implementation, fires onchange event.
-	onClick: function(event)
-	{
-	    var element = Event.findElement(event, 'LI');
-	    this.index = element.autocompleteIndex;
-	    this.selectEntry();
-	    this.hide();
-		Event.fireEvent(this.element, "change");
-	},
-
-	getUpdatedChoices : function()
-	{
-		var options = new Array(this.getToken(),"__TAutoComplete_onSuggest__");
-		Prado.Callback(this.options.EventTarget, options, null, this.options);
-	},
-
-  	onComplete : function(request, boundary)
-  	{
-  		var result = Prado.Element.extractContent(request.transport.responseText, boundary);
-  		if(typeof(result) == "string" && result.length > 0)
-			this.updateChoices(result);
-	}
-});
-
-/**
- * Time Triggered Callback class.
- */
-Prado.WebUI.TTimeTriggeredCallback = Base.extend(
-{
-	count : 0,
-	timeout : 0,
-
-	constructor : function(options)
-	{
-		this.options = Object.extend(
-		{
-			Interval : 1,
-			DecayRate : 0
-		}, options || {})
-
-		this.onComplete = this.options.onComplete;
-		Prado.WebUI.TTimeTriggeredCallback.register(this);
-	},
-
-	startTimer : function()
-	{
-		this.options.onComplete = this.onRequestComplete.bind(this);
-		this.timer = setTimeout(this.onTimerEvent.bind(this), 200);
-	},
-
-	stopTimer : function()
-	{
-		(this.onComplete || Prototype.emptyFunction).apply(this, arguments);
-		this.options.onComplete = undefined;
-		clearTimeout(this.timer);
-		this.timer = undefined;
-		this.count = 0;
-	},
-
-	onTimerEvent : function()
-	{
-		this.options.params = this.timeout/1000;
-		var request = new Prado.CallbackRequest(this.options.EventTarget, this.options);
-		request.dispatch();
-	},
-
-	onRequestComplete : function()
-	{
-		(this.onComplete || Prototype.emptyFunction).apply(this, arguments);
-		this.timer = setTimeout(this.onTimerEvent.bind(this), this.getNewTimeout())
-	},
-
-	getNewTimeout : function()
-	{
-		switch(this.options.DecayType)
-		{
-			case 'Exponential':
-				t = (Math.exp(this.options.DecayRate*this.count*this.options.Interval))-1;
-			break;
-			case 'Linear':
-				t = this.options.DecayRate*this.count*this.options.Interval;
-			break;
-			case 'Quadratic':
-				t = this.options.DecayRate*this.count*this.count*this.options.Interval;
-			break;
-			case 'Cubic':
-				t = this.options.DecayRate*this.count*this.count*this.count*this.options.Interval;
-			break;
-			default : t = 0;
-		}
-		this.timeout = (t + this.options.Interval)*1000;
-		this.count++;
-		return parseInt(this.timeout);
-	}
-},
-//class methods
-{
-	timers : {},
-
-	register : function(timer)
-	{
-		Prado.WebUI.TTimeTriggeredCallback.timers[timer.options.ID] = timer;
-	},
-
-	start : function(id)
-	{
-		Prado.WebUI.TTimeTriggeredCallback.timers[id].startTimer();
-	},
-
-	stop : function(id)
-	{
-		Prado.WebUI.TTimeTriggeredCallback.timers[id].stopTimer();
-	}
-});
-
-Prado.WebUI.ActiveListControl = Base.extend(
-{
-	constructor : function(options)
-	{
-		this.element = $(options.ID);
-		this.options = options;
-		Event.observe(this.element, "change", this.doCallback.bind(this));
-	},
-
-	doCallback : function(event)
-	{
-		var request = new Prado.CallbackRequest(this.options.EventTarget, this.options);
-		request.dispatch();
-		Event.stop(event);
-	}
-});
-
-Prado.WebUI.TActiveDropDownList = Prado.WebUI.ActiveListControl;
-Prado.WebUI.TActiveListBox = Prado.WebUI.ActiveListControl;
-
-/**
- * Observe event of a particular control to trigger a callback request.
- */
-Prado.WebUI.TEventTriggeredCallback = Base.extend(
-{
-	constructor : function(options)
-	{
-		this.options = options;
-		var element = $(options['ControlID']);
-		if(element)
-			Event.observe(element, this.getEventName(element), this.doCallback.bind(this));
-	},
-
-	getEventName : function(element)
-	{
-		var name = this.options.EventName;
-   		if(typeof(name) == "undefined" && element.type)
-		{
-      		switch (element.type.toLowerCase())
-			{
-          		case 'password':
-		        case 'text':
-		        case 'textarea':
-		        case 'select-one':
-		        case 'select-multiple':
-          			return 'change';
-      		}
-		}
-		return typeof(name) == "undefined"  || name == "undefined" ? 'click' : name;
-    },
-
-	doCallback : function(event)
-	{
-		var request = new Prado.CallbackRequest(this.options.EventTarget, this.options);
-		request.dispatch();
-		if(this.options.StopEvent == true)
-			Event.stop(event);
-	}
-});
-
-/**
- * Observe changes to a property of a particular control to trigger a callback.
- */
-Prado.WebUI.TValueTriggeredCallback = Base.extend(
-{
-	count : 1,
-
-	observing : true,
-
-	constructor : function(options)
-	{
-		this.options = options;
-		this.options.PropertyName = this.options.PropertyName || 'value';
-		var element = $(options['ControlID']);
-		this.value = element ? element[this.options.PropertyName] : undefined;
-		Prado.WebUI.TValueTriggeredCallback.register(this);
-		this.startObserving();
-	},
-
-	stopObserving : function()
-	{
-		clearTimeout(this.timer);
-		this.observing = false;
-	},
-
-	startObserving : function()
-	{
-		this.timer = setTimeout(this.checkChanges.bind(this), this.options.Interval*1000);
-	},
-
-	checkChanges : function()
-	{
-		var element = $(this.options.ControlID);
-		if(element)
-		{
-			var value = element[this.options.PropertyName];
-			if(this.value != value)
-			{
-				this.doCallback(this.value, value);
-				this.value = value;
-				this.count=1;
-			}
-			else
-				this.count = this.count + this.options.Decay;
-			if(this.observing)
-				this.time = setTimeout(this.checkChanges.bind(this),
-					parseInt(this.options.Interval*1000*this.count));
-		}
-	},
-
-	doCallback : function(oldValue, newValue)
-	{
-		var request = new Prado.CallbackRequest(this.options.EventTarget, this.options);
-		var param = {'OldValue' : oldValue, 'NewValue' : newValue};
-		request.setCallbackParameter(param);
-		request.dispatch();
-	}
-},
-//class methods
-{
-	timers : {},
-
-	register : function(timer)
-	{
-		Prado.WebUI.TValueTriggeredCallback.timers[timer.options.ID] = timer;
-	},
-
-	stop : function(id)
-	{
-		Prado.WebUI.TValueTriggeredCallback.timers[id].stopObserving();
-	}
-});
-
-
-Prado.WebUI.TInPlaceTextBox = Base.extend(
-{
-	isSaving : false,
-	isEditing : false,
-	editField : null,
-
-	constructor : function(options)
-	{
-		this.options = Object.extend(
-		{
-			LoadTextFromSource : false,
-			TextMode : 'SingleLine'
-
-		}, options || {});
-		this.element = $(this.options.ID);
-		Prado.WebUI.TInPlaceTextBox.register(this);
-		this.initializeListeners();
-	},
-
-	/**
-	 * Initialize the listeners.
-	 */
-	initializeListeners : function()
-	{
-		this.onclickListener = this.enterEditMode.bindAsEventListener(this);
-	    Event.observe(this.element, 'click', this.onclickListener);
-	    if (this.options.ExternalControl)
-			Event.observe($(this.options.ExternalControl), 'click', this.onclickListener);
-	},
-
-	/**
-	 * Changes the panel to an editable input.
-	 * @param {Event} evt event source
-	 */
-	enterEditMode :  function(evt)
-	{
-	    if (this.isSaving || this.isEditing) return;
-	    this.isEditing = true;
-		this.onEnterEditMode();
-		this.createEditorInput();
-		this.showTextBox();
-		this.editField.disabled = false;
-		if(this.options.LoadTextOnEdit)
-			this.loadExternalText();
-		Prado.Element.focus(this.editField);
-		if (evt)
-			Event.stop(evt);
-    	return false;
-	},
-
-	exitEditMode : function(evt)
-	{
-		this.isEditing = false;
-		this.isSaving = false;
-		this.editField.disabled = false;
-		this.element.innerHTML = this.editField.value;
-		this.showLabel();
-	},
-
-	showTextBox : function()
-	{
-		Element.hide(this.element);
-		Element.show(this.editField);
-	},
-
-	showLabel : function()
-	{
-		Element.show(this.element);
-		Element.hide(this.editField);
-	},
-
-	/**
-	 * Create the edit input field.
-	 */
-	createEditorInput : function()
-	{
-		if(this.editField == null)
-			this.createTextBox();
-
-		this.editField.value = this.getText();
-	},
-
-	loadExternalText : function()
-	{
-		this.editField.disabled = true;
-		this.onLoadingText();
-		options = new Array('__InlineEditor_loadExternalText__', this.getText());
-		request = new Prado.CallbackRequest(this.options.EventTarget, this.options);
-		request.setCausesValidation(false);
-		request.setCallbackParameter(options);
-		request.options.onSuccess = this.onloadExternalTextSuccess.bind(this);
-		request.options.onFailure = this.onloadExternalTextFailure.bind(this);
-		request.dispatch();
-	},
-
-	/**
-	 * Create a new input textbox or textarea
-	 */
-	createTextBox : function()
-	{
-		cssClass= this.element.className || '';
-		inputName = this.options.EventTarget;
-		options = {'className' : cssClass, name : inputName, id : this.options.TextBoxID};
-		if(this.options.TextMode == 'SingleLine')
-		{
-			if(this.options.MaxLength > 0)
-				options['maxlength'] = this.options.MaxLength;
-			this.editField = INPUT(options);
-		}
-		else
-		{
-			if(this.options.Rows > 0)
-				options['rows'] = this.options.Rows;
-			if(this.options.Columns > 0)
-				options['cols'] = this.options.Columns;
-			if(this.options.Wrap)
-				options['wrap'] = 'off';
-			this.editField = TEXTAREA(options);
-		}
-
-		this.editField.style.display="none";
-		this.element.parentNode.insertBefore(this.editField,this.element)
-
-		//handle return key within single line textbox
-		if(this.options.TextMode == 'SingleLine')
-		{
-			Event.observe(this.editField, "keydown", function(e)
-			{
-				 if(Event.keyCode(e) == Event.KEY_RETURN)
-		        {
-					var target = Event.element(e);
-					if(target)
-					{
-						Event.fireEvent(target, "blur");
-						Event.stop(e);
-					}
-				}
-			});
-		}
-
-		Event.observe(this.editField, "blur", this.onTextBoxBlur.bind(this));
-	},
-
-	/**
-	 * @return {String} panel inner html text.
-	 */
-	getText: function()
-	{
-    	return this.element.innerHTML;
-  	},
-
-	/**
-	 * Edit mode entered, calls optional event handlers.
-	 */
-	onEnterEditMode : function()
-	{
-		if(typeof(this.options.onEnterEditMode) == "function")
-			this.options.onEnterEditMode(this,null);
-	},
-
-	onTextBoxBlur : function(e)
-	{
-		text = this.element.innerHTML;
-		if(this.options.AutoPostBack && text != this.editField.value)
-			this.onTextChanged(text);
-		else
-		{
-			this.element.innerHTML = this.editField.value;
-			this.isEditing = false;
-			if(this.options.AutoHide)
-				this.showLabel();
-		}
-	},
-
-	/**
-	 * When the text input value has changed.
-	 * @param {String} original text
-	 */
-	onTextChanged : function(text)
-	{
-		request = new Prado.CallbackRequest(this.options.EventTarget, this.options);
-		request.setCallbackParameter(text);
-		request.options.onSuccess = this.onTextChangedSuccess.bind(this);
-		request.options.onFailure = this.onTextChangedFailure.bind(this);
-		if(request.dispatch())
-		{
-			this.isSaving = true;
-			this.editField.disabled = true;
-		}
-	},
-
-	/**
-	 * When loading external text.
-	 */
-	onLoadingText : function()
-	{
-		//Logger.info("on loading text");
-	},
-
-	onloadExternalTextSuccess : function(request, parameter)
-	{
-		this.isEditing = true;
-		this.editField.disabled = false;
-		this.editField.value = this.getText();
-		Prado.Element.focus(this.editField);
-		if(typeof(this.options.onSuccess)=="function")
-			this.options.onSuccess(sender,parameter);
-	},
-
-	onloadExternalTextFailure : function(request, parameter)
-	{
-		this.isSaving = false;
-		this.isEditing = false;
-		this.showLabel();
-		if(typeof(this.options.onFailure)=="function")
-			this.options.onFailure(sender,parameter);
-	},
-
-	/**
-	 * Text change successfully.
-	 * @param {Object} sender
-	 * @param {Object} parameter
-	 */
-	onTextChangedSuccess : function(sender, parameter)
-	{
-		this.isSaving = false;
-		this.isEditing = false;
-		if(this.options.AutoHide)
-			this.showLabel();
-		this.element.innerHTML = parameter == null ? this.editField.value : parameter;
-		this.editField.disabled = false;
-		if(typeof(this.options.onSuccess)=="function")
-			this.options.onSuccess(sender,parameter);
-	},
-
-	onTextChangedFailure : function(sender, parameter)
-	{
-		this.editField.disabled = false;
-		this.isSaving = false;
-		this.isEditing = false;
-		if(typeof(this.options.onFailure)=="function")
-			this.options.onFailure(sender,parameter);
-	}
-},
-{
-	textboxes : {},
-
-	register : function(obj)
-	{
-		Prado.WebUI.TInPlaceTextBox.textboxes[obj.options.TextBoxID] = obj;
-	},
-
-	setDisplayTextBox : function(id,value)
-	{
-		var textbox = Prado.WebUI.TInPlaceTextBox.textboxes[id];
-		if(textbox)
-		{
-			if(value)
-				textbox.enterEditMode(null);
-			else
-			{
-				textbox.exitEditMode(null);
-			}
-		}
-	}
-});
-
-Prado.WebUI.TRatingList = Base.extend(
-{
-	selectedIndex : -1,
-	rating: -1,
-	enabled : true,
-	readOnly : false,
-
-	constructor : function(options)
-	{
-		var cap = $(options.CaptionID);
-		this.options = Object.extend(
-		{
-			caption : cap ? cap.innerHTML : ''
-		}, options || {});
-
-		Prado.WebUI.TRatingList.register(this);
-		this._init();
-		this.selectedIndex = options.SelectedIndex;
-		this.rating = options.Rating;
-		if(options.Rating <= 0 && options.SelectedIndex >= 0)
-			this.rating = options.SelectedIndex+1;
-		this.showRating(this.rating);
-	},
-
-	_init: function(options)
-	{
-		Element.addClassName($(this.options.ListID),this.options.Style);
-		this.radios = new Array();
-		var index=0;
-		for(var i = 0; i<this.options.ItemCount; i++)
-		{
-			var radio = $(this.options.ListID+'_c'+i);
-			var td = radio.parentNode;
-			if(radio && td.tagName.toLowerCase()=='td')
-			{
-				this.radios.push(radio);
-				Event.observe(td, "mouseover", this.hover.bindEvent(this,index));
-				Event.observe(td, "mouseout", this.recover.bindEvent(this,index));
-				Event.observe(td, "click", this.click.bindEvent(this, index));
-				index++;
-				Element.addClassName(td,"rating");
-			}
-		}
-	},
-
-	hover : function(ev,index)
-	{
-		if(this.enabled==false) return;
-		for(var i = 0; i<this.radios.length; i++)
-		{
-			var node = this.radios[i].parentNode;
-			var action = i <= index ? 'addClassName' : 'removeClassName'
-			Element[action](node,"rating_hover");
-			Element.removeClassName(node,"rating_selected");
-			Element.removeClassName(node,"rating_half");
-		}
-		this.showCaption(this.getIndexCaption(index));
-	},
-
-	recover : function(ev,index)
-	{
-		if(this.enabled==false) return;
-		this.showRating(this.rating);
-		this.showCaption(this.options.caption);
-	},
-
-	click : function(ev, index)
-	{
-		if(this.enabled==false) return;
-		for(var i = 0; i<this.radios.length; i++)
-			this.radios[i].checked = (i == index);
-
-		this.selectedIndex = index;
-		this.setRating(index+1);
-
-		this.dispatchRequest(ev);
-	},
-
-	dispatchRequest : function(ev)
-	{
-		var requestOptions = Object.extend(
-		{
-			ID : this.options.ListID+"_c"+this.selectedIndex,
-			EventTarget : this.options.ListName+"$c"+this.selectedIndex
-		},this.options);
-		var request = new Prado.CallbackRequest(requestOptions.EventTarget, requestOptions);
-		if(request.dispatch()==false)
-			Event.stop(ev);
-	},
-
-	setRating : function(value)
-	{
-		this.rating = value;
-		var base = Math.floor(value-1);
-		var remainder = value - base-1;
-		var halfMax = this.options.HalfRating["1"];
-		var index = remainder > halfMax ? base+1 : base;
-		for(var i = 0; i<this.radios.length; i++)
-			this.radios[i].checked = (i == index);
-
-		var caption = this.getIndexCaption(index);
-		this.setCaption(caption);
-		this.showCaption(caption);
-
-		this.showRating(value);
-	},
-
-	showRating: function(value)
-	{
-		var base = Math.floor(value-1);
-		var remainder = value - base-1;
-		var halfMin = this.options.HalfRating["0"];
-		var halfMax = this.options.HalfRating["1"];
-		var index = remainder > halfMax ? base+1 : base;
-		var hasHalf = remainder >= halfMin && remainder <= halfMax;
-		for(var i = 0; i<this.radios.length; i++)
-		{
-			var node = this.radios[i].parentNode;
-			var action = i > index ? 'removeClassName' : 'addClassName';
-			Element[action](node, "rating_selected");
-			if(i==index+1 && hasHalf)
-				Element.addClassName(node, "rating_half");
-			else
-				Element.removeClassName(node, "rating_half");
-			Element.removeClassName(node,"rating_hover");
-		}
-	},
-
-	getIndexCaption : function(index)
-	{
-		return index > -1 ? this.radios[index].value : this.options.caption;
-	},
-
-	showCaption : function(value)
-	{
-		var caption = $(this.options.CaptionID);
-		if(caption) caption.innerHTML = value;
-		$(this.options.ListID).title = value;
-	},
-
-	setCaption : function(value)
-	{
-		this.options.caption = value;
-		this.showCaption(value);
-	},
-
-	setEnabled : function(value)
-	{
-		this.enabled = value;
-		for(var i = 0; i<this.radios.length; i++)
-		{
-			var action = value ? 'removeClassName' : 'addClassName'
-			Element[action](this.radios[i].parentNode, "rating_disabled");
-		}
-	}
-},
-{
-ratings : {},
-register : function(rating)
-{
-	Prado.WebUI.TRatingList.ratings[rating.options.ListID] = rating;
-},
-
-setEnabled : function(id,value)
-{
-	Prado.WebUI.TRatingList.ratings[id].setEnabled(value);
-},
-
-setRating : function(id,value)
-{
-	Prado.WebUI.TRatingList.ratings[id].setRating(value);
-},
-
-setCaption : function(id,value)
-{
-	Prado.WebUI.TRatingList.ratings[id].setCaption(value);
+// Copyright (c) 2005 Thomas Fuchs (http://script.aculo.us, http://mir.aculo.us)
+//           (c) 2005 Sammi Williams (http://www.oriontransfer.co.nz, sammi@oriontransfer.co.nz)
+// 
+// See scriptaculous.js for full license.
+
+/*--------------------------------------------------------------------------*/
+
+if(typeof Effect == 'undefined')
+  throw("dragdrop.js requires including script.aculo.us' effects.js library");
+
+var Droppables = {
+  drops: [],
+
+  remove: function(element) {
+    this.drops = this.drops.reject(function(d) { return d.element==$(element) });
+  },
+
+  add: function(element) {
+    element = $(element);
+    var options = Object.extend({
+      greedy:     true,
+      hoverclass: null,
+      tree:       false
+    }, arguments[1] || {});
+
+    // cache containers
+    if(options.containment) {
+      options._containers = [];
+      var containment = options.containment;
+      if((typeof containment == 'object') && 
+        (containment.constructor == Array)) {
+        containment.each( function(c) { options._containers.push($(c)) });
+      } else {
+        options._containers.push($(containment));
+      }
+    }
+    
+    if(options.accept) options.accept = [options.accept].flatten();
+
+    Element.makePositioned(element); // fix IE
+    options.element = element;
+
+    this.drops.push(options);
+  },
+  
+  findDeepestChild: function(drops) {
+    deepest = drops[0];
+      
+    for (i = 1; i < drops.length; ++i)
+      if (Element.isParent(drops[i].element, deepest.element))
+        deepest = drops[i];
+    
+    return deepest;
+  },
+
+  isContained: function(element, drop) {
+    var containmentNode;
+    if(drop.tree) {
+      containmentNode = element.treeNode; 
+    } else {
+      containmentNode = element.parentNode;
+    }
+    return drop._containers.detect(function(c) { return containmentNode == c });
+  },
+  
+  isAffected: function(point, element, drop) {
+    return (
+      (drop.element!=element) &&
+      ((!drop._containers) ||
+        this.isContained(element, drop)) &&
+      ((!drop.accept) ||
+        (Element.classNames(element).detect( 
+          function(v) { return drop.accept.include(v) } ) )) &&
+      Position.within(drop.element, point[0], point[1]) );
+  },
+
+  deactivate: function(drop) {
+    if(drop.hoverclass)
+      Element.removeClassName(drop.element, drop.hoverclass);
+    this.last_active = null;
+  },
+
+  activate: function(drop) {
+    if(drop.hoverclass)
+      Element.addClassName(drop.element, drop.hoverclass);
+    this.last_active = drop;
+  },
+
+  show: function(point, element) {
+    if(!this.drops.length) return;
+    var affected = [];
+    
+    if(this.last_active) this.deactivate(this.last_active);
+    this.drops.each( function(drop) {
+      if(Droppables.isAffected(point, element, drop))
+        affected.push(drop);
+    });
+        
+    if(affected.length>0) {
+      drop = Droppables.findDeepestChild(affected);
+      Position.within(drop.element, point[0], point[1]);
+      if(drop.onHover)
+        drop.onHover(element, drop.element, Position.overlap(drop.overlap, drop.element));
+      
+      Droppables.activate(drop);
+    }
+  },
+
+  fire: function(event, element) {
+    if(!this.last_active) return;
+    Position.prepare();
+
+    if (this.isAffected([Event.pointerX(event), Event.pointerY(event)], element, this.last_active))
+      if (this.last_active.onDrop) 
+        this.last_active.onDrop(element, this.last_active.element, event);
+  },
+
+  reset: function() {
+    if(this.last_active)
+      this.deactivate(this.last_active);
+  }
 }
-});
+
+var Draggables = {
+  drags: [],
+  observers: [],
+  
+  register: function(draggable) {
+    if(this.drags.length == 0) {
+      this.eventMouseUp   = this.endDrag.bindAsEventListener(this);
+      this.eventMouseMove = this.updateDrag.bindAsEventListener(this);
+      this.eventKeypress  = this.keyPress.bindAsEventListener(this);
+      
+      Event.observe(document, "mouseup", this.eventMouseUp);
+      Event.observe(document, "mousemove", this.eventMouseMove);
+      Event.observe(document, "keypress", this.eventKeypress);
+    }
+    this.drags.push(draggable);
+  },
+  
+  unregister: function(draggable) {
+    this.drags = this.drags.reject(function(d) { return d==draggable });
+    if(this.drags.length == 0) {
+      Event.stopObserving(document, "mouseup", this.eventMouseUp);
+      Event.stopObserving(document, "mousemove", this.eventMouseMove);
+      Event.stopObserving(document, "keypress", this.eventKeypress);
+    }
+  },
+  
+  activate: function(draggable) {
+    window.focus(); // allows keypress events if window isn't currently focused, fails for Safari
+    this.activeDraggable = draggable;
+  },
+  
+  deactivate: function() {
+    this.activeDraggable = null;
+  },
+  
+  updateDrag: function(event) {
+    if(!this.activeDraggable) return;
+    var pointer = [Event.pointerX(event), Event.pointerY(event)];
+    // Mozilla-based browsers fire successive mousemove events with
+    // the same coordinates, prevent needless redrawing (moz bug?)
+    if(this._lastPointer && (this._lastPointer.inspect() == pointer.inspect())) return;
+    this._lastPointer = pointer;
+    this.activeDraggable.updateDrag(event, pointer);
+  },
+  
+  endDrag: function(event) {
+    if(!this.activeDraggable) return;
+    this._lastPointer = null;
+    this.activeDraggable.endDrag(event);
+    this.activeDraggable = null;
+  },
+  
+  keyPress: function(event) {
+    if(this.activeDraggable)
+      this.activeDraggable.keyPress(event);
+  },
+  
+  addObserver: function(observer) {
+    this.observers.push(observer);
+    this._cacheObserverCallbacks();
+  },
+  
+  removeObserver: function(element) {  // element instead of observer fixes mem leaks
+    this.observers = this.observers.reject( function(o) { return o.element==element });
+    this._cacheObserverCallbacks();
+  },
+  
+  notify: function(eventName, draggable, event) {  // 'onStart', 'onEnd', 'onDrag'
+    if(this[eventName+'Count'] > 0)
+      this.observers.each( function(o) {
+        if(o[eventName]) o[eventName](eventName, draggable, event);
+      });
+  },
+  
+  _cacheObserverCallbacks: function() {
+    ['onStart','onEnd','onDrag'].each( function(eventName) {
+      Draggables[eventName+'Count'] = Draggables.observers.select(
+        function(o) { return o[eventName]; }
+      ).length;
+    });
+  }
+}
+
+/*--------------------------------------------------------------------------*/
+
+var Draggable = Class.create();
+Draggable._revertCache = {};
+Draggable._dragging    = {};
+
+Draggable.prototype = {
+  initialize: function(element) {
+    var options = Object.extend({
+      handle: false,
+      starteffect: function(element) {
+        element._opacity = Element.getOpacity(element);
+        Draggable._dragging[element] = true;
+        new Effect.Opacity(element, {duration:0.2, from:element._opacity, to:0.7}); 
+      },
+      reverteffect: function(element, top_offset, left_offset) {
+        var dur = Math.sqrt(Math.abs(top_offset^2)+Math.abs(left_offset^2))*0.02;
+        Draggable._revertCache[element] =
+          new Effect.Move(element, { x: -left_offset, y: -top_offset, duration: dur,
+            queue: {scope:'_draggable', position:'end'}
+          });
+      },
+      endeffect: function(element) {
+        var toOpacity = typeof element._opacity == 'number' ? element._opacity : 1.0;
+        new Effect.Opacity(element, {duration:0.2, from:0.7, to:toOpacity, 
+          queue: {scope:'_draggable', position:'end'},
+          afterFinish: function(){ Draggable._dragging[element] = false }
+        }); 
+      },
+      zindex: 1000,
+      revert: false,
+      scroll: false,
+      scrollSensitivity: 20,
+      scrollSpeed: 15,
+      snap: false   // false, or xy or [x,y] or function(x,y){ return [x,y] }
+    }, arguments[1] || {});
+
+    this.element = $(element);
+    
+    if(options.handle && (typeof options.handle == 'string')) {
+      var h = Element.childrenWithClassName(this.element, options.handle, true);
+      if(h.length>0) this.handle = h[0];
+    }
+    if(!this.handle) this.handle = $(options.handle);
+    if(!this.handle) this.handle = this.element;
+    
+    if(options.scroll && !options.scroll.scrollTo && !options.scroll.outerHTML)
+      options.scroll = $(options.scroll);
+
+    Element.makePositioned(this.element); // fix IE    
+
+    this.delta    = this.currentDelta();
+    this.options  = options;
+    this.dragging = false;   
+
+    this.eventMouseDown = this.initDrag.bindAsEventListener(this);
+    Event.observe(this.handle, "mousedown", this.eventMouseDown);
+    
+    Draggables.register(this);
+  },
+  
+  destroy: function() {
+    Event.stopObserving(this.handle, "mousedown", this.eventMouseDown);
+    Draggables.unregister(this);
+  },
+  
+  currentDelta: function() {
+    return([
+      parseInt(Element.getStyle(this.element,'left') || '0'),
+      parseInt(Element.getStyle(this.element,'top') || '0')]);
+  },
+  
+  initDrag: function(event) {
+    if(typeof Draggable._dragging[this.element] != undefined &&
+      Draggable._dragging[this.element]) return;
+    if(Event.isLeftClick(event)) {    
+      // abort on form elements, fixes a Firefox issue
+      var src = Event.element(event);
+      if(src.tagName && (
+        src.tagName=='INPUT' ||
+        src.tagName=='SELECT' ||
+        src.tagName=='OPTION' ||
+        src.tagName=='BUTTON' ||
+        src.tagName=='TEXTAREA')) return;
+        
+      if(Draggable._revertCache[this.element]) {
+        Draggable._revertCache[this.element].cancel();
+        Draggable._revertCache[this.element] = null;
+      }
+      
+      var pointer = [Event.pointerX(event), Event.pointerY(event)];
+      var pos     = Position.cumulativeOffset(this.element);
+      this.offset = [0,1].map( function(i) { return (pointer[i] - pos[i]) });
+      
+      Draggables.activate(this);
+      Event.stop(event);
+    }
+  },
+  
+  startDrag: function(event) {
+    this.dragging = true;
+    
+    if(this.options.zindex) {
+      this.originalZ = parseInt(Element.getStyle(this.element,'z-index') || 0);
+      this.element.style.zIndex = this.options.zindex;
+    }
+    
+    if(this.options.ghosting) {
+      this._clone = this.element.cloneNode(true);
+      Position.absolutize(this.element);
+      this.element.parentNode.insertBefore(this._clone, this.element);
+    }
+    
+    if(this.options.scroll) {
+      if (this.options.scroll == window) {
+        var where = this._getWindowScroll(this.options.scroll);
+        this.originalScrollLeft = where.left;
+        this.originalScrollTop = where.top;
+      } else {
+        this.originalScrollLeft = this.options.scroll.scrollLeft;
+        this.originalScrollTop = this.options.scroll.scrollTop;
+      }
+    }
+    
+    Draggables.notify('onStart', this, event);
+    if(this.options.starteffect) this.options.starteffect(this.element);
+  },
+  
+  updateDrag: function(event, pointer) {
+    if(!this.dragging) this.startDrag(event);
+    Position.prepare();
+    Droppables.show(pointer, this.element);
+    Draggables.notify('onDrag', this, event);
+    this.draw(pointer);
+    if(this.options.change) this.options.change(this);
+    
+    if(this.options.scroll) {
+      this.stopScrolling();
+      
+      var p;
+      if (this.options.scroll == window) {
+        with(this._getWindowScroll(this.options.scroll)) { p = [ left, top, left+width, top+height ]; }
+      } else {
+        p = Position.page(this.options.scroll);
+        p[0] += this.options.scroll.scrollLeft;
+        p[1] += this.options.scroll.scrollTop;
+        p.push(p[0]+this.options.scroll.offsetWidth);
+        p.push(p[1]+this.options.scroll.offsetHeight);
+      }
+      var speed = [0,0];
+      if(pointer[0] < (p[0]+this.options.scrollSensitivity)) speed[0] = pointer[0]-(p[0]+this.options.scrollSensitivity);
+      if(pointer[1] < (p[1]+this.options.scrollSensitivity)) speed[1] = pointer[1]-(p[1]+this.options.scrollSensitivity);
+      if(pointer[0] > (p[2]-this.options.scrollSensitivity)) speed[0] = pointer[0]-(p[2]-this.options.scrollSensitivity);
+      if(pointer[1] > (p[3]-this.options.scrollSensitivity)) speed[1] = pointer[1]-(p[3]-this.options.scrollSensitivity);
+      this.startScrolling(speed);
+    }
+    
+    // fix AppleWebKit rendering
+    if(navigator.appVersion.indexOf('AppleWebKit')>0) window.scrollBy(0,0);
+    
+    Event.stop(event);
+  },
+  
+  finishDrag: function(event, success) {
+    this.dragging = false;
+
+    if(this.options.ghosting) {
+      Position.relativize(this.element);
+      Element.remove(this._clone);
+      this._clone = null;
+    }
+
+    if(success) Droppables.fire(event, this.element);
+    Draggables.notify('onEnd', this, event);
+
+    var revert = this.options.revert;
+    if(revert && typeof revert == 'function') revert = revert(this.element);
+    
+    var d = this.currentDelta();
+    if(revert && this.options.reverteffect) {
+      this.options.reverteffect(this.element, 
+        d[1]-this.delta[1], d[0]-this.delta[0]);
+    } else {
+      this.delta = d;
+    }
+
+    if(this.options.zindex)
+      this.element.style.zIndex = this.originalZ;
+
+    if(this.options.endeffect) 
+      this.options.endeffect(this.element);
+
+    Draggables.deactivate(this);
+    Droppables.reset();
+  },
+  
+  keyPress: function(event) {
+    if(event.keyCode!=Event.KEY_ESC) return;
+    this.finishDrag(event, false);
+    Event.stop(event);
+  },
+  
+  endDrag: function(event) {
+    if(!this.dragging) return;
+    this.stopScrolling();
+    this.finishDrag(event, true);
+    Event.stop(event);
+  },
+  
+  draw: function(point) {
+    var pos = Position.cumulativeOffset(this.element);
+    var d = this.currentDelta();
+    pos[0] -= d[0]; pos[1] -= d[1];
+    
+    if(this.options.scroll && (this.options.scroll != window)) {
+      pos[0] -= this.options.scroll.scrollLeft-this.originalScrollLeft;
+      pos[1] -= this.options.scroll.scrollTop-this.originalScrollTop;
+    }
+    
+    var p = [0,1].map(function(i){ 
+      return (point[i]-pos[i]-this.offset[i]) 
+    }.bind(this));
+    
+    if(this.options.snap) {
+      if(typeof this.options.snap == 'function') {
+        p = this.options.snap(p[0],p[1],this);
+      } else {
+      if(this.options.snap instanceof Array) {
+        p = p.map( function(v, i) {
+          return Math.round(v/this.options.snap[i])*this.options.snap[i] }.bind(this))
+      } else {
+        p = p.map( function(v) {
+          return Math.round(v/this.options.snap)*this.options.snap }.bind(this))
+      }
+    }}
+    
+    var style = this.element.style;
+    if((!this.options.constraint) || (this.options.constraint=='horizontal'))
+      style.left = p[0] + "px";
+    if((!this.options.constraint) || (this.options.constraint=='vertical'))
+      style.top  = p[1] + "px";
+    if(style.visibility=="hidden") style.visibility = ""; // fix gecko rendering
+  },
+  
+  stopScrolling: function() {
+    if(this.scrollInterval) {
+      clearInterval(this.scrollInterval);
+      this.scrollInterval = null;
+      Draggables._lastScrollPointer = null;
+    }
+  },
+  
+  startScrolling: function(speed) {
+    if(!(speed[0] || speed[1])) return;
+    this.scrollSpeed = [speed[0]*this.options.scrollSpeed,speed[1]*this.options.scrollSpeed];
+    this.lastScrolled = new Date();
+    this.scrollInterval = setInterval(this.scroll.bind(this), 10);
+  },
+  
+  scroll: function() {
+    var current = new Date();
+    var delta = current - this.lastScrolled;
+    this.lastScrolled = current;
+    if(this.options.scroll == window) {
+      with (this._getWindowScroll(this.options.scroll)) {
+        if (this.scrollSpeed[0] || this.scrollSpeed[1]) {
+          var d = delta / 1000;
+          this.options.scroll.scrollTo( left + d*this.scrollSpeed[0], top + d*this.scrollSpeed[1] );
+        }
+      }
+    } else {
+      this.options.scroll.scrollLeft += this.scrollSpeed[0] * delta / 1000;
+      this.options.scroll.scrollTop  += this.scrollSpeed[1] * delta / 1000;
+    }
+    
+    Position.prepare();
+    Droppables.show(Draggables._lastPointer, this.element);
+    Draggables.notify('onDrag', this);
+    Draggables._lastScrollPointer = Draggables._lastScrollPointer || $A(Draggables._lastPointer);
+    Draggables._lastScrollPointer[0] += this.scrollSpeed[0] * delta / 1000;
+    Draggables._lastScrollPointer[1] += this.scrollSpeed[1] * delta / 1000;
+    if (Draggables._lastScrollPointer[0] < 0)
+      Draggables._lastScrollPointer[0] = 0;
+    if (Draggables._lastScrollPointer[1] < 0)
+      Draggables._lastScrollPointer[1] = 0;
+    this.draw(Draggables._lastScrollPointer);
+    
+    if(this.options.change) this.options.change(this);
+  },
+  
+  _getWindowScroll: function(w) {
+    var T, L, W, H;
+    with (w.document) {
+      if (w.document.documentElement && documentElement.scrollTop) {
+        T = documentElement.scrollTop;
+        L = documentElement.scrollLeft;
+      } else if (w.document.body) {
+        T = body.scrollTop;
+        L = body.scrollLeft;
+      }
+      if (w.innerWidth) {
+        W = w.innerWidth;
+        H = w.innerHeight;
+      } else if (w.document.documentElement && documentElement.clientWidth) {
+        W = documentElement.clientWidth;
+        H = documentElement.clientHeight;
+      } else {
+        W = body.offsetWidth;
+        H = body.offsetHeight
+      }
+    }
+    return { top: T, left: L, width: W, height: H };
+  }
+}
+
+/*--------------------------------------------------------------------------*/
+
+var SortableObserver = Class.create();
+SortableObserver.prototype = {
+  initialize: function(element, observer) {
+    this.element   = $(element);
+    this.observer  = observer;
+    this.lastValue = Sortable.serialize(this.element);
+  },
+  
+  onStart: function() {
+    this.lastValue = Sortable.serialize(this.element);
+  },
+  
+  onEnd: function() {
+    Sortable.unmark();
+    if(this.lastValue != Sortable.serialize(this.element))
+      this.observer(this.element)
+  }
+}
+
+var Sortable = {
+  sortables: {},
+  
+  _findRootElement: function(element) {
+    while (element.tagName != "BODY") {  
+      if(element.id && Sortable.sortables[element.id]) return element;
+      element = element.parentNode;
+    }
+  },
+
+  options: function(element) {
+    element = Sortable._findRootElement($(element));
+    if(!element) return;
+    return Sortable.sortables[element.id];
+  },
+  
+  destroy: function(element){
+    var s = Sortable.options(element);
+    
+    if(s) {
+      Draggables.removeObserver(s.element);
+      s.droppables.each(function(d){ Droppables.remove(d) });
+      s.draggables.invoke('destroy');
+      
+      delete Sortable.sortables[s.element.id];
+    }
+  },
+
+  create: function(element) {
+    element = $(element);
+    var options = Object.extend({ 
+      element:     element,
+      tag:         'li',       // assumes li children, override with tag: 'tagname'
+      dropOnEmpty: false,
+      tree:        false,
+      treeTag:     'ul',
+      overlap:     'vertical', // one of 'vertical', 'horizontal'
+      constraint:  'vertical', // one of 'vertical', 'horizontal', false
+      containment: element,    // also takes array of elements (or id's); or false
+      handle:      false,      // or a CSS class
+      only:        false,
+      hoverclass:  null,
+      ghosting:    false,
+      scroll:      false,
+      scrollSensitivity: 20,
+      scrollSpeed: 15,
+      format:      /^[^_]*_(.*)$/,
+      onChange:    Prototype.emptyFunction,
+      onUpdate:    Prototype.emptyFunction
+    }, arguments[1] || {});
+
+    // clear any old sortable with same element
+    this.destroy(element);
+
+    // build options for the draggables
+    var options_for_draggable = {
+      revert:      true,
+      scroll:      options.scroll,
+      scrollSpeed: options.scrollSpeed,
+      scrollSensitivity: options.scrollSensitivity,
+      ghosting:    options.ghosting,
+      constraint:  options.constraint,
+      handle:      options.handle };
+
+    if(options.starteffect)
+      options_for_draggable.starteffect = options.starteffect;
+
+    if(options.reverteffect)
+      options_for_draggable.reverteffect = options.reverteffect;
+    else
+      if(options.ghosting) options_for_draggable.reverteffect = function(element) {
+        element.style.top  = 0;
+        element.style.left = 0;
+      };
+
+    if(options.endeffect)
+      options_for_draggable.endeffect = options.endeffect;
+
+    if(options.zindex)
+      options_for_draggable.zindex = options.zindex;
+
+    // build options for the droppables  
+    var options_for_droppable = {
+      overlap:     options.overlap,
+      containment: options.containment,
+      tree:        options.tree,
+      hoverclass:  options.hoverclass,
+      onHover:     Sortable.onHover
+      //greedy:      !options.dropOnEmpty
+    }
+    
+    var options_for_tree = {
+      onHover:      Sortable.onEmptyHover,
+      overlap:      options.overlap,
+      containment:  options.containment,
+      hoverclass:   options.hoverclass
+    }
+
+    // fix for gecko engine
+    Element.cleanWhitespace(element); 
+
+    options.draggables = [];
+    options.droppables = [];
+
+    // drop on empty handling
+    if(options.dropOnEmpty || options.tree) {
+      Droppables.add(element, options_for_tree);
+      options.droppables.push(element);
+    }
+
+    (this.findElements(element, options) || []).each( function(e) {
+      // handles are per-draggable
+      var handle = options.handle ? 
+        Element.childrenWithClassName(e, options.handle)[0] : e;    
+      options.draggables.push(
+        new Draggable(e, Object.extend(options_for_draggable, { handle: handle })));
+      Droppables.add(e, options_for_droppable);
+      if(options.tree) e.treeNode = element;
+      options.droppables.push(e);      
+    });
+    
+    if(options.tree) {
+      (Sortable.findTreeElements(element, options) || []).each( function(e) {
+        Droppables.add(e, options_for_tree);
+        e.treeNode = element;
+        options.droppables.push(e);
+      });
+    }
+
+    // keep reference
+    this.sortables[element.id] = options;
+
+    // for onupdate
+    Draggables.addObserver(new SortableObserver(element, options.onUpdate));
+
+  },
+
+  // return all suitable-for-sortable elements in a guaranteed order
+  findElements: function(element, options) {
+    return Element.findChildren(
+      element, options.only, options.tree ? true : false, options.tag);
+  },
+  
+  findTreeElements: function(element, options) {
+    return Element.findChildren(
+      element, options.only, options.tree ? true : false, options.treeTag);
+  },
+
+  onHover: function(element, dropon, overlap) {
+    if(Element.isParent(dropon, element)) return;
+
+    if(overlap > .33 && overlap < .66 && Sortable.options(dropon).tree) {
+      return;
+    } else if(overlap>0.5) {
+      Sortable.mark(dropon, 'before');
+      if(dropon.previousSibling != element) {
+        var oldParentNode = element.parentNode;
+        element.style.visibility = "hidden"; // fix gecko rendering
+        dropon.parentNode.insertBefore(element, dropon);
+        if(dropon.parentNode!=oldParentNode) 
+          Sortable.options(oldParentNode).onChange(element);
+        Sortable.options(dropon.parentNode).onChange(element);
+      }
+    } else {
+      Sortable.mark(dropon, 'after');
+      var nextElement = dropon.nextSibling || null;
+      if(nextElement != element) {
+        var oldParentNode = element.parentNode;
+        element.style.visibility = "hidden"; // fix gecko rendering
+        dropon.parentNode.insertBefore(element, nextElement);
+        if(dropon.parentNode!=oldParentNode) 
+          Sortable.options(oldParentNode).onChange(element);
+        Sortable.options(dropon.parentNode).onChange(element);
+      }
+    }
+  },
+  
+  onEmptyHover: function(element, dropon, overlap) {
+    var oldParentNode = element.parentNode;
+    var droponOptions = Sortable.options(dropon);
+        
+    if(!Element.isParent(dropon, element)) {
+      var index;
+      
+      var children = Sortable.findElements(dropon, {tag: droponOptions.tag, only: droponOptions.only});
+      var child = null;
+            
+      if(children) {
+        var offset = Element.offsetSize(dropon, droponOptions.overlap) * (1.0 - overlap);
+        
+        for (index = 0; index < children.length; index += 1) {
+          if (offset - Element.offsetSize (children[index], droponOptions.overlap) >= 0) {
+            offset -= Element.offsetSize (children[index], droponOptions.overlap);
+          } else if (offset - (Element.offsetSize (children[index], droponOptions.overlap) / 2) >= 0) {
+            child = index + 1 < children.length ? children[index + 1] : null;
+            break;
+          } else {
+            child = children[index];
+            break;
+          }
+        }
+      }
+      
+      dropon.insertBefore(element, child);
+      
+      Sortable.options(oldParentNode).onChange(element);
+      droponOptions.onChange(element);
+    }
+  },
+
+  unmark: function() {
+    if(Sortable._marker) Element.hide(Sortable._marker);
+  },
+
+  mark: function(dropon, position) {
+    // mark on ghosting only
+    var sortable = Sortable.options(dropon.parentNode);
+    if(sortable && !sortable.ghosting) return; 
+
+    if(!Sortable._marker) {
+      Sortable._marker = $('dropmarker') || document.createElement('DIV');
+      Element.hide(Sortable._marker);
+      Element.addClassName(Sortable._marker, 'dropmarker');
+      Sortable._marker.style.position = 'absolute';
+      document.getElementsByTagName("body").item(0).appendChild(Sortable._marker);
+    }    
+    var offsets = Position.cumulativeOffset(dropon);
+    Sortable._marker.style.left = offsets[0] + 'px';
+    Sortable._marker.style.top = offsets[1] + 'px';
+    
+    if(position=='after')
+      if(sortable.overlap == 'horizontal') 
+        Sortable._marker.style.left = (offsets[0]+dropon.clientWidth) + 'px';
+      else
+        Sortable._marker.style.top = (offsets[1]+dropon.clientHeight) + 'px';
+    
+    Element.show(Sortable._marker);
+  },
+  
+  _tree: function(element, options, parent) {
+    var children = Sortable.findElements(element, options) || [];
+  
+    for (var i = 0; i < children.length; ++i) {
+      var match = children[i].id.match(options.format);
+
+      if (!match) continue;
+      
+      var child = {
+        id: encodeURIComponent(match ? match[1] : null),
+        element: element,
+        parent: parent,
+        children: new Array,
+        position: parent.children.length,
+        container: Sortable._findChildrenElement(children[i], options.treeTag.toUpperCase())
+      }
+      
+      /* Get the element containing the children and recurse over it */
+      if (child.container)
+        this._tree(child.container, options, child)
+      
+      parent.children.push (child);
+    }
+
+    return parent; 
+  },
+
+  /* Finds the first element of the given tag type within a parent element.
+    Used for finding the first LI[ST] within a L[IST]I[TEM].*/
+  _findChildrenElement: function (element, containerTag) {
+    if (element && element.hasChildNodes)
+      for (var i = 0; i < element.childNodes.length; ++i)
+        if (element.childNodes[i].tagName == containerTag)
+          return element.childNodes[i];
+  
+    return null;
+  },
+
+  tree: function(element) {
+    element = $(element);
+    var sortableOptions = this.options(element);
+    var options = Object.extend({
+      tag: sortableOptions.tag,
+      treeTag: sortableOptions.treeTag,
+      only: sortableOptions.only,
+      name: element.id,
+      format: sortableOptions.format
+    }, arguments[1] || {});
+    
+    var root = {
+      id: null,
+      parent: null,
+      children: new Array,
+      container: element,
+      position: 0
+    }
+    
+    return Sortable._tree (element, options, root);
+  },
+
+  /* Construct a [i] index for a particular node */
+  _constructIndex: function(node) {
+    var index = '';
+    do {
+      if (node.id) index = '[' + node.position + ']' + index;
+    } while ((node = node.parent) != null);
+    return index;
+  },
+
+  sequence: function(element) {
+    element = $(element);
+    var options = Object.extend(this.options(element), arguments[1] || {});
+    
+    return $(this.findElements(element, options) || []).map( function(item) {
+      return item.id.match(options.format) ? item.id.match(options.format)[1] : '';
+    });
+  },
+
+  setSequence: function(element, new_sequence) {
+    element = $(element);
+    var options = Object.extend(this.options(element), arguments[2] || {});
+    
+    var nodeMap = {};
+    this.findElements(element, options).each( function(n) {
+        if (n.id.match(options.format))
+            nodeMap[n.id.match(options.format)[1]] = [n, n.parentNode];
+        n.parentNode.removeChild(n);
+    });
+   
+    new_sequence.each(function(ident) {
+      var n = nodeMap[ident];
+      if (n) {
+        n[1].appendChild(n[0]);
+        delete nodeMap[ident];
+      }
+    });
+  },
+  
+  serialize: function(element) {
+    element = $(element);
+    var options = Object.extend(Sortable.options(element), arguments[1] || {});
+    var name = encodeURIComponent(
+      (arguments[1] && arguments[1].name) ? arguments[1].name : element.id);
+    
+    if (options.tree) {
+      return Sortable.tree(element, arguments[1]).children.map( function (item) {
+        return [name + Sortable._constructIndex(item) + "[id]=" + 
+                encodeURIComponent(item.id)].concat(item.children.map(arguments.callee));
+      }).flatten().join('&');
+    } else {
+      return Sortable.sequence(element, arguments[1]).map( function(item) {
+        return name + "[]=" + encodeURIComponent(item);
+      }).join('&');
+    }
+  }
+}
+
+/* Returns true if child is contained within element */
+Element.isParent = function(child, element) {
+  if (!child.parentNode || child == element) return false;
+
+  if (child.parentNode == element) return true;
+
+  return Element.isParent(child.parentNode, element);
+}
+
+Element.findChildren = function(element, only, recursive, tagName) {    
+  if(!element.hasChildNodes()) return null;
+  tagName = tagName.toUpperCase();
+  if(only) only = [only].flatten();
+  var elements = [];
+  $A(element.childNodes).each( function(e) {
+    if(e.tagName && e.tagName.toUpperCase()==tagName &&
+      (!only || (Element.classNames(e).detect(function(v) { return only.include(v) }))))
+        elements.push(e);
+    if(recursive) {
+      var grandchildren = Element.findChildren(e, only, recursive, tagName);
+      if(grandchildren) elements.push(grandchildren);
+    }
+  });
+
+  return (elements.length>0 ? elements.flatten() : []);
+}
+
+Element.offsetSize = function (element, type) {
+  if (type == 'vertical' || type == 'height')
+    return element.offsetHeight;
+  else
+    return element.offsetWidth;
+}
+
+// Copyright (c) 2005 Marty Haught, Thomas Fuchs 
+//
+// See http://script.aculo.us for more info
+// 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+if(!Control) var Control = {};
+Control.Slider = Class.create();
+
+// options:
+//  axis: 'vertical', or 'horizontal' (default)
+//
+// callbacks:
+//  onChange(value)
+//  onSlide(value)
+Control.Slider.prototype = {
+  initialize: function(handle, track, options) {
+    var slider = this;
+    
+    if(handle instanceof Array) {
+      this.handles = handle.collect( function(e) { return $(e) });
+    } else {
+      this.handles = [$(handle)];
+    }
+    
+    this.track   = $(track);
+    this.options = options || {};
+
+    this.axis      = this.options.axis || 'horizontal';
+    this.increment = this.options.increment || 1;
+    this.step      = parseInt(this.options.step || '1');
+    this.range     = this.options.range || $R(0,1);
+    
+    this.value     = 0; // assure backwards compat
+    this.values    = this.handles.map( function() { return 0 });
+    this.spans     = this.options.spans ? this.options.spans.map(function(s){ return $(s) }) : false;
+    this.options.startSpan = $(this.options.startSpan || null);
+    this.options.endSpan   = $(this.options.endSpan || null);
+
+    this.restricted = this.options.restricted || false;
+
+    this.maximum   = this.options.maximum || this.range.end;
+    this.minimum   = this.options.minimum || this.range.start;
+
+    // Will be used to align the handle onto the track, if necessary
+    this.alignX = parseInt(this.options.alignX || '0');
+    this.alignY = parseInt(this.options.alignY || '0');
+    
+    this.trackLength = this.maximumOffset() - this.minimumOffset();
+
+    this.handleLength = this.isVertical() ? 
+      (this.handles[0].offsetHeight != 0 ? 
+        this.handles[0].offsetHeight : this.handles[0].style.height.replace(/px$/,"")) : 
+      (this.handles[0].offsetWidth != 0 ? this.handles[0].offsetWidth : 
+        this.handles[0].style.width.replace(/px$/,""));
+
+    this.active   = false;
+    this.dragging = false;
+    this.disabled = false;
+
+    if(this.options.disabled) this.setDisabled();
+
+    // Allowed values array
+    this.allowedValues = this.options.values ? this.options.values.sortBy(Prototype.K) : false;
+    if(this.allowedValues) {
+      this.minimum = this.allowedValues.min();
+      this.maximum = this.allowedValues.max();
+    }
+
+    this.eventMouseDown = this.startDrag.bindAsEventListener(this);
+    this.eventMouseUp   = this.endDrag.bindAsEventListener(this);
+    this.eventMouseMove = this.update.bindAsEventListener(this);
+
+    // Initialize handles in reverse (make sure first handle is active)
+    this.handles.each( function(h,i) {
+      i = slider.handles.length-1-i;
+      slider.setValue(parseFloat(
+        (slider.options.sliderValue instanceof Array ? 
+          slider.options.sliderValue[i] : slider.options.sliderValue) || 
+         slider.range.start), i);
+      Element.makePositioned(h); // fix IE
+      Event.observe(h, "mousedown", slider.eventMouseDown);
+    });
+    
+    Event.observe(this.track, "mousedown", this.eventMouseDown);
+    Event.observe(document, "mouseup", this.eventMouseUp);
+    Event.observe(document, "mousemove", this.eventMouseMove);
+    
+    this.initialized = true;
+  },
+  dispose: function() {
+    var slider = this;    
+    Event.stopObserving(this.track, "mousedown", this.eventMouseDown);
+    Event.stopObserving(document, "mouseup", this.eventMouseUp);
+    Event.stopObserving(document, "mousemove", this.eventMouseMove);
+    this.handles.each( function(h) {
+      Event.stopObserving(h, "mousedown", slider.eventMouseDown);
+    });
+  },
+  setDisabled: function(){
+    this.disabled = true;
+  },
+  setEnabled: function(){
+    this.disabled = false;
+  },  
+  getNearestValue: function(value){
+    if(this.allowedValues){
+      if(value >= this.allowedValues.max()) return(this.allowedValues.max());
+      if(value <= this.allowedValues.min()) return(this.allowedValues.min());
+      
+      var offset = Math.abs(this.allowedValues[0] - value);
+      var newValue = this.allowedValues[0];
+      this.allowedValues.each( function(v) {
+        var currentOffset = Math.abs(v - value);
+        if(currentOffset <= offset){
+          newValue = v;
+          offset = currentOffset;
+        } 
+      });
+      return newValue;
+    }
+    if(value > this.range.end) return this.range.end;
+    if(value < this.range.start) return this.range.start;
+    return value;
+  },
+  setValue: function(sliderValue, handleIdx){
+    if(!this.active) {
+      this.activeHandleIdx = handleIdx || 0;
+      this.activeHandle    = this.handles[this.activeHandleIdx];
+      this.updateStyles();
+    }
+    handleIdx = handleIdx || this.activeHandleIdx || 0;
+    if(this.initialized && this.restricted) {
+      if((handleIdx>0) && (sliderValue<this.values[handleIdx-1]))
+        sliderValue = this.values[handleIdx-1];
+      if((handleIdx < (this.handles.length-1)) && (sliderValue>this.values[handleIdx+1]))
+        sliderValue = this.values[handleIdx+1];
+    }
+    sliderValue = this.getNearestValue(sliderValue);
+    this.values[handleIdx] = sliderValue;
+    this.value = this.values[0]; // assure backwards compat
+    
+    this.handles[handleIdx].style[this.isVertical() ? 'top' : 'left'] = 
+      this.translateToPx(sliderValue);
+    
+    this.drawSpans();
+    if(!this.dragging || !this.event) this.updateFinished();
+  },
+  setValueBy: function(delta, handleIdx) {
+    this.setValue(this.values[handleIdx || this.activeHandleIdx || 0] + delta, 
+      handleIdx || this.activeHandleIdx || 0);
+  },
+  translateToPx: function(value) {
+    return Math.round(
+      ((this.trackLength-this.handleLength)/(this.range.end-this.range.start)) * 
+      (value - this.range.start)) + "px";
+  },
+  translateToValue: function(offset) {
+    return ((offset/(this.trackLength-this.handleLength) * 
+      (this.range.end-this.range.start)) + this.range.start);
+  },
+  getRange: function(range) {
+    var v = this.values.sortBy(Prototype.K); 
+    range = range || 0;
+    return $R(v[range],v[range+1]);
+  },
+  minimumOffset: function(){
+    return(this.isVertical() ? this.alignY : this.alignX);
+  },
+  maximumOffset: function(){
+    return(this.isVertical() ? 
+      (this.track.offsetHeight != 0 ? this.track.offsetHeight :
+        this.track.style.height.replace(/px$/,"")) - this.alignY : 
+      (this.track.offsetWidth != 0 ? this.track.offsetWidth : 
+        this.track.style.width.replace(/px$/,"")) - this.alignY);
+  },  
+  isVertical:  function(){
+    return (this.axis == 'vertical');
+  },
+  drawSpans: function() {
+    var slider = this;
+    if(this.spans)
+      $R(0, this.spans.length-1).each(function(r) { slider.setSpan(slider.spans[r], slider.getRange(r)) });
+    if(this.options.startSpan)
+      this.setSpan(this.options.startSpan,
+        $R(0, this.values.length>1 ? this.getRange(0).min() : this.value ));
+    if(this.options.endSpan)
+      this.setSpan(this.options.endSpan, 
+        $R(this.values.length>1 ? this.getRange(this.spans.length-1).max() : this.value, this.maximum));
+  },
+  setSpan: function(span, range) {
+    if(this.isVertical()) {
+      span.style.top = this.translateToPx(range.start);
+      span.style.height = this.translateToPx(range.end - range.start + this.range.start);
+    } else {
+      span.style.left = this.translateToPx(range.start);
+      span.style.width = this.translateToPx(range.end - range.start + this.range.start);
+    }
+  },
+  updateStyles: function() {
+    this.handles.each( function(h){ Element.removeClassName(h, 'selected') });
+    Element.addClassName(this.activeHandle, 'selected');
+  },
+  startDrag: function(event) {
+    if(Event.isLeftClick(event)) {
+      if(!this.disabled){
+        this.active = true;
+        
+        var handle = Event.element(event);
+        var pointer  = [Event.pointerX(event), Event.pointerY(event)];
+        var track = handle;
+        if(track==this.track) {
+          var offsets  = Position.cumulativeOffset(this.track); 
+          this.event = event;
+          this.setValue(this.translateToValue( 
+           (this.isVertical() ? pointer[1]-offsets[1] : pointer[0]-offsets[0])-(this.handleLength/2)
+          ));
+          var offsets  = Position.cumulativeOffset(this.activeHandle);
+          this.offsetX = (pointer[0] - offsets[0]);
+          this.offsetY = (pointer[1] - offsets[1]);
+        } else {
+          // find the handle (prevents issues with Safari)
+          while((this.handles.indexOf(handle) == -1) && handle.parentNode) 
+            handle = handle.parentNode;
+        
+          this.activeHandle    = handle;
+          this.activeHandleIdx = this.handles.indexOf(this.activeHandle);
+          this.updateStyles();
+        
+          var offsets  = Position.cumulativeOffset(this.activeHandle);
+          this.offsetX = (pointer[0] - offsets[0]);
+          this.offsetY = (pointer[1] - offsets[1]);
+        }
+      }
+      Event.stop(event);
+    }
+  },
+  update: function(event) {
+   if(this.active) {
+      if(!this.dragging) this.dragging = true;
+      this.draw(event);
+      // fix AppleWebKit rendering
+      if(navigator.appVersion.indexOf('AppleWebKit')>0) window.scrollBy(0,0);
+      Event.stop(event);
+   }
+  },
+  draw: function(event) {
+    var pointer = [Event.pointerX(event), Event.pointerY(event)];
+    var offsets = Position.cumulativeOffset(this.track);
+    pointer[0] -= this.offsetX + offsets[0];
+    pointer[1] -= this.offsetY + offsets[1];
+    this.event = event;
+    this.setValue(this.translateToValue( this.isVertical() ? pointer[1] : pointer[0] ));
+    if(this.initialized && this.options.onSlide)
+      this.options.onSlide(this.values.length>1 ? this.values : this.value, this);
+  },
+  endDrag: function(event) {
+    if(this.active && this.dragging) {
+      this.finishDrag(event, true);
+      Event.stop(event);
+    }
+    this.active = false;
+    this.dragging = false;
+  },  
+  finishDrag: function(event, success) {
+    this.active = false;
+    this.dragging = false;
+    this.updateFinished();
+  },
+  updateFinished: function() {
+    if(this.initialized && this.options.onChange) 
+      this.options.onChange(this.values.length>1 ? this.values : this.value, this);
+    this.event = null;
+  }
+}
 

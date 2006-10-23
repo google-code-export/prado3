@@ -126,6 +126,8 @@ class Page2Tex
 
 	function parse_html($page,$html)
 	{
+
+
 		$html = preg_replace('/<\/?com:TContent[^>]*>/', '', $html);
 		$html = preg_replace('/<\/?p [^>]*>/', '', $html);
 		$html = preg_replace('/<\/?p>/', '', $html);
@@ -162,7 +164,7 @@ class Page2Tex
 	                        '\href{http://www.pradosoft.com/docs/manual/$1/$2.html}{$1.$2 API Reference}', $html);
 
 		//text modifiers
-		$html = preg_replace('/<(b|strong)[^>]*>([^<]*)<\/(b|strong)>/', '\textbf{$2}', $html);
+		$html = preg_replace('/<b[^>]*>([^<]*)<\/b>/', '\textbf{$1}', $html);
 		$html = preg_replace('/<i[^>]*>([^<]*)<\/i>/', '\emph{$1}', $html);
 		$html = preg_replace_callback('/<tt>([^<]*)<\/tt>/', array($this,'texttt'), $html);
 
@@ -198,9 +200,6 @@ class Page2Tex
 		//tabular
 		$html = preg_replace_callback('/<!--\s*tabular:([^-]*)-->\s*<table[^>]*>((.|\n)*?)<\/table>/',
 						array($this, 'tabular'), $html);
-
-		$html = preg_replace('/<!--(.*)-->/', '', $html);
-
 
 		$html = html_entity_decode($html);
 

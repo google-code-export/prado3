@@ -71,7 +71,6 @@ assetmanager_filepath_invalid			= TAssetManager is publishing an invalid file '{
 assetmanager_tarchecksum_invalid		= TAssetManager is publishing a tar file with invalid checksum '{0}'.
 assetmanager_tarfile_invalid			= TAssetManager is publishing an invalid tar file '{0}'.
 
-cache_primary_duplicated				= At most one primary cache module is allowed. {0} is trying to register as another primary cache.
 sqlitecache_extension_required			= TSqliteCache requires SQLite PHP extension.
 sqlitecache_dbfile_required				= TSqliteCache.DbFile is required.
 sqlitecache_connection_failed			= TSqliteCache database connection failed. {0}.
@@ -301,7 +300,6 @@ parametermodule_parameterid_required	= Parameter element must have 'id' attribut
 datagridcolumn_id_invalid				= {0}.ID '{1}' is invalid. Only alphanumeric and underline characters are allowed. The first character must be an alphabetic or underline character.
 datagridcolumn_expression_invalid		= {0} is evaluating an invalid expression '{1}' : {2}
 
-outputcache_cachemoduleid_invalid		= TOutputCache.CacheModuleID is set with an invalid cache module ID {0}. Either the module does not exist or does not implement ICache interface.
 outputcache_duration_invalid			= {0}.Duration must be an integer no less than 0.
 
 stack_data_not_iterable					= TStack can only fetch data from an array or a traversable object.
@@ -328,22 +326,3 @@ clientscript_invalid_file_position		= Invalid file position '{1}' for TClientScr
 tdatepicker_autopostback_unsupported	= '{0}' does not support AutoPostBack.
 globalization_cache_path_failed			= Unable to create translation message cache path '{0}'. Make sure the parent directory exists and is writable by the Web process.
 globalization_source_path_failed		= Unable to create translation message path '{0}'. Make sure the parent directory exists and is writable by the Web process.
-callback_not_support_no_priority_state_update	= Callback request does not support unprioritized pagestate update.
-callback_invalid_callback_options		= '{1}' is not a valid TCallbackOptions control for Callback control '{0}'.
-callback_invalid_clientside_options		= Callback ClientSide property must be either a string that is the ID of a TCallbackOptions control or an instance of TCallbackClientSideOptions.=======
-callback_not_support_no_priority_state_update	= Callback request does not support unprioritized pagestate update.
-callback_invalid_handler				= Invalid callback handler, control {0} must implement ICallbackEventHandler.
-callback_invalid_target					= Invalid callback target, no such control with ID {0}.
-
-callback_interval_be_positive			= Interval for TCallbackTimer "{0}" must be strictly greater than zero seconds.
-callback_decay_be_not_negative			= Decay rate for TCallbackTimer "{0}" must be not negative.
-
-callback_no_autopostback				= Control "{0}" can not enable AutoPostBack.
-
-xmltransform_xslextension_required		= TXmlTransform requires the PHP's XSL extension.
-xmltransform_transformpath_invalid		= TXmlTransform.TransformPath '{0}' is invalid.
-xmltransform_documentpath_invalid		= TXmlTransform.DocumentPath '{0}' is invalid.
-xmltransform_transform_required			= Either TransformContent or TransformPath property must be set for TXmlTransform.
-
-ttriggeredcallback_invalid_controlid	= ControlID property for '{0}' must not be empty.
-tactivecustomvalidator_clientfunction_unsupported = {0} does not support client side validator function.
