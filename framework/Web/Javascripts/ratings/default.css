@@ -6,38 +6,24 @@
 {
 	display: none;
 }
-
 .TRatingList_default td
 {
-	width: 18px;
+	width: 17px;
 	height: 18px;
-	padding: 0;
-}
-
-.TRatingList_default td.rating
-{
-	background-image: url(default_combined.gif);
+	background-image: url(default_blank.gif);
 	background-repeat: no-repeat;
 	cursor: pointer;
-	background-position: 0px 0px;
 }
-
 .TRatingList_default td.rating_selected
 {
-	background-position: 0px -100px;
-}
-
-.TRatingList_default td.rating_half
-{
-	background-position: 0px -200px;
+	background-image: url(default_selected.gif);
 }
 
 .TRatingList_default td.rating_hover
 {
-	background-position: 0px -300px;
+	background-image: url(default_hover.gif);
 }
-
-.TRatingList_default td.rating_disabled
+.TRatingList_default td.rating_half
 {
-	cursor: default !important;
+	background-image: url(default_half.gif);
 }

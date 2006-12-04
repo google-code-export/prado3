@@ -131,10 +131,10 @@ PeriodicalExecuter.prototype = {
 /**
  * Similar to bindAsEventLister, but takes additional arguments.
  */
-Function.prototype.bindEvent = function()
+Function.prototype.bindEvent = function() 
 {
 	var __method = this, args = $A(arguments), object = args.shift();
-	return function(event)
+	return function(event) 
 	{
 		return __method.apply(object, [event || window.event].concat(args));
 	}
@@ -152,313 +152,10 @@ Class.extend = function(base, definition)
 {
 		var component = Class.create();
 		Object.extend(component.prototype, base.prototype);
-		if(definition)
+		if(definition) 
 			Object.extend(component.prototype, definition);
 		return component;
 }
-
-/*
-	Base, version 1.0.2
-	Copyright 2006, Dean Edwards
-	License: http://creativecommons.org/licenses/LGPL/2.1/
-*/
-
-var Base = function() {
-	if (arguments.length) {
-		if (this == window) { // cast an object to this class
-			Base.prototype.extend.call(arguments[0], arguments.callee.prototype);
-		} else {
-			this.extend(arguments[0]);
-		}
-	}
-};
-
-Base.version = "1.0.2";
-
-Base.prototype = {
-	extend: function(source, value) {
-		var extend = Base.prototype.extend;
-		if (arguments.length == 2) {
-			var ancestor = this[source];
-			// overriding?
-			if ((ancestor instanceof Function) && (value instanceof Function) &&
-				ancestor.valueOf() != value.valueOf() && /\bbase\b/.test(value)) {
-				var method = value;
-			//	var _prototype = this.constructor.prototype;
-			//	var fromPrototype = !Base._prototyping && _prototype[source] == ancestor;
-				value = function() {
-					var previous = this.base;
-				//	this.base = fromPrototype ? _prototype[source] : ancestor;
-					this.base = ancestor;
-					var returnValue = method.apply(this, arguments);
-					this.base = previous;
-					return returnValue;
-				};
-				// point to the underlying method
-				value.valueOf = function() {
-					return method;
-				};
-				value.toString = function() {
-					return String(method);
-				};
-			}
-			return this[source] = value;
-		} else if (source) {
-			var _prototype = {toSource: null};
-			// do the "toString" and other methods manually
-			var _protected = ["toString", "valueOf"];
-			// if we are prototyping then include the constructor
-			if (Base._prototyping) _protected[2] = "constructor";
-			for (var i = 0; (name = _protected[i]); i++) {
-				if (source[name] != _prototype[name]) {
-					extend.call(this, name, source[name]);
-				}
-			}
-			// copy each of the source object's properties to this object
-			for (var name in source) {
-				if (!_prototype[name]) {
-					extend.call(this, name, source[name]);
-				}
-			}
-		}
-		return this;
-	},
-
-	base: function() {
-		// call this method from any other method to invoke that method's ancestor
-	}
-};
-
-Base.extend = function(_instance, _static) {
-	var extend = Base.prototype.extend;
-	if (!_instance) _instance = {};
-	// build the prototype
-	Base._prototyping = true;
-	var _prototype = new this;
-	extend.call(_prototype, _instance);
-	var constructor = _prototype.constructor;
-	_prototype.constructor = this;
-	delete Base._prototyping;
-	// create the wrapper for the constructor function
-	var klass = function() {
-		if (!Base._prototyping) constructor.apply(this, arguments);
-		this.constructor = klass;
-	};
-	klass.prototype = _prototype;
-	// build the class interface
-	klass.extend = this.extend;
-	klass.implement = this.implement;
-	klass.toString = function() {
-		return String(constructor);
-	};
-	extend.call(klass, _static);
-	// single instance
-	var object = constructor ? klass : _prototype;
-	// class initialisation
-	if (object.init instanceof Function) object.init();
-	return object;
-};
-
-Base.implement = function(_interface) {
-	if (_interface instanceof Function) _interface = _interface.prototype;
-	this.prototype.extend(_interface);
-};
-
-/*
- * Signals and Slots for Prototype: Easy custom javascript events
- * http://tetlaw.id.au/view/blog/signals-and-slots-for-prototype-easy-custom-javascript-events
- * Andrew Tetlaw
- * Version 1.2 (2006-06-19)
- *
- * http://creativecommons.org/licenses/by-sa/2.5/
- *
-Signal = {
-	throwErrors : true,
-	MT : function(){ return true },
-	connect : function(obj1, func1, obj2, func2, options) {
-		var options = Object.extend({
-			connectOnce : false,
-			before : false,
-			mutate : function() {return arguments;}
-		}, options || {});
-		if(typeof func1 != 'string' || typeof func2 != 'string') return;
-
-		var sigObj = obj1 || window;
-		var slotObj = obj2 || window;
-		var signame = func1+'__signal_';
-		var slotsname = func1+'__slots_';
-		if(!sigObj[signame]) {
-			// having the slotFunc in a var and setting it by using an anonymous function in this way
-			// is apparently a good way to prevent memory leaks in IE if the objects are DOM nodes.
-			var slotFunc = function() {
-				var args = [];
-				for(var x = 0; x < arguments.length; x++){
-					args.push(arguments[x]);
-				}
-				args = options.mutate.apply(null,args)
-				var result;
-				if(!options.before) result = sigObj[signame].apply(sigObj,arguments); //default: call sign before slot
-				sigObj[slotsname].each(function(slot){
-					try {
-						if(slot && slot[0]) { // testing for null, a disconnect may have nulled this slot
-							slot[0][slot[1]].apply(slot[0],args); //[0] = obj, [1] = func name
-						}
-					} catch(e) {
-						if(Signal.throwErrors) throw e;
-					}
-				});
-				if(options.before) result = sigObj[signame].apply(sigObj,arguments); //call slot before sig
-				return result; //return sig result
-			};
-			(function() {
-				sigObj[slotsname] = $A([]);
-				sigObj[signame] = sigObj[func1] || Signal.MT;
-				sigObj[func1] = slotFunc;
-			})();
-		}
-		var con = (sigObj[slotsname].length > 0) ?
-					(options.connectOnce ? !sigObj[slotsname].any(function(slot) { return (slot[0] == slotObj && slot[1] == func2) }) : true) :
-					true;
-		if(con) {
-			sigObj[slotsname].push([slotObj,func2]);
-		}
-	},
-	connectOnce : function(obj1, func1, obj2, func2, options) {
-		Signal.connect(obj1, func1, obj2, func2, Object.extend(options || {}, {connectOnce : true}))
-	},
-	disconnect : function(obj1, func1, obj2, func2, options) {
-		var options = Object.extend({
-			disconnectAll : false
-		}, options || {});
-		if(typeof func1 != 'string' || typeof func2 != 'string') return;
-
-		var sigObj = obj1 || window;
-		var slotObj = obj2 || window;
-		var signame = func1+'__signal_';
-		var slotsname = func1+'__slots_';
-
-		// I null them in this way so that any currectly active signal will read a null slot,
-		// otherwise the slot will be applied even though it's been disconnected
-		if(sigObj[slotsname]) {
-			if(options.disconnectAll) {
-				sigObj[slotsname] = sigObj[slotsname].collect(function(slot) {
-					if(slot[0] == slotObj && slot[1] == func2) {
-						slot[0] = null;
-						return null;
-					} else {
-						return slot;
-					}
-				}).compact();
-			} else {
-				var idx = -1;
-				sigObj[slotsname] = sigObj[slotsname].collect(function(slot, index) {
-					if(slot[0] == slotObj && slot[1] == func2 && idx < 0) {  //disconnect first match
-						idx = index;
-						slot[0] = null;
-						return null;
-					} else {
-						return slot;
-					}
-				}).compact();
-			}
-		}
-	},
-	disconnectAll : function(obj1, func1, obj2, func2, options) {
-		Signal.disconnect(obj1, func1, obj2, func2, Object.extend(options || {}, {disconnectAll : true}))
-	}
-}
-*/
-
-/*
- Tests
-
-//   1. Simple Test 1 "hello Fred" should trigger "Fred is a stupid head"
-
-
-      sayHello = function(n) {
-      	alert("Hello! " + n);
-      }
-      moron = function(n) {
-      	alert(n + " is a stupid head");
-      }
-      Signal.connect(null,'sayHello',null,'moron');
-
-      onclick="sayHello('Fred')"
-
-
-//   2. Simple Test 2 repeated insults about Fred
-
-
-      Signal.connect(null,'sayHello2',null,'moron2');
-      Signal.connect(null,'sayHello2',null,'moron2');
-      Signal.connect(null,'sayHello2',null,'moron2');
-
-
-//   3. Simple Test 3 multiple insults about Fred
-
-
-      Signal.connect(null,'sayHello3',null,'moron3');
-      Signal.connect(null,'sayHello3',null,'bonehead3');
-      Signal.connect(null,'sayHello3',null,'idiot3');
-
-
-//   4. Simple Test 4 3 insults about Fred first - 3 then none
-
-
-      Signal.connect(null,'sayHello4',null,'moron4');
-      Signal.connect(null,'sayHello4',null,'moron4');
-      Signal.connect(null,'sayHello4',null,'moron4');
-      Signal.disconnect(null,'sayHello4',null,'moron4');
-      Signal.disconnect(null,'sayHello4',null,'moron4');
-      Signal.disconnect(null,'sayHello4',null,'moron4');
-
-
-//   5. Simple Test 5 connect 3 insults about Fred first - only one, then none
-
-
-      Signal.connect(null,'sayHello5',null,'moron5');
-      Signal.connect(null,'sayHello5',null,'moron5');
-      Signal.connect(null,'sayHello5',null,'moron5');
-      Signal.disconnectAll(null,'sayHello5',null,'moron5');
-
-
-//   6. Simple Test 6 connect 3 insults but only one comes out
-
-
-      Signal.connectOnce(null,'sayHello6',null,'moron6');
-      Signal.connectOnce(null,'sayHello6',null,'moron6');
-      Signal.connectOnce(null,'sayHello6',null,'moron6');
-
-
-//   7. Simple Test 7 connect via objects
-
-
-      var o = {};
-      o.sayHello = function(n) {
-      	alert("Hello! " + n + " (from object o)");
-      }
-      var m = {};
-      m.moron = function(n) {
-      	alert(n + " is a stupid head (from object m)");
-      }
-
-      Signal.connect(o,'sayHello',m,'moron');
-
-      onclick="o.sayHello('Fred')"
-
-
-//   8. Simple Test 8 connect but the insult comes first using {before:true}
-
-
-      Signal.connect(null,'sayHello8',null,'moron8', {before:true});
-
-
-//   9. Simple Test 9 connect but the insult is mutated
-
-
-      Signal.connect(null,'sayHello9',null,'moron9', {mutate:function() { return ['smelly ' + arguments[0]] }});
-
- */
 
 Object.extend(String.prototype, {
   gsub: function(pattern, replacement) {
@@ -599,8 +296,7 @@ Template.prototype = {
 /**
  * @class String extensions
  */
-Object.extend(String.prototype, 
-{
+Object.extend(String.prototype, {
 	/**
 	 * @param {String} "left" to pad the string on the left, "right" to pad right.
 	 * @param {Number} minimum string length.
@@ -1030,45 +726,35 @@ var Hash = {
     for (var key in this) {
       var value = this[key];
       if (typeof value == 'function') continue;
-
+      
       var pair = [key, value];
       pair.key = key;
       pair.value = value;
       iterator(pair);
     }
   },
-
+  
   keys: function() {
     return this.pluck('key');
   },
-
+  
   values: function() {
     return this.pluck('value');
   },
-
+  
   merge: function(hash) {
     return $H(hash).inject($H(this), function(mergedHash, pair) {
       mergedHash[pair.key] = pair.value;
       return mergedHash;
     });
   },
-
+  
   toQueryString: function() {
-    return this.map(function(pair)
-	{
-	  //special case for PHP, array post data.
-	  if(typeof(pair[1]) == 'object' || typeof(pair[1]) == 'array')
-	  {
-	  	return $A(pair[1]).collect(function(value)
-		{
-			return encodeURIComponent(pair[0])+'='+encodeURIComponent(value);
-		}).join('&');
-	  }
-	  else
- 	     return pair.map(encodeURIComponent).join('=');
+    return this.map(function(pair) {
+      return pair.map(encodeURIComponent).join('=');
     }).join('&');
   },
-
+  
   inspect: function() {
     return '#<Hash:{' + this.map(function(pair) {
       return pair.map(Object.inspect).join(': ');
@@ -1523,17 +1209,17 @@ var Field = {
   focus: function(element) {
     $(element).focus();
   },
-
+  
   present: function() {
     for (var i = 0; i < arguments.length; i++)
       if ($(arguments[i]).value == '') return false;
     return true;
   },
-
+  
   select: function(element) {
     $(element).select();
   },
-
+   
   activate: function(element) {
     element = $(element);
     element.focus();
@@ -1548,16 +1234,16 @@ var Form = {
   serialize: function(form) {
     var elements = Form.getElements($(form));
     var queryComponents = new Array();
-
+    
     for (var i = 0; i < elements.length; i++) {
       var queryComponent = Form.Element.serialize(elements[i]);
       if (queryComponent)
         queryComponents.push(queryComponent);
     }
-
+    
     return queryComponents.join('&');
   },
-
+  
   getElements: function(form) {
     form = $(form);
     var elements = new Array();
@@ -1569,19 +1255,19 @@ var Form = {
     }
     return elements;
   },
-
+  
   getInputs: function(form, typeName, name) {
     form = $(form);
     var inputs = form.getElementsByTagName('input');
-
+    
     if (!typeName && !name)
       return inputs;
-
+      
     var matchingInputs = new Array();
     for (var i = 0; i < inputs.length; i++) {
       var input = inputs[i];
       if ((typeName && input.type != typeName) ||
-          (name && input.name != name))
+          (name && input.name != name)) 
         continue;
       matchingInputs.push(input);
     }
@@ -1627,25 +1313,25 @@ Form.Element = {
     element = $(element);
     var method = element.tagName.toLowerCase();
     var parameter = Form.Element.Serializers[method](element);
-
+    
     if (parameter) {
       var key = encodeURIComponent(parameter[0]);
       if (key.length == 0) return;
-
+      
       if (parameter[1].constructor != Array)
         parameter[1] = [parameter[1]];
-
+      
       return parameter[1].map(function(value) {
         return key + '=' + encodeURIComponent(value);
       }).join('&');
     }
   },
-
+  
   getValue: function(element) {
     element = $(element);
     var method = element.tagName.toLowerCase();
     var parameter = Form.Element.Serializers[method](element);
-
+    
     if (parameter)
       return parameter[1];
   }
@@ -1653,15 +1339,13 @@ Form.Element = {
 
 Form.Element.Serializers = {
   input: function(element) {
-  	if(typeof(element.type) == "undefined")
-		return false;
     switch (element.type.toLowerCase()) {
       case 'submit':
       case 'hidden':
       case 'password':
       case 'text':
         return Form.Element.Serializers.textarea(element);
-      case 'checkbox':
+      case 'checkbox':  
       case 'radio':
         return Form.Element.Serializers.inputSelector(element);
     }
@@ -1676,12 +1360,12 @@ Form.Element.Serializers = {
   textarea: function(element) {
     return [element.name, element.value];
   },
-
+  
   select: function(element) {
-    return Form.Element.Serializers[element.type == 'select-one' ?
+    return Form.Element.Serializers[element.type == 'select-one' ? 
       'selectOne' : 'selectMany'](element);
   },
-
+  
   selectOne: function(element) {
     var value = '', opt, index = element.selectedIndex;
     if (index >= 0) {
@@ -1690,7 +1374,7 @@ Form.Element.Serializers = {
     }
     return [element.name, value];
   },
-
+  
   selectMany: function(element) {
     var value = [];
     for (var i = 0; i < element.length; i++) {
@@ -1714,15 +1398,15 @@ Abstract.TimedObserver.prototype = {
     this.frequency = frequency;
     this.element   = $(element);
     this.callback  = callback;
-
+    
     this.lastValue = this.getValue();
     this.registerCallback();
   },
-
+  
   registerCallback: function() {
     setInterval(this.onTimerEvent.bind(this), this.frequency * 1000);
   },
-
+  
   onTimerEvent: function() {
     var value = this.getValue();
     if (this.lastValue != value) {
@@ -1753,14 +1437,14 @@ Abstract.EventObserver.prototype = {
   initialize: function(element, callback) {
     this.element  = $(element);
     this.callback = callback;
-
+    
     this.lastValue = this.getValue();
     if (this.element.tagName.toLowerCase() == 'form')
       this.registerFormCallbacks();
     else
       this.registerCallback(this.element);
   },
-
+  
   onElementEvent: function() {
     var value = this.getValue();
     if (this.lastValue != value) {
@@ -1768,17 +1452,17 @@ Abstract.EventObserver.prototype = {
       this.lastValue = value;
     }
   },
-
+  
   registerFormCallbacks: function() {
     var elements = Form.getElements(this.element);
     for (var i = 0; i < elements.length; i++)
       this.registerCallback(elements[i]);
   },
-
+  
   registerCallback: function(element) {
     if (element.type) {
       switch (element.type.toLowerCase()) {
-        case 'checkbox':
+        case 'checkbox':  
         case 'radio':
           Event.observe(element, 'click', this.onElementEvent.bind(this));
           break;
@@ -1790,7 +1474,7 @@ Abstract.EventObserver.prototype = {
           Event.observe(element, 'change', this.onElementEvent.bind(this));
           break;
       }
-    }
+    }    
   }
 }
 
@@ -1924,14 +1608,14 @@ if (navigator.appVersion.match(/\bMSIE\b/))
 /**
  * @class Event extensions.
  */
-Object.extend(Event,
+Object.extend(Event, 
 {
 	/**
-	 * Register a function to be executed when the page is loaded.
-	 * Note that the page is only loaded if all resources (e.g. images)
+	 * Register a function to be executed when the page is loaded. 
+	 * Note that the page is only loaded if all resources (e.g. images) 
 	 * are loaded.
-	 *
-	 * Example: Show an alert box with message "Page Loaded!" when the
+	 * 
+	 * Example: Show an alert box with message "Page Loaded!" when the 
 	 * page finished loading.
 	 * <code>
 	 * Event.OnLoad(function(){ alert("Page Loaded!"); });
@@ -1939,18 +1623,18 @@ Object.extend(Event,
 	 *
 	 * @param {Function} function to execute when page is loaded.
 	 */
-	OnLoad : function (fn)
+	OnLoad : function (fn) 
 	{
 		// opera onload is in document, not window
-		var w = document.addEventListener &&
+		var w = document.addEventListener && 
 					!window.addEventListener ? document : window;
 		Event.observe(w,'load',fn);
 	},
 
 	/**
 	 * @param {Event} a keyboard event
-	 * @return {Number} the Unicode character code generated by the key
-	 * that was struck.
+	 * @return {Number} the Unicode character code generated by the key 
+	 * that was struck. 
 	 */
 	keyCode : function(e)
 	{
@@ -1959,65 +1643,64 @@ Object.extend(Event,
 
 	/**
 	 * @param {String} event type or event name.
-	 * @return {Boolean} true if event type is of HTMLEvent, false
+	 * @return {Boolean} true if event type is of HTMLEvent, false 
 	 * otherwise
 	 */
 	isHTMLEvent : function(type)
 	{
-		var events = ['abort', 'blur', 'change', 'error', 'focus',
-					'load', 'reset', 'resize', 'scroll', 'select',
+		var events = ['abort', 'blur', 'change', 'error', 'focus', 
+					'load', 'reset', 'resize', 'scroll', 'select', 
 					'submit', 'unload'];
 		return events.include(type);
 	},
 
 	/**
 	 * @param {String} event type or event name
-	 * @return {Boolean} true if event type is of MouseEvent,
+	 * @return {Boolean} true if event type is of MouseEvent, 
 	 * false otherwise
 	 */
 	isMouseEvent : function(type)
 	{
-		var events = ['click', 'mousedown', 'mousemove', 'mouseout',
+		var events = ['click', 'mousedown', 'mousemove', 'mouseout', 
 					'mouseover', 'mouseup'];
 		return events.include(type);
 	},
 
 	/**
-	 * Dispatch the DOM event of a given <tt>type</tt> on a DOM
-	 * <tt>element</tt>. Only HTMLEvent and MouseEvent can be
-	 * dispatched, keyboard events or UIEvent can not be dispatch
+	 * Dispatch the DOM event of a given <tt>type</tt> on a DOM 
+	 * <tt>element</tt>. Only HTMLEvent and MouseEvent can be 
+	 * dispatched, keyboard events or UIEvent can not be dispatch 
 	 * via javascript consistently.
 	 * For the "submit" event the submit() method is called.
 	 * @param {Object} element id string or a DOM element.
 	 * @param {String} event type to dispatch.
 	 */
-	fireEvent : function(element,type,canBubble)
+	fireEvent : function(element,type)
 	{
-		canBubble = (typeof(canBubble) == undefined) ? true : canBubble;
 		element = $(element);
 		if(type == "submit")
 			return element.submit();
 		if(document.createEvent)
-        {
+        {            
 			if(Event.isHTMLEvent(type))
 			{
 				var event = document.createEvent('HTMLEvents');
-	            event.initEvent(type, canBubble, true);
+	            event.initEvent(type, true, true);
 			}
 			else if(Event.isMouseEvent(type))
 			{
-				var event = document.createEvent('MouseEvents');
+				var event = document.createEvent('MouseEvents');				
 				if (event.initMouseEvent)
 		        {
-					event.initMouseEvent(type,canBubble,true,
-						document.defaultView, 1, 0, 0, 0, 0, false,
+					event.initMouseEvent(type,true,true,
+						document.defaultView, 1, 0, 0, 0, 0, false, 
 								false, false, false, 0, null);
 		        }
 		        else
 		        {
 		            // Safari
 		            // TODO we should be initialising other mouse-event related attributes here
-		            event.initEvent(type, canBubble, true);
+		            event.initEvent(type, true, true);
 		        }
 			}
             element.dispatchEvent(event);
@@ -2662,7 +2345,7 @@ Object.extend(Date,
 
 var Prado =
 {
-	Version: '3.1',
+	Version: '3.0.0',
 
 	/**
 	 * Returns browser information. Example
@@ -2926,7 +2609,7 @@ Prado.doPostBack = function(formID, eventTarget, eventParameter, performValidati
 }
 */
 
-Prado.Element =
+Prado.Element = 
 {
 	/**
 	 * Set the value of a particular element.
@@ -2940,41 +2623,29 @@ Prado.Element =
 			el.value = value;
 	},
 
-	select : function(element, method, value, total)
+	select : function(element, method, value)
 	{
 		var el = $(element);
+		var isList = element.indexOf('[]') > -1;
+		if(!el && !isList) return;
+		method = isList ? 'check'+method : el.tagName.toLowerCase()+method;
 		var selection = Prado.Element.Selection;
-		if(typeof(selection[method]) == "function")
-		{
-			control = selection.isSelectable(el) ? [el] : selection.getListElements(element,total);
-			selection[method](control, value);
-		}
+		if(isFunction(selection[method])) 
+			selection[method](isList ? element : el,value);
 	},
 
 	click : function(element)
 	{
 		var el = $(element);
-		if(el)
+		if(el) 
 			Event.fireEvent(el,'click');
 	},
-
+	
 	setAttribute : function(element, attribute, value)
 	{
 		var el = $(element);
-		if((attribute == "disabled" || attribute == "multiple") && value==false)
+		if(attribute == "disabled" && value==false)
 			el.removeAttribute(attribute);
-		else if(attribute.match(/^on/i)) //event methods
-		{
-			try
-			{
-				eval("(func = function(event){"+value+"})");
-				el[attribute] = func;
-			}
-			catch(e)
-			{
-				throw "Error in evaluating '"+value+"' for attribute "+attribute+" for element "+element.id;
-			}
-		}
 		else
 			el.setAttribute(attribute, value);
 	},
@@ -2984,9 +2655,10 @@ Prado.Element =
 		var el = $(element);
 		if(el && el.tagName.toLowerCase() == "select")
 		{
-			el.options.length = options.length;
+			while(el.length > 0)
+				el.remove(0);
 			for(var i = 0; i<options.length; i++)
-				el.options[i] = new Option(options[i][0],options[i][1]);
+				el.options[el.options.length] = new Option(options[i][0],options[i][1]);
 		}
 	},
 
@@ -3000,191 +2672,76 @@ Prado.Element =
 		if(typeof(obj) != "undefined" && typeof(obj.focus) != "undefined")
 			setTimeout(function(){ obj.focus(); }, 100);
 		return false;
-	},
-
-	replace : function(element, method, content, boundary)
-	{
-		if(boundary)
-		{
-			result = Prado.Element.extractContent(this.transport.responseText, boundary);
-			if(result != null)
-				content = result;
-		}
-		if(typeof(element) == "string")
-		{
-			if($(element))
-				method.toFunction().apply(this,[element,content]);
-		}
-		else
-		{
-			method.toFunction().apply(this,[content]);
-		}
-	},
-
-	extractContent : function(text, boundary)
-	{
-		f = RegExp('(<!--'+boundary+'-->)([\\s\\S\\w\\W]*)(<!--//'+boundary+'-->)',"m");
-		result = text.match(f);
-		if(result && result.length >= 2)
-			return result[2];
-		else
-			return null;
-	},
-
-	evaluateScript : function(content)
-	{
-		content.evalScripts();
 	}
 }
 
-Prado.Element.Selection =
+Prado.Element.Selection = 
 {
-	isSelectable : function(el)
-	{
-		if(el && el.type)
-		{
-			switch(el.type.toLowerCase())
-			{
-				case 'checkbox':
-				case 'radio':
-				case 'select':
-				case 'select-multiple':
-				case 'select-one':
-				return true;
-			}
-		}
-		return false;
-	},
-
 	inputValue : function(el, value)
 	{
-		switch(el.type.toLowerCase())
+		switch(el.type.toLowerCase()) 
 		{
-			case 'checkbox':
+			case 'checkbox':  
 			case 'radio':
 			return el.checked = value;
 		}
 	},
 
-	selectValue : function(elements, value)
+	selectValue : function(el, value)
 	{
-		elements.each(function(el)
+		$A(el.options).each(function(option)
 		{
-			$A(el.options).each(function(option)
-			{
-				if(typeof(value) == "boolean")
-					options.selected = value;
-				else if(option.value == value)
-					option.selected = true;
-			});
-		})
-	},
-
-	selectValues : function(elements, values)
-	{
-		selection = this;
-		values.each(function(value)
-		{
-			selection.selectValue(elements,value);
-		})
-	},
-
-	selectIndex : function(elements, index)
-	{
-		elements.each(function(el)
-		{
-			if(el.type.toLowerCase() == 'select-one')
-				el.selectedIndex = index;
-			else
-			{
-				for(var i = 0; i<el.length; i++)
-				{
-					if(i == index)
-						el.options[i].selected = true;
-				}
-			}
-		})
-	},
-
-	selectAll : function(elements)
-	{
-		elements.each(function(el)
-		{
-			if(el.type.toLowerCase() != 'select-one')
-			{
-				$A(el.options).each(function(option)
-				{
-					option.selected = true;
-				})
-			}
-		})
-	},
-
-	selectInvert : function(elements)
-	{
-		elements.each(function(el)
-		{
-			if(el.type.toLowerCase() != 'select-one')
-			{
-				$A(el.options).each(function(option)
-				{
-					option.selected = !options.selected;
-				})
-			}
-		})
-	},
-
-	selectIndices : function(elements, indices)
-	{
-		selection = this;
-		indices.each(function(index)
-		{
-			selection.selectIndex(elements,index);
-		})
-	},
-
-	selectClear : function(elements)
-	{
-		elements.each(function(el)
-		{
-			el.selectedIndex = -1;
-		})
-	},
-
-	getListElements : function(element, total)
-	{
-		elements = new Array();
-		for(i = 0; i < total; i++)
-		{
-			el = $(element+"_c"+i);
-			if(el)
-				elements.push(el);
-		}
-		return elements;
-	},
-
-	checkValue : function(elements, value)
-	{
-		elements.each(function(el)
-		{
-			if(typeof(value) == "boolean")
-				el.checked = value;
-			else if(el.value == value)
-				el.checked = true;
+			option.selected = option.value == value;
 		});
 	},
 
-	checkValues : function(elements, values)
+	selectIndex : function(el, index)
 	{
-		selection = this;
-		values.each(function(value)
+		if(el.type == 'select-one')
+			el.selectedIndex = index;
+		else
 		{
-			selection.checkValue(elements, value);
-		})
+			for(var i = 0; i<el.length; i++)
+			{
+				if(i == index)
+					el.options[i].selected = true;
+			}
+		}
 	},
 
-	checkIndex : function(elements, index)
+	selectClear : function(el)
 	{
+		el.selectedIndex = -1;
+	},
+
+	selectAll : function(el)
+	{
+		$A(el.options).each(function(option)
+		{
+			option.selected = true;
+			Logger.warn(option.value);
+		});
+	},
+
+	selectInvert : function(el)
+	{
+		$A(el.options).each(function(option)
+		{
+			option.selected = !option.selected;
+		});
+	},
+
+	checkValue : function(name, value)
+	{
+		$A(document.getElementsByName(name)).each(function(el)
+		{
+			el.checked = el.value == value
+		});
+	},
+
+	checkIndex : function(name, index)
+	{
+		var elements = $A(document.getElementsByName(name));
 		for(var i = 0; i<elements.length; i++)
 		{
 			if(i == index)
@@ -3192,69 +2749,68 @@ Prado.Element.Selection =
 		}
 	},
 
-	checkIndices : function(elements, indices)
+	checkClear : function(name)
 	{
-		selection = this;
-		indices.each(function(index)
-		{
-			selection.checkIndex(elements, index);
-		})
-	},
-
-	checkClear : function(elements)
-	{
-		elements.each(function(el)
+		$A(document.getElementsByName(name)).each(function(el)
 		{
 			el.checked = false;
 		});
 	},
 
-	checkAll : function(elements)
+	checkAll : function(name)
 	{
-		elements.each(function(el)
+		$A(document.getElementsByName(name)).each(function(el)
 		{
 			el.checked = true;
-		})
+		});
 	},
-
-	checkInvert : function(elements)
+	checkInvert : function(name)
 	{
-		elements.each(function(el)
+		$A(document.getElementsByName(name)).each(function(el)
 		{
-			el.checked != el.checked;
-		})
+			el.checked = !el.checked;
+		});
 	}
 };
 
-
-Prado.Element.Insert =
-{
-	append: function(element, content)
-	{
-		new Insertion.Bottom(element, content);
-	},
-
-	prepend: function(element, content)
-	{
-		new Insertion.Top(element, content);
-	},
-
-	after: function(element, content)
-	{
-		new Insertion.After(element, content);
-	},
-
-	before: function(element, content)
-	{
-		new Insertion.Before(element, content);
-	}
-}
-
 Prado.WebUI = Class.create();
 
+//base postback-able controls
+/*Prado.WebUI.PostBackControl = Class.create();
+Prado.WebUI.PostBackControl.prototype =
+{
+	initialize : function(options)
+	{
+		this.element = $(options['ID']);
+		
+/*		if(options.CausesValidation && typeof(Prado.Validation) != 'undefined')
+		{
+			Prado.Validation.registerTarget(options);
+		}
+		
+		//TODO: what do the following options do?
+		//options['PostBackUrl']
+		//options['ClientSubmit']
+
+		if(this.onInit)
+			this.onInit(options);
+	}
+};
+
+//short cut to create postback components
+Prado.WebUI.createPostBackComponent = function(definition)
+{
+	var component = Class.create();
+	Object.extend(component.prototype, Prado.WebUI.PostBackControl.prototype);
+	if(definition) Object.extend(component.prototype, definition);
+	return component;
+}
+
+Prado.WebUI.TButton = Prado.WebUI.createPostBackComponent();
+*/
 Prado.WebUI.PostBackControl = Class.create();
 
-Prado.WebUI.PostBackControl.prototype =
+Prado.WebUI.PostBackControl.prototype = 
 {
 	_elementOnClick : null, //capture the element's onclick function
 
@@ -3264,7 +2820,7 @@ Prado.WebUI.PostBackControl.prototype =
 		if(this.onInit)
 			this.onInit(options);
 	},
-
+	
 	onInit : function(options)
 	{
 		if(typeof(this.element.onclick)=="function")
@@ -3272,10 +2828,10 @@ Prado.WebUI.PostBackControl.prototype =
 			this._elementOnClick = this.element.onclick;
 			this.element.onclick = null;
 		}
-		Event.observe(this.element, "click", this.elementClicked.bindEvent(this,options));
+		Event.observe(this.element, "click", this.onClick.bindEvent(this,options));		
 	},
 
-	elementClicked : function(event, options)
+	onClick : function(event, options)
 	{
 		var src = Event.element(event);
 		var doPostBack = true;
@@ -3306,7 +2862,7 @@ Prado.WebUI.TBulletedList = Class.extend(Prado.WebUI.PostBackControl);
 Prado.WebUI.TImageMap = Class.extend(Prado.WebUI.PostBackControl);
 
 /**
- * TImageButton client-side behaviour. With validation, Firefox needs
+ * TImageButton client-side behaviour. With validation, Firefox needs 
  * to capture the x,y point of the clicked image in hidden form fields.
  */
 Prado.WebUI.TImageButton = Class.extend(Prado.WebUI.PostBackControl);
@@ -3316,7 +2872,7 @@ Object.extend(Prado.WebUI.TImageButton.prototype,
 	 * Only add the hidden inputs once.
 	 */
 	hasXYInput : false,
-
+	
 	/**
 	 * Override parent onPostBack function, tried to add hidden forms
 	 * inputs to capture x,y clicked point.
@@ -3330,7 +2886,7 @@ Object.extend(Prado.WebUI.TImageButton.prototype,
 		}
 		Prado.PostBack(event, options);
 	},
-
+	
 	/**
 	 * Add hidden inputs to capture the x,y point clicked on the image.
 	 * @param event DOM click event.
@@ -3338,33 +2894,15 @@ Object.extend(Prado.WebUI.TImageButton.prototype,
 	 */
 	addXYInput : function(event,options)
 	{
-		imagePos = Position.cumulativeOffset(this.element);
-		clickedPos = [event.clientX, event.clientY];
-		x = clickedPos[0]-imagePos[0]+1;
-		y = clickedPos[1]-imagePos[1]+1;
-		x = x < 0 ? 0 : x;
-		y = y < 0 ? 0 : y;
-		id = options['EventTarget'];
-		x_input = $(id+"_x");
-		y_input = $(id+"_y");
-		if(x_input)
-		{
-			x_input.value = x;
-		}
-		else
-		{
-			x_input = INPUT({type:'hidden',name:id+'_x','id':id+'_x',value:x});
-			this.element.parentNode.appendChild(x_input);
-		}
-		if(y_input)
-		{
-			y_input.value = y;
-		}
-		else
-		{
-			y_input = INPUT({type:'hidden',name:id+'_y','id':id+'_y',value:y});
-			this.element.parentNode.appendChild(y_input);
-		}
+		var imagePos = Position.cumulativeOffset(this.element);
+		var clickedPos = [event.clientX, event.clientY];
+		var x = clickedPos[0]-imagePos[0]+1;
+		var y = clickedPos[1]-imagePos[1]+1;
+		var id = options['EventTarget'];
+		var x_input = INPUT({type:'hidden',name:id+'_x',value:x});
+		var y_input = INPUT({type:'hidden',name:id+'_y',value:y});
+		this.element.parentNode.appendChild(x_input);
+		this.element.parentNode.appendChild(y_input);		
 	}
 });
 
@@ -3420,7 +2958,7 @@ Prado.WebUI.TListBox = Class.extend(Prado.WebUI.TListControl);
 Prado.WebUI.TDropDownList = Class.extend(Prado.WebUI.TListControl);
 
 Prado.WebUI.DefaultButton = Class.create();
-Prado.WebUI.DefaultButton.prototype =
+Prado.WebUI.DefaultButton.prototype = 
 {
 	initialize : function(options)
 	{
@@ -3439,7 +2977,7 @@ Prado.WebUI.DefaultButton.prototype =
 			if(defaultButton)
 			{
 				this.triggered = true;
-				$('PRADO_POSTBACK_TARGET').value = this.options.EventTarget;
+				$('PRADO_POSTBACK_TARGET').value = this.options.EventTarget;				
 				Event.fireEvent(defaultButton, this.options['Event']);
 				Event.stop(ev);
 			}
@@ -3495,35 +3033,64 @@ Object.extend(Prado.WebUI.TTextHighlighter,
 });
 
 
-Prado.WebUI.TCheckBoxList = Base.extend(
+Prado.WebUI.TRatingList = Class.create();	
+Prado.WebUI.TRatingList.prototype = 
 {
-	constructor : function(options)
-	{
-		for(var i = 0; i<options.ItemCount; i++)
-		{
-			var checkBoxOptions = Object.extend(
-			{
-				ID : options.ListID+"_c"+i,
-				EventTarget : options.ListID+"$c"+i
-			}, options);
-			new Prado.WebUI.TCheckBox(checkBoxOptions);
-		}
-	}
-});
+	selectedIndex : -1,
 
-Prado.WebUI.TRadioButtonList = Base.extend(
-{
-	constructor : function(options)
+	initialize : function(options)
 	{
-		for(var i = 0; i<options.ItemCount; i++)
+		this.options = options;
+		this.element = $(options['ID']);
+		Element.addClassName(this.element,options.cssClass);
+		this.radios = document.getElementsByName(options.field);
+		for(var i = 0; i<this.radios.length; i++)
 		{
-			var radioButtonOptions = Object.extend(
-			{
-				ID : options.ListID+"_c"+i,
-				EventTarget : options.ListID+"$c"+i
-			}, options);
-			new Prado.WebUI.TRadioButton(radioButtonOptions);
-		}
+			Event.observe(this.radios[i].parentNode, "mouseover", this.hover.bindEvent(this,i));
+			Event.observe(this.radios[i].parentNode, "mouseout", this.recover.bindEvent(this,i));
+			Event.observe(this.radios[i].parentNode, "click", this.click.bindEvent(this, i));
+		}		
+		this.caption = CAPTION();
+		this.element.appendChild(this.caption);
+		this.selectedIndex = options.selectedIndex;
+		this.setRating(this.selectedIndex);
+	},
+	
+	hover : function(ev,index)
+	{
+		for(var i = 0; i<this.radios.length; i++)
+			this.radios[i].parentNode.className = (i<=index) ? "rating_hover" : "";
+		this.setCaption(index);
+	},
+	
+	recover : function(ev,index)
+	{
+		for(var i = 0; i<=index; i++)
+			Element.removeClassName(this.radios[i].parentNode, "rating_hover");
+		this.setRating(this.selectedIndex);
+	},
+	
+	click : function(ev, index)
+	{
+		for(var i = 0; i<this.radios.length; i++)
+			this.radios[i].checked = (i == index);
+		this.selectedIndex = index;
+		this.setRating(index);
+		if(isFunction(this.options.onChange))
+			this.options.onChange(this,index);		
+	},
+	
+	setRating: function(index)
+	{
+		for(var i = 0; i<=index; i++)
+			this.radios[i].parentNode.className = "rating_selected";
+		this.setCaption(index);
+	},
+	
+	setCaption : function(index)
+	{
+		this.caption.innerHTML = index > -1 ? 
+			this.radios[index].value : this.options.caption;	
 	}
-});
+}
 

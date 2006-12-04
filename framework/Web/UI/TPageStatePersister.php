@@ -16,17 +16,19 @@
  * TPageStatePersister implements a page state persistent method based on
  * form hidden fields.
  *
- * Since page state can be very big for complex pages, consider using
- * alternative persisters, such as {@link TSessionPageStatePersister},
- * which store page state on the server side and thus reduce the network
- * traffic for transmitting bulky page state.
+ * Depending on the {@link TPage::getEnableStateValidation() EnableStateValidation}
+ * and {@link TPage::getEnableStateEncryption() EnableStateEncryption},
+ * TPageStatePersister may do HMAC validation and encryption to prevent
+ * the state data from being tampered or viewed.
+ * The private keys and hashing/encryption methods are determined by
+ * {@link TApplication::getSecurityManager() SecurityManager}.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @version $Id$
  * @package System.Web.UI
  * @since 3.0
  */
-class TPageStatePersister extends TComponent implements IPageStatePersister
+class TPageStatePersister extends TApplicationComponent implements IPageStatePersister
 {
 	private $_page;
 
@@ -52,7 +54,15 @@ class TPageStatePersister extends TComponent implements IPageStatePersister
 	 */
 	public function save($state)
 	{
-		$this->_page->setClientState(TPageStateFormatter::serialize($this->_page,$state));
+		if($this->_page->getEnableStateValidation())
+			$data=$this->getApplication()->getSecurityManager()->hashData(Prado::serialize($state));
+		else
+			$data=Prado::serialize($state);
+		if($this->_page->getEnableStateEncryption())
+			$data=$this->getApplication()->getSecurityManager()->encrypt($data);
+		if(extension_loaded('zlib'))
+			$data=gzcompress($data);
+		$this->_page->getClientScript()->registerHiddenField(TPage::FIELD_PAGESTATE,base64_encode($data));
 	}
 
 	/**
@@ -62,10 +72,26 @@ class TPageStatePersister extends TComponent implements IPageStatePersister
 	 */
 	public function load()
 	{
-		if(($data=TPageStateFormatter::unserialize($this->_page,$this->_page->getRequestClientState()))!==null)
-			return $data;
+		$str=base64_decode($this->getRequest()->itemAt(TPage::FIELD_PAGESTATE));
+		if($str==='')
+			return null;
+		if(extension_loaded('zlib'))
+			$data=gzuncompress($str);
 		else
-			throw new THttpException(400,'pagestatepersister_pagestate_corrupted');
+			$data=$str;
+		if($data!==false)
+		{
+			if($this->_page->getEnableStateEncryption())
+				$data=$this->getApplication()->getSecurityManager()->decrypt($data);
+			if($this->_page->getEnableStateValidation())
+			{
+				if(($data=$this->getApplication()->getSecurityManager()->validateData($data))!==false)
+					return Prado::unserialize($data);
+			}
+			else
+				return $data;
+		}
+		throw new THttpException(400,'pagestatepersister_pagestate_corrupted');
 	}
 }
 

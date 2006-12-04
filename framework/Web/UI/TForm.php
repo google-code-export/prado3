@@ -58,7 +58,7 @@ class TForm extends TControl
 		if(($butt=$this->getDefaultButton())!=='')
 		{
 			if(($button=$this->findControl($butt))!==null)
-				$this->getPage()->getClientScript()->registerDefaultButton($this, $button);
+				$this->getPage()->getClientScript()->registerDefaultButton($this,$button);
 			else
 				throw new TInvalidDataValueException('form_defaultbutton_invalid',$butt);
 		}
@@ -70,33 +70,12 @@ class TForm extends TControl
 	 */
 	public function render($writer)
 	{
-		$page=$this->getPage();
-		$page->beginFormRender($writer);
-		$textWriter=new TTextWriter;
-		$this->renderChildren(new THtmlWriter($textWriter));
-		$content=$textWriter->flush();
-		$page->endFormRender($writer);
-
 		$this->addAttributesToRender($writer);
 		$writer->renderBeginTag('form');
-
-		if($page->getClientSupportsJavaScript())
-		{
-			$cs=$page->getClientScript();
-			$cs->renderHiddenFields($writer);
-			$cs->renderScriptFiles($writer);
-			$cs->renderBeginScripts($writer);
-
-			$writer->write($content);
-
-			$cs->renderEndScripts($writer);
-		}
-		else
-		{
-			$cs->renderHiddenFields($writer);
-			$writer->write($content);
-		}
-
+		$page=$this->getPage();
+		$page->beginFormRender($writer);
+		$this->renderChildren($writer);
+		$page->endFormRender($writer);
 		$writer->renderEndTag();
 	}
 

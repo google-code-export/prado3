@@ -106,22 +106,6 @@ abstract class TListControl extends TDataBoundControl
 	}
 
 	/**
-	 * @return boolean whether to render javascript.
-	 */
-	public function getEnableClientScript()
-	{
-		return $this->getViewState('EnableClientScript',true);
-	}
-
-	/**
-	 * @param boolean whether to render javascript.
-	 */
-	public function setEnableClientScript($value)
-	{
-		$this->setViewState('EnableClientScript',TPropertyValue::ensureBoolean($value),true);
-	}
-
-	/**
 	 * Adds attributes to renderer.
 	 * @param THtmlWriter the renderer
 	 */
@@ -131,27 +115,14 @@ abstract class TListControl extends TDataBoundControl
 		$page->ensureRenderInForm($this);
 		if($this->getIsMultiSelect())
 			$writer->addAttribute('multiple','multiple');
-		if($this->getEnabled(true))
+		if($this->getEnabled(true) && $this->getAutoPostBack() && $page->getClientSupportsJavaScript())
 		{
-			if($this->getAutoPostBack()
-				&& $this->getEnableClientScript()
-				&& $page->getClientSupportsJavaScript())
-			{
-				$this->renderClientControlScript($writer);
-			}
+			$writer->addAttribute('id',$this->getClientID());
+			$this->getPage()->getClientScript()->registerPostBackControl($this->getClientClassName(),$this->getPostBackOptions());
 		}
-		else if($this->getEnabled())
+		if(!$this->getEnabled(true) && $this->getEnabled())
 			$writer->addAttribute('disabled','disabled');
 		parent::addAttributesToRender($writer);
-	}
-
-	/**
-	 * Renders the javascript for list control.
-	 */
-	protected function renderClientControlScript($writer)
-	{
-		$writer->addAttribute('id',$this->getClientID());
-		$this->getPage()->getClientScript()->registerPostBackControl($this->getClientClassName(),$this->getPostBackOptions());
 	}
 
 	/**
@@ -491,8 +462,6 @@ abstract class TListControl extends TDataBoundControl
 				throw new TInvalidDataValueException('listcontrol_selectedindex_invalid',get_class($this),$index);
 		}
 		$this->_cachedSelectedIndex=$index;
-		if($this->getAdapter() instanceof IListControlAdapter)
-			$this->getAdapter()->setSelectedIndex($index);
 	}
 
 	/**
@@ -532,9 +501,6 @@ abstract class TListControl extends TDataBoundControl
 		}
 		else
 			throw new TNotSupportedException('listcontrol_multiselect_unsupported',get_class($this));
-
-		if($this->getAdapter() instanceof IListControlAdapter)
-			$this->getAdapter()->setSelectedIndices($indices);
 	}
 
 	/**
@@ -578,8 +544,6 @@ abstract class TListControl extends TDataBoundControl
 	    		throw new TInvalidDataValueException('listcontrol_selectedvalue_invalid',get_class($this),$value);
     	}
     	$this->_cachedSelectedValue=$value;
-		if($this->getAdapter() instanceof IListControlAdapter)
-			$this->getAdapter()->setSelectedValue($value);
     }
 
 
@@ -625,9 +589,6 @@ abstract class TListControl extends TDataBoundControl
 		}
 		else
 			throw new TNotSupportedException('listcontrol_multiselect_unsupported',get_class($this));
-
-		if($this->getAdapter() instanceof IListControlAdapter)
-			$this->getAdapter()->setSelectedValues($values);
 	}
 
     /**
@@ -656,9 +617,6 @@ abstract class TListControl extends TDataBoundControl
 		    foreach($this->_items as $item)
 		    	$item->setSelected(false);
 	    }
-
-		if($this->getAdapter() instanceof IListControlAdapter)
-			$this->getAdapter()->clearSelection();
     }
 
 	/**
@@ -816,22 +774,11 @@ class TListItemCollection extends TList
 	 */
 	public function createListItem($index=-1)
 	{
-		$item=$this->createNewListItem();
+		$item=new TListItem;
 		if($index<0)
 			$this->add($item);
 		else
 			$this->insertAt($index,$item);
-		return $item;
-	}
-
-	/**
-	 * @return TListItem new item.
-	 */
-	protected function createNewListItem($text=null)
-	{
-		$item =  new TListItem;
-		if(!is_null($text))
-			$item->setText($text);
 		return $item;
 	}
 
@@ -844,11 +791,15 @@ class TListItemCollection extends TList
 	 */
 	public function insertAt($index,$item)
 	{
-		if(is_string($item))
-			$item = $this->createNewListItem($item);
-		if(!($item instanceof TListItem))
+		if($item instanceof TListItem)
+			parent::insertAt($index,$item);
+		else if(is_string($item))
+		{
+			$item=$this->createListItem($index);
+			$item->setText($item);
+		}
+		else
 			throw new TInvalidDataTypeException('listitemcollection_item_invalid',get_class($this));
-		parent::insertAt($index,$item);
 	}
 
 	/**
@@ -939,45 +890,5 @@ class TListItemCollection extends TList
 		return ($this->getCount()>0) ? $this->toArray() : null;
 	}
 }
-
-/**
- * IListControlAdapter interface
- *
- * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
- * @version $Revision: $  Sun Jun 25 04:53:43 EST 2006 $
- * @package System.Web.UI.ActiveControls
- * @since 3.0
- */
-interface IListControlAdapter
-{
-	/**
-	 * Selects an item based on zero-base index on the client side.
-	 * @param integer the index (zero-based) of the item to be selected
-	 */
-	public function setSelectedIndex($index);
-	/**
-	 * Selects a list of item based on zero-base indices on the client side.
-	 * @param array list of index of items to be selected
-	 */
-	public function setSelectedIndices($indices);
-
-	/**
-	 * Sets selection by item value on the client side.
-	 * @param string the value of the item to be selected.
-	 */
-	public function setSelectedValue($value);
-
-	/**
-	 * Sets selection by a list of item values on the client side.
-	 * @param array list of the selected item values
-	 */
-	public function setSelectedValues($values);
-
-    /**
-     * Clears all existing selections on the client side.
-     */
-    public function clearSelection();
-}
-
 
 ?>

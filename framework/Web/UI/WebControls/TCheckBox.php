@@ -337,22 +337,6 @@ class TCheckBox extends TWebControl implements IPostBackDataHandler, IValidatabl
 	}
 
 	/**
-	 * @return boolean whether to render javascript.
-	 */
-	public function getEnableClientScript()
-	{
-		return $this->getViewState('EnableClientScript',true);
-	}
-
-	/**
-	 * @param boolean whether to render javascript.
-	 */
-	public function setEnableClientScript($value)
-	{
-		$this->setViewState('EnableClientScript',TPropertyValue::ensureBoolean($value),true);
-	}
-
-	/**
 	 * Renders a label beside the checkbox.
 	 * @param THtmlWriter the writer for the rendering purpose
 	 * @param string checkbox id
@@ -381,7 +365,7 @@ class TCheckBox extends TWebControl implements IPostBackDataHandler, IValidatabl
 		$writer->addAttribute('type','checkbox');
 		if(($value=$this->getValueAttribute())!=='')
 			$writer->addAttribute('value',$value);
-		if(!empty($onclick))
+		if($onclick!=='')
 			$writer->addAttribute('onclick',$onclick);
 		if(($uniqueID=$this->getUniqueID())!=='')
 			$writer->addAttribute('name',$uniqueID);
@@ -391,13 +375,8 @@ class TCheckBox extends TWebControl implements IPostBackDataHandler, IValidatabl
 			$writer->addAttribute('disabled','disabled');
 
 		$page=$this->getPage();
-		if($this->getEnabled(true)
-			&& $this->getEnableClientScript()
-			&& $this->getAutoPostBack()
-			&& $page->getClientSupportsJavaScript())
-		{
-			$this->renderClientControlScript($writer);
-		}
+		if($this->getEnabled(true) && $this->getAutoPostBack() && $page->getClientSupportsJavaScript())
+			$page->getClientScript()->registerPostBackControl('Prado.WebUI.TCheckBox',$this->getPostBackOptions());
 
 		if(($accesskey=$this->getAccessKey())!=='')
 			$writer->addAttribute('accesskey',$accesskey);
@@ -407,25 +386,6 @@ class TCheckBox extends TWebControl implements IPostBackDataHandler, IValidatabl
 			$writer->addAttributes($attributes);
 		$writer->renderBeginTag('input');
 		$writer->renderEndTag();
-	}
-
-	/**
-	 * Renders the client-script code.
-	 */
-	protected function renderClientControlScript($writer)
-	{
-		$cs = $this->getPage()->getClientScript();
-		$cs->registerPostBackControl($this->getClientClassName(),$this->getPostBackOptions());
-	}
-
-	/**
-	 * Gets the name of the javascript class responsible for performing postback for this control.
-	 * This method overrides the parent implementation.
-	 * @return string the javascript class name
-	 */
-	protected function getClientClassName()
-	{
-		return 'Prado.WebUI.TCheckBox';
 	}
 
 	/**
@@ -440,6 +400,7 @@ class TCheckBox extends TWebControl implements IPostBackDataHandler, IValidatabl
 		$options['EventTarget'] = $this->getUniqueID();
 		return $options;
 	}
+
 }
 
 /**
