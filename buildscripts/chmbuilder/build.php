@@ -15,7 +15,7 @@ if(!isset($isChild))
 
 $toc_file = $base.'/controls/TopicList.tpl';
 
-$pages = include($ROOT.'/../texbuilder/quickstart/pages.php');
+$pages = include($ROOT.'/../texbuilder/pages.php');
 
 include($ROOT.'/ChmQuickstartBuilder.php');
 include($ROOT.'/../../framework/PradoBase.php');
@@ -71,7 +71,7 @@ else
 		passthru('php '.$child_builder.' '.$class);
 	}
 
-//	$classBuilder->parseBasePage();
+	$classBuilder->parseBasePage();
 
 	$toc = new HTMLHelpTOCBuilder();
 	$toc->buildToc($toc_file,$output_dir,array_keys($classes));

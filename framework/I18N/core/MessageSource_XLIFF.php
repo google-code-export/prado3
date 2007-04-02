@@ -487,12 +487,12 @@ class MessageSource_XLIFF extends MessageSource
 		if(!is_dir($dir))
 		{
 			@mkdir($dir);
-			@chmod($dir,PRADO_CHMOD);
+			@chmod($dir,0777);
 		}
 		if(!is_dir($dir))
 			throw new TException("Unable to create directory $dir");
 		file_put_contents($file, $this->getTemplate($catalogue));
-		chmod($file, PRADO_CHMOD);
+		chmod($file, 0777);
 		return array($variant, $file);
 	}
 

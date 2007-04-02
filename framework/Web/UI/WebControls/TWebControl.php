@@ -38,7 +38,7 @@ Prado::using('System.Web.UI.WebControls.TWebControlAdapter');
  * @package System.Web.UI.WebControls
  * @since 3.0
  */
-class TWebControl extends TControl implements IStyleable
+class TWebControl extends TControl
 {
 	/**
 	 * Copies basic control attributes from another control.
@@ -194,22 +194,6 @@ class TWebControl extends TControl implements IStyleable
 	}
 
 	/**
-	 * @param TDisplayStyle display style of the control, default is TDisplayStyle::Fixed
-	 */
-	public function setDisplay($value)
-	{
-		$this->getStyle()->setDisplayStyle($value);
-	}
-
-	/**
-	 * @return TDisplayStyle display style of the control, default is TDisplayStyle::Fixed
-	 */
-	public function getDisplay()
-	{
-		return $this->getStyle()->getDisplayStyle();
-	}
-
-	/**
 	 * @param string the css class of the control
 	 */
 	public function setCssClass($value)
@@ -247,7 +231,6 @@ class TWebControl extends TControl implements IStyleable
 	/**
 	 * Creates a style object to be used by the control.
 	 * This method may be overriden by controls to provide customized style.
-	 * @return TStyle the default style created for TWebControl
 	 */
 	protected function createStyle()
 	{
@@ -281,14 +264,6 @@ class TWebControl extends TControl implements IStyleable
 			$this->getStyle()->setCustomStyle($value);
 		else
 			throw new TInvalidDataValueException('webcontrol_style_invalid',get_class($this));
-	}
-
-	/**
-	 * Removes all style data.
-	 */
-	public function clearStyle()
-	{
-		$this->clearViewState('Style');
 	}
 
 	/**

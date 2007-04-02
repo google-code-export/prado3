@@ -48,7 +48,7 @@
  * @package System.Web.UI.WebControls
  * @since 3.0
  */
-class TTextBox extends TWebControl implements IPostBackDataHandler, IValidatable, IDataRenderer
+class TTextBox extends TWebControl implements IPostBackDataHandler, IValidatable
 {
 	/**
 	 * Default number of rows (for MultiLine text box)
@@ -73,22 +73,6 @@ class TTextBox extends TWebControl implements IPostBackDataHandler, IValidatable
 	protected function getTagName()
 	{
 		return ($this->getTextMode()==='MultiLine')?'textarea':'input';
-	}
-
-	/**
-	 * @return boolean whether to render javascript.
-	 */
-	public function getEnableClientScript()
-	{
-		return $this->getViewState('EnableClientScript',true);
-	}
-
-	/**
-	 * @param boolean whether to render javascript.
-	 */
-	public function setEnableClientScript($value)
-	{
-		$this->setViewState('EnableClientScript',TPropertyValue::ensureBoolean($value),true);
 	}
 
 	/**
@@ -142,8 +126,6 @@ class TTextBox extends TWebControl implements IPostBackDataHandler, IValidatable
 			}
 			else
 			{
-				if($this->getPersistPassword() && ($text=$this->getText())!=='')
-					$writer->addAttribute('value',$text);
 				$writer->addAttribute('type','password');
 			}
 			if(($cols=$this->getColumns())>0)
@@ -156,34 +138,12 @@ class TTextBox extends TWebControl implements IPostBackDataHandler, IValidatable
 		$isEnabled=$this->getEnabled(true);
 		if(!$isEnabled && $this->getEnabled())  // in this case parent will not render 'disabled'
 			$writer->addAttribute('disabled','disabled');
-		if($isEnabled
-			&& $this->getEnableClientScript()
-			&& ( $this->getAutoPostBack() || $textMode===TTextBoxMode::SingleLine)
-			&& $page->getClientSupportsJavaScript())
+		if($isEnabled && $this->getAutoPostBack() && $page->getClientSupportsJavaScript())
 		{
-			$this->renderClientControlScript($writer);
+			$writer->addAttribute('id',$this->getClientID());
+			$this->getPage()->getClientScript()->registerPostBackControl('Prado.WebUI.TTextBox',$this->getPostBackOptions());
 		}
 		parent::addAttributesToRender($writer);
-	}
-
-	/**
-	 * Renders the javascript for textbox.
-	 */
-	protected function renderClientControlScript($writer)
-	{
-		$writer->addAttribute('id',$this->getClientID());
-		$cs = $this->getPage()->getClientScript();
-		$cs->registerPostBackControl($this->getClientClassName(),$this->getPostBackOptions());
-	}
-
-	/**
-	 * Gets the name of the javascript class responsible for performing postback for this control.
-	 * This method overrides the parent implementation.
-	 * @return string the javascript class name
-	 */
-	protected function getClientClassName()
-	{
-		return 'Prado.WebUI.TTextBox';
 	}
 
 	/**
@@ -408,22 +368,6 @@ class TTextBox extends TWebControl implements IPostBackDataHandler, IValidatable
 	}
 
 	/**
-	 * @return boolean whether password should be displayed in the textbox during postback. Defaults to false. This property only applies when TextMode='Password'.
-	 */
-	public function getPersistPassword()
-	{
-		return $this->getViewState('PersistPassword',false);
-	}
-
-	/**
-	 * @param boolean whether password should be displayed in the textbox during postback. This property only applies when TextMode='Password'.
-	 */
-	public function setPersistPassword($value)
-	{
-		$this->setViewState('PersistPassword',TPropertyValue::ensureBoolean($value),false);
-	}
-
-	/**
 	 * @return string the text content of the TTextBox control.
 	 */
 	public function getText()
@@ -439,32 +383,6 @@ class TTextBox extends TWebControl implements IPostBackDataHandler, IValidatable
 	{
 		$this->setViewState('Text',$value,'');
 		$this->_safeText = null;
-	}
-
-	/**
-	 * Returns the text content of the TTextBox control.
-	 * This method is required by {@link IDataRenderer}.
-	 * It is the same as {@link getText()}.
-	 * @return string the text content of the TTextBox control.
-	 * @see getText
-	 * @since 3.1.0
-	 */
-	public function getData()
-	{
-		return $this->getText();
-	}
-
-	/**
-	 * Sets the text content of the TTextBox control.
-	 * This method is required by {@link IDataRenderer}.
-	 * It is the same as {@link setText()}.
-	 * @param string the text content of the TTextBox control.
-	 * @see setText
-	 * @since 3.1.0
-	 */
-	public function setData($value)
-	{
-		$this->setText($value);
 	}
 
 	/**

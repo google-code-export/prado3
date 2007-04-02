@@ -24,13 +24,11 @@ map_item_unremovable					= The item cannot be removed from the map.
 map_data_not_iterable					= Data must be either an array or an object implementing Traversable interface.
 map_readonly							= {0} is read-only.
 
-application_includefile_invalid			= Unable to find application configuration {0}. Make sure it is in namespace format and the file ends with ".xml".
 application_basepath_invalid			= Application base path '{0}' does not exist or is not a directory.
 application_runtimepath_invalid			= Application runtime path '{0}' does not exist or is not writable by Web server process.
 application_service_invalid				= Service '{0}' must implement IService interface.
 application_service_unknown				= Requested service '{0}' is not defined.
-application_unavailable					= Application is unavailable at this time.
-application_service_unavailable			= Service '{0}' is unavailable at this time.
+application_service_unavailable			= Service Unavailable.
 application_moduleid_duplicated			= Application module ID '{0}' is not unique.
 application_runtimepath_failed			= Unable to create runtime path '{0}'. Make sure the parent directory exists and is writable by the Web process.
 
@@ -43,7 +41,6 @@ appconfig_moduletype_required			= Application configuration <module id="{0}"> mu
 appconfig_serviceid_required			= Application configuration <service> element must have an "id" attribute.
 appconfig_servicetype_required			= Application configuration <service id="{0}"> must have a "class" attribute.
 appconfig_parameterid_required			= Application configuration <parameter> element must have an "id" attribute.
-appconfig_includefile_required			= Application configuration <include> element must have a "file" attribute.
 
 securitymanager_validationkey_invalid	= TSecurityManager.ValidationKey must not be empty.
 securitymanager_encryptionkey_invalid	= TSecurityManager.EncryptionKey must not be empty.
@@ -78,7 +75,6 @@ assetmanager_filepath_invalid			= TAssetManager is publishing an invalid file '{
 assetmanager_tarchecksum_invalid		= TAssetManager is publishing a tar file with invalid checksum '{0}'.
 assetmanager_tarfile_invalid			= TAssetManager is publishing an invalid tar file '{0}'.
 
-cache_primary_duplicated				= At most one primary cache module is allowed. {0} is trying to register as another primary cache.
 sqlitecache_extension_required			= TSqliteCache requires SQLite PHP extension.
 sqlitecache_dbfile_required				= TSqliteCache.DbFile is required.
 sqlitecache_connection_failed			= TSqliteCache database connection failed. {0}.
@@ -103,7 +99,6 @@ pageservice_basepath_invalid			= TPageService.BasePath '{0}' is not a valid dire
 pageservice_page_required				= Page Name Required
 pageservice_defaultpage_unchangeable	= TPageService.DefaultPage cannot be modified after the service is initialized.
 pageservice_basepath_unchangeable		= TPageService.BasePath cannot be modified after the service is initialized.
-pageservice_pageclass_invalid			= Page class {0} is invalid. It should be TPage or extend from TPage.
 
 pageserviceconf_file_invalid			= Unable to open page directory configuration file '{0}'.
 pageserviceconf_aliaspath_invalid		= <alias id="{0}"> uses an invalid file path "{1}" in page directory configuration file '{2}'.
@@ -125,7 +120,8 @@ template_property_readonly				= {0} has a read-only property '{1}'.
 template_event_forbidden				= {0} is a non-control component. No handler can be attached to its event '{1}' in a template.
 template_databind_forbidden				= {0} is a non-control component. Expressions cannot be bound to its property '{1}'.
 template_component_required				= '{0}' is not a component. Only components can appear in a template.
-template_format_invalid					= Invalid template syntax: {0}
+template_format_invalid					= Error in {0} (line {1}) : {2}
+template_format_invalid2				= Error at line {0} of the following template: {1} {2}
 template_property_duplicated			= Property {0} is configured twice or more.
 template_eventhandler_invalid			= {0}.{1} can only accept a static string.
 template_controlid_invalid				= {0}.ID can only accept a static text string.
@@ -253,23 +249,26 @@ comparevalidator_controltocompare_invalid = TCompareValidator.ControlToCompare c
 listcontrolvalidator_invalid_control	= {0}.ControlToValidate contains an invalid TListControl ID path, "{1}" is a {2}.
 
 repeater_template_required				= TRepeater.{0} requires a template instance implementing ITemplate interface.
-repeater_itemtype_unknown				= Unknow repeater item type {0}.
-repeateritemcollection_item_invalid		= TRepeaterItemCollection can only accept objects that are instance of TControl or its descendant class.
-
 datalist_template_required				= TDataList.{0} requires a template instance implementing ITemplate interface.
-datalistitemcollection_datalistitem_required = TDataListItemCollection can only accept TDataListItem objects.
-
 datagrid_template_required				= TDataGrid.{0} requires a template instance implementing ITemplate interface.
 templatecolumn_template_required		= TTemplateColumn.{0} requires a template instance implementing ITemplate interface.
+
 datagrid_currentpageindex_invalid		= TDataGrid.CurrentPageIndex must be no less than 0.
 datagrid_pagesize_invalid				= TDataGrid.PageSize must be greater than 0.
 datagrid_virtualitemcount_invalid		= TDataGrid.VirtualItemCount must be no less than 0.
-datagriditemcollection_datagriditem_required = TDataGridItemCollection can only accept TDataGridItem objects.
-datagridcolumncollection_datagridcolumn_required = TDataGridColumnCollection can only accept TDataGridColumn objects.
+
 datagridpagerstyle_pagebuttoncount_invalid = TDataGridPagerStyle.PageButtonCount must be greater than 0.
 
 datafieldaccessor_data_invalid			= TDataFieldAccessor is trying to evaluate a field value of an invalid data. Make sure the data is an array, TMap, TList, or object that contains the specified field '{0}'.
 datafieldaccessor_datafield_invalid		= TDataFieldAccessor is trying to evaluate data value of an unknown field '{0}'.
+
+repeateritemcollection_repeateritem_required = TRepeaterItemCollection can only accept TRepeaterItem objects.
+
+datagriditemcollection_datagriditem_required = TDataGridItemCollection can only accept TDataGridItem objects.
+
+datagridcolumncollection_datagridcolumn_required = TDataGridColumnCollection can only accept TDataGridColumn objects.
+
+datalistitemcollection_datalistitem_required = TDataListItemCollection can only accept TDataListItem objects.
 
 tablerowcollection_tablerow_required	= TTableRowCollection can only accept TTableRow objects.
 
@@ -307,7 +306,6 @@ parametermodule_parameterid_required	= Parameter element must have 'id' attribut
 datagridcolumn_id_invalid				= {0}.ID '{1}' is invalid. Only alphanumeric and underline characters are allowed. The first character must be an alphabetic or underline character.
 datagridcolumn_expression_invalid		= {0} is evaluating an invalid expression '{1}' : {2}
 
-outputcache_cachemoduleid_invalid		= TOutputCache.CacheModuleID is set with an invalid cache module ID {0}. Either the module does not exist or does not implement ICache interface.
 outputcache_duration_invalid			= {0}.Duration must be an integer no less than 0.
 
 stack_data_not_iterable					= TStack can only fetch data from an array or a traversable object.
@@ -334,47 +332,3 @@ clientscript_invalid_file_position		= Invalid file position '{1}' for TClientScr
 tdatepicker_autopostback_unsupported	= '{0}' does not support AutoPostBack.
 globalization_cache_path_failed			= Unable to create translation message cache path '{0}'. Make sure the parent directory exists and is writable by the Web process.
 globalization_source_path_failed		= Unable to create translation message path '{0}'. Make sure the parent directory exists and is writable by the Web process.
-callback_not_support_no_priority_state_update	= Callback request does not support unprioritized pagestate update.
-callback_invalid_callback_options		= '{1}' is not a valid TCallbackOptions control for Callback control '{0}'.
-callback_invalid_clientside_options		= Callback ClientSide property must be either a string that is the ID of a TCallbackOptions control or an instance of TCallbackClientSideOptions.=======
-callback_not_support_no_priority_state_update	= Callback request does not support unprioritized pagestate update.
-callback_invalid_handler				= Invalid callback handler, control {0} must implement ICallbackEventHandler.
-callback_invalid_target					= Invalid callback target, no such control with ID {0}.
-
-callback_interval_be_positive			= Interval for TCallbackTimer "{0}" must be strictly greater than zero seconds.
-callback_decay_be_not_negative			= Decay rate for TCallbackTimer "{0}" must be not negative.
-
-callback_no_autopostback				= Control "{0}" can not enable AutoPostBack.
-
-xmltransform_xslextension_required		= TXmlTransform requires the PHP's XSL extension.
-xmltransform_transformpath_invalid		= TXmlTransform.TransformPath '{0}' is invalid.
-xmltransform_documentpath_invalid		= TXmlTransform.DocumentPath '{0}' is invalid.
-xmltransform_transform_required			= Either TransformContent or TransformPath property must be set for TXmlTransform.
-
-ttriggeredcallback_invalid_controlid	= ControlID property for '{0}' must not be empty.
-tactivecustomvalidator_clientfunction_unsupported = {0} does not support client side validator function.
-
-dbconnection_open_failed				= TDbConnection failed to establish DB connection: {0}
-dbconnection_connection_inactive		= TDbConnection is inactive.
-
-dbcommand_prepare_failed				= TDbCommand failed to prepare the SQL statement "{1}": {0}
-dbcommand_execute_failed				= TDbCommand failed to execute the SQL statement "{1}": {0}
-dbcommand_query_failed					= TDbCommand failed to execute the query SQL "{1}": {0}
-dbcommand_column_empty					= TDbCommand returned an empty result and could not obtain the scalar.
-dbdatareader_rewind_invalid				= TDbDataReader is a forward-only stream. It can only be traversed once.
-dbtransaction_transaction_inactive		= TDbTransaction is inactive.
-
-directorycachedependency_directory_invalid = TDirectoryCacheDependency.Directory {0} does not refer to a valid directory.
-cachedependencylist_cachedependency_required = Only objects implementing ICacheDependency can be added into TCacheDependencyList.
-
-soapservice_configfile_invalid			= TSoapService.ConfigFile '{0}' does not exist. Note, it has to be specified in a namespace format and the file extension must be '.xml'.
-soapservice_request_invalid				= SOAP server '{0}' not found.
-soapservice_serverid_required			= <soap> element must have 'id' attribute.
-soapservice_serverid_duplicated			= SOAP server ID '{0}' is duplicated.
-soapserver_id_invalid					= Invalid SOAP server ID '{0}'. It should not end with '.wsdl'.
-soapserver_version_invalid				= Invalid SOAP version '{0}'. It must be either '1.1' or '1.2'.
-
-dbusermanager_userclass_required		= TDbUserManager.UserClass is required.
-dbusermanager_userclass_invalid			= TDbUserManager.UserClass '{0}' is not a valid user class. The class must extend TDbUser.
-dbusermanager_connectionid_invalid		= TDbUserManager.ConnectionID '{0}' does not point to a valid TDataSourceConfig module.
-dbusermanager_connectionid_required		= TDbUserManager.ConnectionID is required.

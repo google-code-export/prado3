@@ -35,12 +35,6 @@ Prado::using('System.Web.UI.WebControls.TDataGridColumn');
  * The second method is possible because the textbox control created within the
  * datagrid cell is the first child.
  *
- * Since v3.1.0, TBoundColumn has introduced two new properties {@link setItemRenderer ItemRenderer}
- * and {@link setEditItemRenderer EditItemRenderer} which can be used to specify
- * the layout of the datagrid cells in browsing and editing mode.
- * A renderer refers to a control class that is to be instantiated as a control.
- * For more details, see {@link TRepeater} and {@link TDataList}.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @version $Id$
  * @package System.Web.UI.WebControls
@@ -48,62 +42,6 @@ Prado::using('System.Web.UI.WebControls.TDataGridColumn');
  */
 class TBoundColumn extends TDataGridColumn
 {
-	/**
-	 * @return string the class name for the item cell renderer. Defaults to empty, meaning not set.
-	 * @since 3.1.0
-	 */
-	public function getItemRenderer()
-	{
-		return $this->getViewState('ItemRenderer','');
-	}
-
-	/**
-	 * Sets the item cell renderer class.
-	 *
-	 * If not empty, the class will be used to instantiate as a child control in the item cells of the column.
-	 *
-	 * If the class implements {@link IDataRenderer}, the <b>Data</b> property
-	 * will be set as the data associated with the datagrid cell during databinding.
-	 * The data can be either the whole data row or a field of the row if
-	 * {@link getDataField DataField} is not empty. If {@link getDataFormatString DataFormatString}
-	 * is not empty, the data will be formatted first before passing to the renderer.
-	 *
-	 * @param string the renderer class name in namespace format.
-	 * @since 3.1.0
-	 */
-	public function setItemRenderer($value)
-	{
-		$this->setViewState('ItemRenderer',$value,'');
-	}
-
-	/**
-	 * @return string the class name for the edit item cell renderer. Defaults to empty, meaning not set.
-	 * @since 3.1.0
-	 */
-	public function getEditItemRenderer()
-	{
-		return $this->getViewState('EditItemRenderer','');
-	}
-
-	/**
-	 * Sets the edit item cell renderer class.
-	 *
-	 * If not empty, the class will be used to instantiate as a child control in the item cell that is in edit mode.
-	 *
-	 * If the class implements {@link IDataRenderer}, the <b>Data</b> property
-	 * will be set as the data associated with the datagrid cell during databinding.
-	 * The data can be either the whole data row or a field of the row if
-	 * {@link getDataField DataField} is not empty. If {@link getDataFormatString DataFormatString}
-	 * is not empty, the data will be formatted first before passing to the renderer.
-	 *
-	 * @param string the renderer class name in namespace format.
-	 * @since 3.1.0
-	 */
-	public function setEditItemRenderer($value)
-	{
-		$this->setViewState('EditItemRenderer',$value,'');
-	}
-
 	/**
 	 * @return string the field name from the data source to bind to the column
 	 */
@@ -165,52 +103,26 @@ class TBoundColumn extends TDataGridColumn
 	 */
 	public function initializeCell($cell,$columnIndex,$itemType)
 	{
-		$item=$cell->getParent();
+		parent::initializeCell($cell,$columnIndex,$itemType);
 		switch($itemType)
 		{
+			case TListItemType::EditItem:
+				$control=$cell;
+				if(!$this->getReadOnly())
+				{
+					$textBox=Prado::createComponent('System.Web.UI.WebControls.TTextBox');
+					$cell->getControls()->add($textBox);
+					$cell->registerObject('TextBox',$textBox);
+					$control=$textBox;
+				}
+				if(($dataField=$this->getDataField())!=='')
+					$control->attachEventHandler('OnDataBinding',array($this,'dataBindColumn'));
+				break;
 			case TListItemType::Item:
 			case TListItemType::AlternatingItem:
 			case TListItemType::SelectedItem:
-				if(($classPath=$this->getItemRenderer())!=='')
-				{
-					$control=Prado::createComponent($classPath);
-					if($control instanceof IItemDataRenderer)
-					{
-						$control->setItemIndex($item->getItemIndex());
-						$control->setItemType($item->getItemType());
-					}
-					$cell->getControls()->add($control);
-				}
-				else
-					$control=$cell;
-				$control->attachEventHandler('OnDataBinding',array($this,'dataBindColumn'));
-				break;
-			case TListItemType::EditItem:
-				if(!$this->getReadOnly())
-				{
-					if(($classPath=$this->getItemRenderer())!=='')
-					{
-						$control=Prado::createComponent($classPath);
-						if($control instanceof IItemDataRenderer)
-						{
-							$control->setItemIndex($item->getItemIndex());
-							$control->setItemType($item->getItemType());
-						}
-						$cell->getControls()->add($control);
-					}
-					else
-					{
-						$control=Prado::createComponent('System.Web.UI.WebControls.TTextBox');
-						$cell->getControls()->add($control);
-						$cell->registerObject('TextBox',$control);
-					}
-				}
-				else
-					$control=$cell;
-				$control->attachEventHandler('OnDataBinding',array($this,'dataBindColumn'));
-				break;
-			default:
-				parent::initializeCell($cell,$columnIndex,$itemType);
+				if($this->getDataField()!=='')
+					$cell->attachEventHandler('OnDataBinding',array($this,'dataBindColumn'));
 				break;
 		}
 	}
@@ -223,13 +135,14 @@ class TBoundColumn extends TDataGridColumn
 	public function dataBindColumn($sender,$param)
 	{
 		$item=$sender->getNamingContainer();
-		$data=$item->getData();
+		$data=$item->getDataItem();
 		$formatString=$this->getDataFormatString();
 		if(($field=$this->getDataField())!=='')
 			$value=$this->formatDataValue($formatString,$this->getDataFieldValue($data,$field));
 		else
 			$value=$this->formatDataValue($formatString,$data);
-		$sender->setData($value);
+		if(($sender instanceof TTableCell) || ($sender instanceof TTextBox))
+			$sender->setText($value);
 	}
 }
 

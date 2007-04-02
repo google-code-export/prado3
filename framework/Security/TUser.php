@@ -34,17 +34,21 @@ Prado::using('System.Security.IUserManager');
 class TUser extends TComponent implements IUser
 {
 	/**
-	 * @var array persistent state
-	 */
-	private $_state;
-	/**
-	 * @var boolean whether user state is changed
-	 */
-	private $_stateChanged=false;
-	/**
 	 * @var IUserManager user manager
 	 */
 	private $_manager;
+	/**
+	 * @var boolean if the user is a guest
+	 */
+	private $_isGuest=true;
+	/**
+	 * @var string username
+	 */
+	private $_name='';
+	/**
+	 * @var array user roles
+	 */
+	private $_roles=array();
 
 	/**
 	 * Constructor.
@@ -52,9 +56,8 @@ class TUser extends TComponent implements IUser
 	 */
 	public function __construct(IUserManager $manager)
 	{
-		$this->_state=array();
 		$this->_manager=$manager;
-		$this->setName($manager->getGuestName());
+		$this->_name=$manager->getGuestName();
 	}
 
 	/**
@@ -66,11 +69,11 @@ class TUser extends TComponent implements IUser
 	}
 
 	/**
-	 * @return string username, defaults to empty string.
+	 * @return string username
 	 */
 	public function getName()
 	{
-		return $this->getState('Name','');
+		return $this->_name;
 	}
 
 	/**
@@ -78,15 +81,15 @@ class TUser extends TComponent implements IUser
 	 */
 	public function setName($value)
 	{
-		$this->setState('Name',$value,'');
+		$this->_name=$value;
 	}
 
 	/**
-	 * @return boolean if the user is a guest, defaults to true.
+	 * @return boolean if the user is a guest
 	 */
 	public function getIsGuest()
 	{
-		return $this->getState('IsGuest',true);
+		return $this->_isGuest;
 	}
 
 	/**
@@ -94,12 +97,11 @@ class TUser extends TComponent implements IUser
 	 */
 	public function setIsGuest($value)
 	{
-		if($isGuest=TPropertyValue::ensureBoolean($value))
+		if($this->_isGuest=TPropertyValue::ensureBoolean($value))
 		{
-			$this->setName($this->_manager->getGuestName());
-			$this->setRoles(array());
+			$this->_name=$this->_manager->getGuestName();
+			$this->_roles=array();
 		}
-		$this->setState('IsGuest',$isGuest);
 	}
 
 	/**
@@ -107,7 +109,7 @@ class TUser extends TComponent implements IUser
 	 */
 	public function getRoles()
 	{
-		return $this->getState('Roles',array());
+		return $this->_roles;
 	}
 
 	/**
@@ -116,16 +118,15 @@ class TUser extends TComponent implements IUser
 	public function setRoles($value)
 	{
 		if(is_array($value))
-			$this->setState('Roles',$value,array());
+			$this->_roles=$value;
 		else
 		{
-			$roles=array();
+			$this->_roles=array();
 			foreach(explode(',',$value) as $role)
 			{
 				if(($role=trim($role))!=='')
-					$roles[]=$role;
+					$this->_roles[]=$role;
 			}
-			$this->setState('Roles',$roles,array());
 		}
 	}
 
@@ -135,7 +136,7 @@ class TUser extends TComponent implements IUser
 	 */
 	public function isInRole($role)
 	{
-		foreach($this->getRoles() as $r)
+		foreach($this->_roles as $r)
 			if(strcasecmp($role,$r)===0)
 				return true;
 		return false;
@@ -146,7 +147,7 @@ class TUser extends TComponent implements IUser
 	 */
 	public function saveToString()
 	{
-		return serialize($this->_state);
+		return serialize(array($this->_name,$this->_roles,$this->_isGuest));
 	}
 
 	/**
@@ -156,67 +157,13 @@ class TUser extends TComponent implements IUser
 	public function loadFromString($data)
 	{
 		if(!empty($data))
-			$this->_state=unserialize($data);
-		if(!is_array($this->_state))
-			$this->_state=array();
+		{
+			$array=unserialize($data);
+			$this->_name=$array[0];
+			$this->_roles=$array[1];
+			$this->_isGuest=$array[2];
+		}
 		return $this;
-	}
-
-	/**
-	 * Returns the value of a variable that is stored in user session.
-	 *
-	 * This function is designed to be used by TUser descendant classes
-	 * who want to store additional user information in user session.
-	 * A variable, if stored in user session using {@link setState} can be
-	 * retrieved back using this function.
-	 *
-	 * @param string variable name
-	 * @param mixed default value
-	 * @return mixed the value of the variable. If it doesn't exist, the provided default value will be returned
-	 * @see setState
-	 */
-	protected function getState($key,$defaultValue=null)
-	{
-		return isset($this->_state[$key])?$this->_state[$key]:$defaultValue;
-	}
-
-	/**
-	 * Stores a variable in user session.
-	 *
-	 * This function is designed to be used by TUser descendant classes
-	 * who want to store additional user information in user session.
-	 * By storing a variable using this function, the variable may be retrieved
-	 * back later using {@link getState}. The variable will be persistent
-	 * across page requests during a user session.
-	 *
-	 * @param string variable name
-	 * @param mixed variable value
-	 * @param mixed default value. If $value===$defaultValue, the variable will be removed from persistent storage.
-	 * @see getState
-	 */
-	protected function setState($key,$value,$defaultValue=null)
-	{
-		if($value===$defaultValue)
-			unset($this->_state[$key]);
-		else
-			$this->_state[$key]=$value;
-		$this->_stateChanged=true;
-	}
-
-	/**
-	 * @return boolean whether user session state is changed (i.e., setState() is called)
-	 */
-	public function getStateChanged()
-	{
-		return $this->_stateChanged;
-	}
-
-	/**
-	 * @param boolean whether user session state is changed
-	 */
-	public function setStateChanged($value)
-	{
-		$this->_stateChanged=TPropertyValue::ensureBoolean($value);
 	}
 }
 

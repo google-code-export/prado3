@@ -30,7 +30,7 @@
  <dd>國際化的一個細節步驟，它針對某個特定的市場文化對產品進行翻譯和調整。</dd>
  </dl>
  <p>PRADO支持以下功能：</p>
- <ul id="u1" class="block-content">
+ <ul>
    <li>文本翻譯</li>
    <li>屬性翻譯（尚未完成）</li>
    <li>參數替換（如需要可進行翻譯）</li>
@@ -152,4 +152,4 @@
 	<com:TTranslateParameter Key="time" Value="<%= Time() %>" />
 </com:TTranslate>
 
-<div class="last-modified">$Id$</div></com:TContent>
+</com:TContent>

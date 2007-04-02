@@ -1,7 +1,7 @@
 
 var Prado =
 {
-	Version: '3.1',
+	Version: '3.0.0',
 
 	/**
 	 * Returns browser information. Example

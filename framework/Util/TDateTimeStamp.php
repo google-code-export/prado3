@@ -11,7 +11,7 @@
  * @link http://www.pradosoft.com/
  * @copyright Copyright &copy; 2006 PradoSoft
  * @license http://www.pradosoft.com/license/
- * @version $Id$
+ * @version $Revision: 30/08/2006 $
  * @package System.Util
  */
 
@@ -28,7 +28,7 @@
 	 http://lists.debian.org/debian-glibc/2002/debian-glibc-200205/msg00010.html
 */
 
-if (!defined('ADODB_ALLOW_NEGATIVE_TS')
+if (!defined('ADODB_ALLOW_NEGATIVE_TS') 
 	&& !defined('ADODB_NO_NEGATIVE_TS')) define('ADODB_NO_NEGATIVE_TS',1);
 
 /**
@@ -59,7 +59,7 @@ if (!defined('ADODB_ALLOW_NEGATIVE_TS')
  * the 32-bit signed integer range.
  *
  * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
- * @version $Id$
+ * @version $Revision: $ 30/08/2006 $
  * @package System.Util
  * @since 3.0.4
  */

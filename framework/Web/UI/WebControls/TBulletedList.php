@@ -329,10 +329,9 @@ class TBulletedList extends TListControl implements IPostBackEventHandler
 		else
 		{
 			$this->_currentRenderItemIndex = $index;
+			$this->getPage()->getClientScript()->registerPostBackControl('Prado.WebUI.TBulletedList',$this->getPostBackOptions());
 			$writer->addAttribute('id', $this->getClientID().$index);
 			$writer->addAttribute('href', "javascript:;//".$this->getClientID().$index);
-			$cs = $this->getPage()->getClientScript();
-			$cs->registerPostBackControl($this->getClientClassName(),$this->getPostBackOptions());
 		}
 		if(($accesskey=$this->getAccessKey())!=='')
 			$writer->addAttribute('accesskey',$accesskey);
@@ -390,14 +389,6 @@ class TBulletedList extends TListControl implements IPostBackEventHandler
 	 * @throws TNotSupportedException if this method is invoked
 	 */
 	public function setSelectedValue($value)
-	{
-		throw new TNotSupportedException('bulletedlist_selectedvalue_unsupported');
-	}
-
-	/**
-	 * @throws TNotSupportedException if this method is invoked
-	 */
-	public function setSelectedValues($values)
 	{
 		throw new TNotSupportedException('bulletedlist_selectedvalue_unsupported');
 	}

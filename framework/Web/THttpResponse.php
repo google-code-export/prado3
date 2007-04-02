@@ -11,11 +11,6 @@
  */
 
 /**
- * Includes the THttpResponse adapter.
- */
-Prado::using('System.Web.THttpResponseAdapter');
-
-/**
  * THttpResponse class
  *
  * THttpResponse implements the mechanism for sending output to client users.
@@ -34,7 +29,7 @@ Prado::using('System.Web.THttpResponseAdapter');
  *
  * THttpResponse may be configured in application configuration file as follows
  *
- * <module id="response" class="System.Web.THttpResponse" CacheExpire="20" CacheControl="nocache" BufferOutput="true" />
+ * <module id="response" CacheExpire="20" CacheControl="nocache" BufferOutput="true" />
  *
  * where {@link getCacheExpire CacheExpire}, {@link getCacheControl CacheControl}
  * and {@link getBufferOutput BufferOutput} are optional properties of THttpResponse.
@@ -77,10 +72,6 @@ class THttpResponse extends TModule implements ITextWriter
 	 * @var string character set, e.g. UTF-8
 	 */
 	private $_charset='';
-	/**
-	 * @var THttpResponseAdapter adapter.
-	 */
-	private $_adapter;
 
 	/**
 	 * Destructor.
@@ -88,32 +79,8 @@ class THttpResponse extends TModule implements ITextWriter
 	 */
 	public function __destruct()
 	{
-		//if($this->_bufferOutput)
-		//	@ob_end_flush();
-	}
-
-	/**
-	 * @param THttpResponseAdapter response adapter
-	 */
-	public function setAdapter(THttpResponseAdapter $adapter)
-	{
-		$this->_adapter=$adapter;
-	}
-
-	/**
-	 * @return THttpResponseAdapter response adapter, null if not exist.
-	 */
-	public function getAdapter()
-	{
-		return $this->_adapter;
-	}
-
-	/**
-	 * @return boolean true if adapter exists, false otherwise.
-	 */
-	public function getHasAdapter()
-	{
-		return !is_null($this->_adapter);
+		if($this->_bufferOutput)
+			@ob_end_flush();
 	}
 
 	/**
@@ -314,20 +281,6 @@ class THttpResponse extends TModule implements ITextWriter
 	 */
 	public function redirect($url)
 	{
-		if($this->getHasAdapter())
-			$this->_adapter->httpRedirect($url);
-		else
-			$this->httpRedirect($url);
-	}
-
-	/**
-	 * Redirect the browser to another URL and exists the current application.
-	 * This method is used internally. Please use {@link redirect} instead.
-	 * @param string URL to be redirected to. If the URL is a relative one, the base URL of
-	 * the current request will be inserted at the beginning.
-	 */
-	public function httpRedirect($url)
-	{
 		if(!$this->getApplication()->getRequestCompleted())
 			$this->getApplication()->onEndRequest();
 		if($url[0]==='/')
@@ -347,21 +300,9 @@ class THttpResponse extends TModule implements ITextWriter
 	}
 
 	/**
-	 * Flush the response contents and headers.
+	 * Outputs the buffered content, sends content-type and charset header.
 	 */
 	public function flush()
-	{
-		if($this->getHasAdapter())
-			$this->_adapter->flushContent();
-		else
-			$this->flushContent();
-	}
-
-	/**
-	 * Outputs the buffered content, sends content-type and charset header.
-	 * This method is used internally. Please use {@link flush} instead.
-	 */
-	public function flushContent()
 	{
 		Prado::trace("Flushing output",'System.Web.THttpResponse');
 		$this->sendContentTypeHeader();
@@ -483,22 +424,8 @@ class THttpResponse extends TModule implements ITextWriter
 	public function createHtmlWriter($type=null)
 	{
 		if($type===null)
-			$type=$this->getHtmlWriterType();
-		if($this->getHasAdapter())
-			return $this->_adapter->createNewHtmlWriter($type, $this);
-		else
-		 	return $this->createNewHtmlWriter($type, $this);
-	}
-
-	/**
-	 * Create a new html writer intance.
-	 * This method is used internally. Please use {@link createHtmlWriter} instead.
-	 * @param string type of HTML writer to be created.
-	 * @param ITextWriter text writer holding the contents.
-	 */
-	public function createNewHtmlWriter($type, $writer)
-	{
-		return Prado::createComponent($type, $writer);
+			$type=$this->_htmlWriterType;
+		return Prado::createComponent($type,$this);
 	}
 }
 

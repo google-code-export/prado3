@@ -156,16 +156,6 @@ class TRadioButton extends TCheckBox
 	}
 
 	/**
-	 * Add the group name as post data loader if group name is set.
-	 */
-	protected function addToPostDataLoader()
-	{
-		parent::addToPostDataLoader();
-		$group = $this->getGroupName();
-		if(!empty($group))
-			$this->getPage()->registerPostDataLoader($this->getUniqueGroupName());
-	}
-	/**
 	 * @return string the name used to fetch radiobutton post data
 	 */
 	public function getUniqueGroupName()
@@ -244,22 +234,6 @@ class TRadioButton extends TCheckBox
 	}
 
 	/**
-	 * @return boolean whether to render javascript.
-	 */
-	public function getEnableClientScript()
-	{
-		return $this->getViewState('EnableClientScript',true);
-	}
-
-	/**
-	 * @param boolean whether to render javascript.
-	 */
-	public function setEnableClientScript($value)
-	{
-		$this->setViewState('EnableClientScript',TPropertyValue::ensureBoolean($value),true);
-	}
-
-	/**
 	 * Renders a radiobutton input element.
 	 * @param THtmlWriter the writer for the rendering purpose
 	 * @param string checkbox id
@@ -272,7 +246,7 @@ class TRadioButton extends TCheckBox
 		$writer->addAttribute('type','radio');
 		$writer->addAttribute('name',$this->getUniqueGroupName());
 		$writer->addAttribute('value',$this->getValueAttribute());
-		if(!empty($onclick))
+		if($onclick!=='')
 			$writer->addAttribute('onclick',$onclick);
 		if($this->getChecked())
 			$writer->addAttribute('checked','checked');
@@ -280,13 +254,8 @@ class TRadioButton extends TCheckBox
 			$writer->addAttribute('disabled','disabled');
 
 		$page=$this->getPage();
-		if($this->getEnabled(true)
-			&& $this->getEnableClientScript()
-			&& $this->getAutoPostBack()
-			&& $page->getClientSupportsJavaScript())
-		{
-			$this->renderClientControlScript($writer);
-		}
+		if($this->getEnabled(true) && $this->getAutoPostBack() && $page->getClientSupportsJavaScript())
+			$page->getClientScript()->registerPostBackControl('Prado.WebUI.TRadioButton',$this->getPostBackOptions());
 
 		if(($accesskey=$this->getAccessKey())!=='')
 			$writer->addAttribute('accesskey',$accesskey);
@@ -296,25 +265,6 @@ class TRadioButton extends TCheckBox
 			$writer->addAttributes($attributes);
 		$writer->renderBeginTag('input');
 		$writer->renderEndTag();
-	}
-
-	/**
-	 * Renders the client-script code.
-	 */
-	protected function renderClientControlScript($writer)
-	{
-		$cs = $this->getPage()->getClientScript();
-		$cs->registerPostBackControl($this->getClientClassName(),$this->getPostBackOptions());
-	}
-
-	/**
-	 * Gets the name of the javascript class responsible for performing postback for this control.
-	 * This method overrides the parent implementation.
-	 * @return string the javascript class name
-	 */
-	protected function getClientClassName()
-	{
-		return 'Prado.WebUI.TRadioButton';
 	}
 }
 

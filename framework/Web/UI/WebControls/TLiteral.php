@@ -31,7 +31,7 @@
  * @package System.Web.UI.WebControls
  * @since 3.0
  */
-class TLiteral extends TControl implements IDataRenderer
+class TLiteral extends TControl
 {
 	/**
 	 * @return string the static text of the TLiteral
@@ -48,32 +48,6 @@ class TLiteral extends TControl implements IDataRenderer
 	public function setText($value)
 	{
 		$this->setViewState('Text',$value,'');
-	}
-
-	/**
-	 * Returns the static text of the TLiteral.
-	 * This method is required by {@link IDataRenderer}.
-	 * It is the same as {@link getText()}.
-	 * @return string the static text of the TLiteral
-	 * @see getText
-	 * @since 3.1.0
-	 */
-	public function getData()
-	{
-		return $this->getText();
-	}
-
-	/**
-	 * Sets the static text of the TLiteral.
-	 * This method is required by {@link IDataRenderer}.
-	 * It is the same as {@link setText()}.
-	 * @param string the static text of the TLiteral
-	 * @see setText
-	 * @since 3.1.0
-	 */
-	public function setData($value)
-	{
-		$this->setText($value);
 	}
 
 	/**

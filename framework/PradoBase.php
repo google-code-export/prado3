@@ -18,11 +18,13 @@
  */
 if(!defined('PRADO_DIR'))
 	define('PRADO_DIR',dirname(__FILE__));
+
 /**
- * Defines the default permission for writable directories and files
+ * Includes the classes essential for PradoBase class
  */
-if(!defined('PRADO_CHMOD'))
-	define('PRADO_CHMOD',0777);
+require_once(PRADO_DIR.'/TComponent.php');
+require_once(PRADO_DIR.'/Exceptions/TException.php');
+require_once(PRADO_DIR.'/Util/TLogger.php');
 
 /**
  * PradoBase class.
@@ -66,7 +68,7 @@ class PradoBase
 	 */
 	public static function getVersion()
 	{
-		return '3.1.0b';
+		return '3.0.6';
 	}
 
 	/**
@@ -103,14 +105,7 @@ class PradoBase
 	 */
 	public static function poweredByPrado()
 	{
-		if(self::$_application!==null)
-		{
-			$am=self::$_application->getAssetManager();
-			$url=$am->publishFilePath(self::getPathOfNamespace('System.powered','.gif'));
-		}
-		else
-			$url='http://www.pradosoft.com/images/powered.gif';
-		return '<a title="Powered by PRADO" href="http://www.pradosoft.com/" target="_blank"><img src="'.$url.'" style="border-width:0px;" alt="Powered by PRADO" /></a>';
+		return '<a title="Powered by PRADO" href="http://www.pradosoft.com/"><img src="http://www.pradosoft.com/images/powered.gif" style="border-width:0px;" alt="Powered by PRADO" /></a>';
 	}
 
 	/**
@@ -271,26 +266,36 @@ class PradoBase
 			$className=substr($namespace,$pos+1);
 			if($className==='*')  // a directory
 			{
-				self::$_usings[$namespace]=$path;
-				set_include_path(get_include_path().PATH_SEPARATOR.$path);
+				if(is_dir($path))
+				{
+					self::$_usings[$namespace]=$path;
+					set_include_path(get_include_path().PATH_SEPARATOR.$path);
+				}
+				else
+					throw new TInvalidDataValueException('prado_using_invalid',$namespace);
 			}
 			else  // a file
 			{
-				self::$_usings[$namespace]=$path;
-				if(!class_exists($className,false))
+				if(is_file($path))
 				{
-					try
+					self::$_usings[$namespace]=$path;
+					if(!class_exists($className,false))
 					{
-						include_once($path);
-					}
-					catch(Exception $e)
-					{
-						if(!class_exists($className,false))
-							throw new TInvalidOperationException('prado_component_unknown',$className);
-						else
-							throw $e;
+						try
+						{
+							include_once($path);
+						}
+						catch(Exception $e)
+						{
+							if(!class_exists($className,false))
+								throw new TInvalidOperationException('prado_component_unknown',$className);
+							else
+								throw $e;
+						}
 					}
 				}
+				else
+					throw new TInvalidDataValueException('prado_using_invalid',$namespace);
 			}
 		}
 		else
@@ -600,12 +605,5 @@ class PradoBase
 class TReflectionClass extends ReflectionClass
 {
 }
-
-/**
- * Includes the classes essential for PradoBase class
- */
-PradoBase::using('System.TComponent');
-PradoBase::using('System.Exceptions.TException');
-PradoBase::using('System.Util.TLogger');
 
 ?>

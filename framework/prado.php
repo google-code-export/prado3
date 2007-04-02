@@ -51,9 +51,4 @@ Prado::initErrorHandlers();
  */
 require_once(dirname(__FILE__).'/TApplication.php');
 
-/**
- * Includes TShellApplication class file
- */
-require_once(dirname(__FILE__).'/TShellApplication.php');
-
 ?>

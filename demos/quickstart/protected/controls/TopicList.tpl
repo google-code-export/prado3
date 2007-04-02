@@ -6,20 +6,9 @@
     <li><a href="?page=GettingStarted.Introduction">Introduction</a></li>
     <li><a href="?page=GettingStarted.AboutPrado">What is PRADO?</a></li>
     <li><a href="?page=GettingStarted.Installation">Installation</a></li>
-    <li><a href="?page=GettingStarted.NewFeatures">New Features</a></li>
-    <li><a href="?page=GettingStarted.Upgrading">Upgrading from v2.x and v1.x</a></li>
-</ul>
-</div>
-
-<div class="topic">
-<div>Tutorials</div>
-<ul>
     <li><a href="?page=GettingStarted.HelloWorld">Creating First PRADO Application</a></li>
-    <li><a href="?page=Fundamentals.Hangman">Sample: Hangman Game</a></li>
-    <li><a href="?page=Tutorial.CurrencyConverter">Currency Converter</a></li>
-	<li><a href="?page=Tutorial.AddressBook">Address Book</a></li>
-	<li><a href="?page=Tutorial.AjaxChat">AJAX Chat Client</a></li>
     <li><a href="?page=GettingStarted.CommandLine">Command Line Tool</a></li>
+    <li><a href="?page=GettingStarted.Upgrading">Upgrading from v2.x and v1.x</a></li>
 </ul>
 </div>
 
@@ -33,6 +22,7 @@
     <li><a href="?page=Fundamentals.Modules">Modules</a></li>
     <li><a href="?page=Fundamentals.Services">Services</a></li>
     <li><a href="?page=Fundamentals.Applications">Applications</a></li>
+    <li><a href="?page=Fundamentals.Hangman">Sample: Hangman Game</a></li>
 </ul>
 </div>
 
@@ -56,26 +46,20 @@
     <li><a href="?page=Controls.Validation">Validation Controls</a></li>
     <li><a href="?page=Controls.List">List Controls</a></li>
     <li><a href="?page=Controls.Data">Data Controls</a></li>
-    <li><a href="?page=ActiveControls.Home">Active Controls (AJAX)</a></li>
+    <li><a href="?page=Construction">Active Controls</a></li>
     <li><a href="?page=Controls.NewControl">Writing New Controls</a></li>
+</ul>
+</div>
+
+<div class="topic">
+<div>Module Reference</div>
+<ul>
 </ul>
 </div>
 
 <div class="topic">
 <div>Service Reference</div>
 <ul>
-    <li><a href="?page=Fundamentals.Services">Page Service</a></li>
-    <li><a href="?page=Services.SoapService">SOAP Service</a></li>
-</ul>
-</div>
-
-<div class="topic">
-<div>Working with Databases</div>
-<ul>
-    <li><a href="?page=Database.DAO">Data Access Objects</a></li>
-    <li><a href="?page=Database.ActiveRecord">Active Record</a></li>
-    <li><a href="?page=Database.Scaffold">Active Record Scaffold</a></li>
-    <li><a href="?page=Database.SqlMap">SqlMap Data Mapper</a></li>
 </ul>
 </div>
 
@@ -85,6 +69,7 @@
 	<li><a href="?page=Advanced.Collections">Collections</a></li>
     <li><a href="?page=Advanced.Auth">Authentication and Authorization</a></li>
     <li><a href="?page=Advanced.Security">Security</a></li>
+    <li><a href="?page=Advanced.Scripts">Client-side Scripting</a></li>
     <li><a href="?page=Advanced.Assets">Assets</a></li>
     <li><a href="?page=Advanced.MasterContent">Master and Content</a></li>
     <li><a href="?page=Advanced.Themes">Themes and Skins</a></li>

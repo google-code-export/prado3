@@ -31,7 +31,7 @@ class SearchBox extends TTemplateControl
 	{
 		if(strlen($query = $this->search->getText()) >0)
 		{
-			$ps = $this->getApplication()->getService();
+			$ps = $this->getApplication()->getPageService();
 			$page = $ps->constructUrl('Search', array('q' => $query), false);
 			$this->getApplication()->getResponse()->redirect($page);
 		}

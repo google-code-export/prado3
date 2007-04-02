@@ -1,36 +1,41 @@
 <com:TContent ID="body">
-<h1>Conditional Validation (client-side + server side)</h1>
+	<h1>Validator Toggle - Server and Client Side</h1>
+	<com:TLabel ForControl="text1" Text="Text 1:" />
+	<com:TTextBox ID="text1" />
+	<com:TRequiredFieldValidator
+		ID="validator1"
+		ControlToValidate="text1"
+		ErrorMessage="Text 1 is required" />
+	<div>
+	<com:TCheckBox ID="check1" Text="More..." />
+	</div>
 
-<table class="sampletable">
-<tr>
-<td class="samplenote">
-Validator with default settings:<br />
-Check "optional" to validate both textboxes
-</td>
-<td class="sampleaction">
-		<com:TTextBox ID="text1" />
-		<com:TRequiredFieldValidator
-			ID="validator1"
-			ControlToValidate="text1"
-			ErrorMessage="*"
-			ControlCssClass="required"/>
+	<com:TPanel ID="panel1" Style="display:none" >
+		<com:TLabel ForControl="text2" Text="Text 2:" />
 		<com:TTextBox ID="text2" />
-		<com:TRequiredFieldValidator
-			ID="validator2"
-			ControlToValidate="text2"
-			OnValidate="check_validate"
-			ErrorMessage="*"
-			ControlCssClass="required">
-		<prop:ClientSide.OnValidate>
-			sender.enabled = $('<%= $this->check1->ClientID %>').checked;
-		</prop:ClientSide.OnValidate>
 
-		</com:TRequiredFieldValidator>
-		<com:TCheckBox ID="check1" Text="Optional" />
-	<com:TButton ID="submit1" Text="Submit" />
-</td>
-</tr>
+	<com:TRequiredFieldValidator
+		ID="validator2"
+		ControlToValidate="text2"
+		OnValidate="validator2_onValidate"
+		OnPreRender="validate2_onPostValidate"
+		ErrorMessage="Text 2 is required">
+	<prop:ClientSide.OnValidate>
+		sender.enabled = $("<%= $this->check1->ClientID %>").checked;
+	</prop:ClientSide.OnValidate>
+	</com:TRequiredFieldValidator>
 
-</table>
+	</com:TPanel>
 
-<div class="last-modified">$Id$</div></com:TContent>
+	<com:TButton ID="button1" Text="Submit!" />
+
+	<com:TClientScript>
+	Event.OnLoad(function()
+	{
+		Event.observe("<%= $this->check1->ClientID %>", "click", function(ev)
+		{
+			$("<%= $this->panel1->ClientID %>").toggle();
+		});
+	});
+	</com:TClientScript>
+</com:TContent>

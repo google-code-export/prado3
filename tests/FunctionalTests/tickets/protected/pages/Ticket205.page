@@ -1,5 +1,5 @@
 <com:TContent ID="Content">
-	<h3>TCustomValidator not enabling ControlCssClass or prop:ClientSide.OnValidationError after postback.</h3>
+	<h3>TCustomValidator not enabling ControlCssClass or prop:ClientSide.OnError after postback.</h3>
 	<style>
 		.required
 		{
@@ -20,7 +20,7 @@
 		ControlCssClass="required"
 		OnServerValidate="customValidate"
 		ClientValidationFunction="clientSideCustomValidate"
-		ClientSide.OnValidationError="alert('error')"
+		ClientSide.OnError="alert('error')"
 		ErrorMessage="must equal to 'Prado'" />
 	<com:TButton ID="button1" Text="Submit!" />
 </com:TContent>

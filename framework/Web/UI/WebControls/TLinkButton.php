@@ -54,7 +54,7 @@
  * @package System.Web.UI.WebControls
  * @since 3.0
  */
-class TLinkButton extends TWebControl implements IPostBackEventHandler, IButtonControl, IDataRenderer
+class TLinkButton extends TWebControl implements IPostBackEventHandler, IButtonControl
 {
 	/**
 	 * @return string tag name of the button
@@ -62,22 +62,6 @@ class TLinkButton extends TWebControl implements IPostBackEventHandler, IButtonC
 	protected function getTagName()
 	{
 		return 'a';
-	}
-
-	/**
-	 * @return boolean whether to render javascript.
-	 */
-	public function getEnableClientScript()
-	{
-		return $this->getViewState('EnableClientScript',true);
-	}
-
-	/**
-	 * @param boolean whether to render javascript.
-	 */
-	public function setEnableClientScript($value)
-	{
-		$this->setViewState('EnableClientScript',TPropertyValue::ensureBoolean($value),true);
 	}
 
 	/**
@@ -96,44 +80,16 @@ class TLinkButton extends TWebControl implements IPostBackEventHandler, IButtonC
 		// may be overwritten in the following
 		parent::addAttributesToRender($writer);
 
-		if($this->getEnabled(true) && $this->getEnableClientScript())
+		if($this->getEnabled(true))
 		{
-			$this->renderLinkButtonHref($writer);
-			$this->renderClientControlScript($writer);
+			//create unique no-op url references
+			//$nop = "#".$this->getClientID();
+			$nop = "javascript:;//".$this->getClientID();
+			$writer->addAttribute('href', $nop);
+			$this->getPage()->getClientScript()->registerPostBackControl('Prado.WebUI.TLinkButton',$this->getPostBackOptions());
 		}
 		else if($this->getEnabled()) // in this case, parent will not render 'disabled'
 			$writer->addAttribute('disabled','disabled');
-	}
-
-	/**
-	 * Renders the client-script code.
-	 * @param THtmlWriter renderer
-	 */
-	protected function renderClientControlScript($writer)
-	{
-		$cs = $this->getPage()->getClientScript();
-		$cs->registerPostBackControl($this->getClientClassName(),$this->getPostBackOptions());
-	}
-
-	/**
-	 * Renders the Href for link button.
-	 * @param THtmlWriter renderer
-	 */
-	protected function renderLinkButtonHref($writer)
-	{
-		//create unique no-op url references
-		$nop = "javascript:;//".$this->getClientID();
-		$writer->addAttribute('href', $nop);
-	}
-
-	/**
-	 * Gets the name of the javascript class responsible for performing postback for this control.
-	 * This method overrides the parent implementation.
-	 * @return string the javascript class name
-	 */
-	protected function getClientClassName()
-	{
-		return 'Prado.WebUI.TLinkButton';
 	}
 
 	/**
@@ -180,32 +136,6 @@ class TLinkButton extends TWebControl implements IPostBackEventHandler, IButtonC
 	public function setText($value)
 	{
 		$this->setViewState('Text',$value,'');
-	}
-
-	/**
-	 * Returns the caption of the button.
-	 * This method is required by {@link IDataRenderer}.
-	 * It is the same as {@link getText()}.
-	 * @return string caption of the button.
-	 * @see getText
-	 * @since 3.1.0
-	 */
-	public function getData()
-	{
-		return $this->getText();
-	}
-
-	/**
-	 * Sets the caption of the button.
-	 * This method is required by {@link IDataRenderer}.
-	 * It is the same as {@link setText()}.
-	 * @param string caption of the button
-	 * @see setText
-	 * @since 3.1.0
-	 */
-	public function setData($value)
-	{
-		$this->setText($value);
 	}
 
 	/**

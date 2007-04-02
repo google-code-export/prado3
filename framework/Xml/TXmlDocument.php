@@ -200,10 +200,7 @@ class TXmlElement extends TComponent
 		if($this->_attributes!==null)
 		{
 			foreach($this->_attributes as $name=>$value)
-			{
-				$value=$this->xmlEncode($value);
 				$attr.=" $name=\"$value\"";
-			}
 		}
 		$prefix=str_repeat(' ',$indent*4);
 		if($this->getHasElement())
@@ -214,25 +211,12 @@ class TXmlElement extends TComponent
 			$str.=$prefix."</{$this->_tagName}>";
 			return $str;
 		}
-		else if(($value=$this->getValue())!=='')
+		else if($this->getValue()!=='')
 		{
-			$value=$this->xmlEncode($value);
-			return $prefix."<{$this->_tagName}$attr>$value</{$this->_tagName}>";
+			return $prefix."<{$this->_tagName}$attr>{$this->_value}</{$this->_tagName}>";
 		}
 		else
 			return $prefix."<{$this->_tagName}$attr />";
-	}
-
-	private function xmlEncode($str)
-	{
-		return strtr($str,array(
-			'>'=>'&gt;',
-			'<'=>'&lt;',
-			'&'=>'&amp;',
-			'"'=>'&quot;',
-			"\r"=>'&#xA;',
-			"\t"=>'&#x9;',
-			"\n"=>'&#xD;'));
 	}
 }
 
@@ -476,7 +460,7 @@ class TXmlElementList extends TList
 	 * Inserts an item at the specified position.
 	 * This overrides the parent implementation by performing additional
 	 * operations for each newly added TXmlElement object.
-	 * @param integer the specified position.
+	 * @param integer the speicified position.
 	 * @param mixed new item
 	 * @throws TInvalidDataTypeException if the item to be inserted is not a TXmlElement object.
 	 */

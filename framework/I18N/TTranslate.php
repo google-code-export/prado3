@@ -146,7 +146,6 @@ class TTranslate extends TI18NControl
 		else
 		{
 			$parameters=new TAttributeCollection;
-			$parameters->setCaseSensitive(true);
 			$this->setViewState('Parameters',$parameters,null);
 			return $parameters;
 		}

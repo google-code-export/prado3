@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  PRADO 3.1 build file - Copyright (C) 2006 PradoSoft
+  PRADO 3.0 build file - Copyright (C) 2006 PradoSoft
 
   Requirements
   ============
@@ -42,13 +42,8 @@
     <exclude name="**/.svn"/>
     <exclude name="**/*.bak"/>
     <exclude name="**/*~"/>
-    <exclude name="**/pradolite.php" /><!-- will be generated -->
-    <exclude name="**/prado-cli.php" /><!-- will be copied later -->
-    <exclude name="framework/Configuration/**" /><!-- not ready yet -->
-    <exclude name="framework/Web/UI/WebControls/Login*.*" /><!-- not ready yet -->
-    <exclude name="**/Web/Security/**" /><!-- not ready yet -->
-    <exclude name="**/TFeedService.php" /><!-- not ready yet -->
-    <exclude name="**/IFeedContentProvider.php" /><!-- not ready yet -->
+    <exclude name="**/pradolite.php" />
+    <exclude name="**/prado-cli.php" />
     <include name="framework/**/*"/>
   </fileset>
 
@@ -67,15 +62,13 @@
   </fileset>
 
   <!--
-      Documentation ????
+      Documentation
   -->
   <fileset dir="." id="docs">
     <exclude name="**/.svn"/>
     <exclude name="**/*.bak"/>
     <exclude name="**/*~"/>
-    <exclude name="**/latex" />
-    <exclude name="**/sqlmap_tut.pdf" />
-    <include name="docs/specs/*"/>
+    <include name="docs/**/*"/>
   </fileset>
 
   <!--
@@ -90,21 +83,9 @@
     <exclude name="**/runtime/*/**"/>
     <exclude name="**/assets/*/**"/>
     <exclude name="demos/blog/protected/Data/Blog.db" />
-    <include name="demos/blog/**/*"/>
-    <include name="demos/chat/**/*"/>
-    <include name="demos/composer/**/*"/>
-    <include name="demos/currency-converter/**/*"/>
-    <include name="demos/helloworld/**/*"/>
-    <include name="demos/personal/**/*"/>
-    <include name="demos/quickstart/**/*"/>
-    <include name="demos/soap/**/*"/>
-    <include name="demos/sqlmap/**/*"/>
-    <include name="demos/time-tracker/**/*"/>
+    <include name="demos/**/*"/>
   </fileset>
 
-  <!--
-  		Test tools
-  	-->
   <fileset dir="." id="test-tools">
     <include name="tests/test_tools/**/*"/>
   </fileset>
@@ -156,7 +137,7 @@
       <fileset refid="framework"/>
       <fileset refid="misc"/>
 	  <fileset refid="test-tools" />
-    </copy> 
+    </copy>
 
     <copy file="buildscripts/classtree/DWExtensionReadme.txt" tofile="${build.src.dir}/editors/Dreamweaver/readme.txt" />
     <copy file="framework/pradolite.php" tofile="${build.src.dir}/framework/pradolite.php" />
@@ -178,20 +159,20 @@
 
   <target name="rebuild" depends="clean,build" />
 
-  <target name="docs" depends="build">
+  <target name="docs">
 	<echo>Build PDF + CHM + HTML Docs, it may take about 30 mins</echo>
 
 	<echo>Building quickstart.pdf...</echo>
     <delete>
       <fileset dir=".">
-        <include name="buildscripts/texbuilder/quickstart/*.aux" />
+        <include name="buildscripts/texbuilder/*.aux" />
       </fileset>
     </delete>
-    <exec command="${php} build.php" dir="buildscripts/texbuilder/quickstart" passthru="true"/>
-    <exec command="${pdflatex} quickstart.tex -interaction=nonstopmode -max-print-line=120" dir="buildscripts/texbuilder/quickstart" passthru="true"/>
-    <exec command="${pdflatex} quickstart.tex -interaction=nonstopmode -max-print-line=120" dir="buildscripts/texbuilder/quickstart" passthru="true"/>
-    <exec command="${pdflatex} quickstart.tex -interaction=nonstopmode -max-print-line=120" dir="buildscripts/texbuilder/quickstart" passthru="true"/>
-    <move file="buildscripts/texbuilder/quickstart/quickstart.pdf" todir="${build.doc.dir}"/>
+    <exec command="${php} build.php" dir="buildscripts/texbuilder" passthru="true"/>
+    <exec command="${pdflatex} quickstart.tex -interaction=nonstopmode -max-print-line=120" dir="buildscripts/texbuilder" passthru="true"/>
+    <exec command="${pdflatex} quickstart.tex -interaction=nonstopmode -max-print-line=120" dir="buildscripts/texbuilder" passthru="true"/>
+    <exec command="${pdflatex} quickstart.tex -interaction=nonstopmode -max-print-line=120" dir="buildscripts/texbuilder" passthru="true"/>
+    <move file="buildscripts/texbuilder/quickstart.pdf" todir="${build.doc.dir}"/>
 
 	<echo>Building API manuals...</echo>
     <delete dir="${build.doc.dir}/manual"/>
@@ -199,9 +180,9 @@
     <prado-doc phpdoc="${php} buildscripts/PhpDocumentor/phpdoc"
                title="PRADO v${prado.version} API Manual"
                destdir="${build.doc.dir}/manual"
-               sourcepath="${build.src.dir}/framework"
+               sourcepath="framework"
                ignorelist="*pradolite.php,*prado-cli.php,*3rdParty/*,*Javascripts/*,*I18N/core/*"
-               output="HTML:frames:default,CHM:default:default,HTML:Smarty:PradoSoft" />
+               output="CHM:default:default,HTML:Smarty:PradoSoft" />
 
     <echo>Indexing API manuals...</echo>
     <prado-api-index docdir="${build.doc.dir}/manual/HTMLSmartyConverter" todir="${build.doc.dir}/manual/HTMLSmartyConverter" />
@@ -212,10 +193,8 @@
 
 	<echo>Generating CHM Content (Quickstart + ClassDocs)</echo>
 	<exec command="${php} build.php" dir="buildscripts/chmbuilder" passthru="true"/>
-	<!-- done on project website 
 	<echo>Generating CHM Content (WIKI)</echo>
 	<exec command="${php} build.php" dir="buildscripts/wikibuilder" passthru="true"/>
-	-->
     <if>
       <equals arg1="${prado.winbuild}" arg2="true"/>
       <then>
@@ -236,7 +215,7 @@
     <if>
       <equals arg1="${prado.winbuild}" arg2="true"/>
       <then>
-        <move file="${build.doc.dir}/prado3_manual.chm" tofile="${build.src.dir}/docs/prado3_manual.chm" />
+        <move file="${build.doc.dir}/manual/CHMdefaultConverter/documentation.chm" tofile="${build.src.dir}/docs/manual.chm" />
       </then>
     </if>
 
@@ -347,7 +326,8 @@ the PRADO distribution:
     <mkdir dir="${reports.dir}"/>
     <delete dir="${reports.unit.dir}"/>
     <delete dir="${reports.codecoverage.dir}"/>
- 
+    <mkdir dir="${reports.unit.dir}"/>
+
     <if>
       <equals arg1="${codecoverage}" arg2="true"/>
       <then>
@@ -386,8 +366,7 @@ the PRADO distribution:
     </phpunit2>
 
     <echo>Creating Unit Test Report</echo>
-	 <mkdir dir="${reports.unit.dir}"/>
-     <phpunit2report infile="${reports.dir}/logfile.xml" format="frames" styledir="${reports.style.dir}" todir="${reports.unit.dir}"/>
+    <phpunit2report infile="${reports.dir}/logfile.xml" format="frames" styledir="${reports.style.dir}" todir="${reports.unit.dir}"/>
 
     <if>
       <equals arg1="${codecoverage}" arg2="true"/>

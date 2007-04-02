@@ -260,14 +260,11 @@ class TDatePicker extends TTextBox
 	}
 
 	/**
-	 * @return integer current selected date from the date picker as timestamp, NULL if timestamp is not set previously.
+	 * @return integer current selected date from the date picker as timestamp.
 	 */
 	public function getTimeStamp()
 	{
-		if(trim($this->getText())==='')
-			return null;
-		else
-			return $this->getTimeStampFromText();
+		return $this->getTimeStampFromText();
 	}
 
 	/**
@@ -276,14 +273,11 @@ class TDatePicker extends TTextBox
 	 */
 	public function setTimeStamp($value)
 	{
-		if($value===null || (is_string($value) && trim($value)===''))
-			$this->setText('');
-		else
-		{
-			$date = TPropertyValue::ensureFloat($value);
-			$formatter = Prado::createComponent('System.Util.TSimpleDateFormatter',$this->getDateFormat());
-			$this->setText($formatter->format($date));
-		}
+		$date = TPropertyValue::ensureFloat($value);
+		$formatter = Prado::createComponent('System.Util.TSimpleDateFormatter',
+						$this->getDateFormat());
+						$d =$formatter->format($date);
+		$this->setText($d);
 	}
 
 	/**
@@ -378,16 +372,12 @@ class TDatePicker extends TTextBox
 	 */
 	protected function renderDatePickerButtons($writer)
 	{
-		if($this->getShowCalendar())
+		if($this->getShowCalendar() && $this->getEnabled(true))
 		{
 			switch ($this->getMode())
 			{
-				case TDatePickerMode::Button:
-					$this->renderButtonDatePicker($writer);
-					break;
-				case TDatePickerMode::ImageButton :
-					$this->renderImageButtonDatePicker($writer);
-					break;
+				case TDatePickerMode::Button: $this->renderButtonDatePicker($writer); break;
+				case TDatePickerMode::ImageButton : $this->renderImageButtonDatePicker($writer); break;
 			}
 		}
 	}
@@ -722,8 +712,6 @@ class TDatePicker extends TTextBox
 		$writer->addAttribute('type', 'button');
 		$writer->addAttribute('class', $this->getCssClass().' TDatePickerButton');
 		$writer->addAttribute('value',$this->getButtonText());
-		if(!$this->getEnabled(true))
-			$writer->addAttribute('disabled', 'disabled');
 		$writer->renderBeginTag("input");
 		$writer->renderEndTag();
 	}
@@ -738,10 +726,7 @@ class TDatePicker extends TTextBox
 		$url = empty($url) ? $this->publishDefaultButtonImage() : $url;
 		$writer->addAttribute('id', $this->getDatePickerButtonID());
 		$writer->addAttribute('src', $url);
-		$writer->addAttribute('alt', ' ');
 		$writer->addAttribute('class', $this->getCssClass().' TDatePickerImageButton');
-		if(!$this->getEnabled(true))
-			$writer->addAttribute('disabled', 'disabled');
 		$writer->renderBeginTag('img');
 		$writer->renderEndTag();
 	}

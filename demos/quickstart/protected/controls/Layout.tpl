@@ -29,20 +29,7 @@
 <com:TopicList ID="TopicPanel" />
 </td>
 <td valign="top">
-
-<com:TRepeater ID="languages" OnItemCreated="languageLinkCreated">
-	<prop:HeaderTemplate>
-		<div class="languages">Available Languages: <ul>
-	</prop:HeaderTemplate>
-	<prop:ItemTemplate>
-		<li><com:THyperLink ID="link" Text=<%# $this->DataItem %> /></li>
-	</prop:ItemTemplate>
-	<prop:FooterTemplate>
-		</ul></div>
-	</prop:FooterTemplate>
-</com:TRepeater>
 <div id="content">
-<p class="block-content" id="top-content" style="border-color: transparent; height:1px; margin: 0; padding: 0; background-color: transparent"></p>
 <com:TContentPlaceHolder ID="body" />
 </div>
 </td>
@@ -50,7 +37,7 @@
 </table>
 
 <div id="footer">
-Copyright &copy; 2005-2007 <a href="http://www.pradosoft.com">PradoSoft</a>.
+Copyright &copy; 2005-2006 <a href="http://www.pradosoft.com">PradoSoft</a>.
 <br/><br/>
 <%= Prado::poweredByPrado() %>
 <a href="http://validator.w3.org/check?uri=referer"><img border="0" src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0 Transitional" height="31" width="88" /></a>

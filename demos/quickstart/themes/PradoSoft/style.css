@@ -1,11 +1,3 @@
-html
-{
-	background-image: url('mantisbg.jpg');
-	background-repeat: no-repeat;
-	background-position: top right;
-	background-color: white;
-}
-
 body {
 	font-family: 'Lucida Grande', Verdana, Geneva, Lucida, Helvetica, Arial, sans-serif;
 	font-weight:normal;
@@ -13,12 +5,14 @@ body {
 	color:black;
 	margin:0px 0px 0px 0px;
 	padding:0px;
+	background-image: url('mantisbg.jpg');
+	background-repeat: no-repeat;
+	background-position: top right;
 }
 
 h1, h2, h3, h4
 {
 	color: #333;
-	margin-bottom: 0;
 }
 
 h1, h2
@@ -73,24 +67,6 @@ a
 }
 
 
-.languages
-{
-	text-align: right;
-	margin: 0.5em 1em;
-}
-
-.languages ul, .languages li
-{
-	margin: 0; padding: 0;
-	list-style: none;
-	display: inline;
-}
-
-.languages a.active
-{
-	color: black;
-	text-decoration: none;
-}
 
 .mainmenu {
 	padding:10px;
@@ -119,6 +95,7 @@ a
 }
 
 #content {
+	background:#fff;
 	padding: 1em 1em 1em 1em;
 	line-height: 135%;
 }
@@ -544,29 +521,22 @@ pre code
 
 div.tip, div.info, div.note
 {
-	border-top:2px solid #0cf;
-	border-bottom:2px solid #0cf;
-	padding:1em 1em 1em 40px;
+	border:1px solid #0cf;
+	padding:1em;
 	margin: 1em 2em;
-	border-color: #32CD32;
-	background-color: #EBFFCE;
-	background-repeat: no-repeat;
-	background-position: 10px 50%;
-	background-image: url(lightbulb.gif);
+	background-color: #eff;
 }
 
 div.info
 {
-	border-color: #87CEFA;
-	background-color: #EEF9FD;
-	background-image: url(information.gif);
+	border-color: #32CD32;
+	background-color: #EBFFCE;
 }
 
 div.note
 {
-	border-color: #FFD700;
+	border-color: Orange;
 	background-color: #FFF5E1;
-	background-image: url(error.gif);
 }
 
 div b.tip
@@ -575,7 +545,7 @@ div b.tip
 	padding-right: 0.5em;
 }
 
-#content img.figure, #content p img.figure
+img.figure
 {
 	display: block;
 	margin: 1em auto;
@@ -605,56 +575,4 @@ table.tabular
 table.tabular td
 {
 	padding: 0.75em;
-}
-
-
-div.last-modified
-{
-	font-size: 0.8em;
-	color: #999;
-	margin-top: 5em;
-	margin-bottom: -3em;
-}
-
-#comment-nav li a#show-comment-link,
-#comment-nav li a#add-comment-link,
-#comment-nav li a#all-comments-link
-{
-	background-image: url(comment.gif);
-	background-repeat: no-repeat;
-	background-position: 7px 50%;
-	padding-left: 30px;
-}
-
-#comment-nav li a#add-comment-link
-{
-	background-image: url(comment_add.gif);
-}
-
-#comment-nav li a#all-comments-link
-{
-	background-image: url(comments.gif);
-}
-
-
-
-.start-page
-{
-	clear: both;
-	height: 300px;
-}
-
-.start-block
-{
-	width: 230px;
-	height: 250px;
-	float: left;
-	padding: 0 15px;
-	margin-bottom: 20px;
-}
-
-.start-page .examples
-{
-	border-left: 1px solid #ccc;
-	border-right: 1px solid #ccc;
 }

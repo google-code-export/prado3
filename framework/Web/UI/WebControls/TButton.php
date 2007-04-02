@@ -47,7 +47,7 @@
  * @package System.Web.UI.WebControls
  * @since 3.0
  */
-class TButton extends TWebControl implements IPostBackEventHandler, IButtonControl, IDataRenderer
+class TButton extends TWebControl implements IPostBackEventHandler, IButtonControl
 {
 	/**
 	 * @return string tag name of the button
@@ -55,22 +55,6 @@ class TButton extends TWebControl implements IPostBackEventHandler, IButtonContr
 	protected function getTagName()
 	{
 		return 'input';
-	}
-
-	/**
-	 * @return boolean whether to render javascript.
-	 */
-	public function getEnableClientScript()
-	{
-		return $this->getViewState('EnableClientScript',true);
-	}
-
-	/**
-	 * @param boolean whether to render javascript.
-	 */
-	public function setEnableClientScript($value)
-	{
-		$this->setViewState('EnableClientScript',TPropertyValue::ensureBoolean($value),true);
 	}
 
 	/**
@@ -88,32 +72,16 @@ class TButton extends TWebControl implements IPostBackEventHandler, IButtonContr
 		$writer->addAttribute('value',$this->getText());
 		if($this->getEnabled(true))
 		{
-			if($this->getEnableClientScript() && $this->needPostBackScript())
-				$this->renderClientControlScript($writer);
+			if($this->needPostBackScript())
+			{
+				$writer->addAttribute('id',$this->getClientID());
+				$this->getPage()->getClientScript()->registerPostBackControl('Prado.WebUI.TButton',$this->getPostBackOptions());
+			}
 		}
 		else if($this->getEnabled()) // in this case, parent will not render 'disabled'
 			$writer->addAttribute('disabled','disabled');
 
 		parent::addAttributesToRender($writer);
-	}
-
-	/**
-	 * Renders the client-script code.
-	 */
-	protected function renderClientControlScript($writer)
-	{
-		$writer->addAttribute('id',$this->getClientID());
-		$this->getPage()->getClientScript()->registerPostBackControl($this->getClientClassName(),$this->getPostBackOptions());
-	}
-
-	/**
-	 * Gets the name of the javascript class responsible for performing postback for this control.
-	 * This method overrides the parent implementation.
-	 * @return string the javascript class name
-	 */
-	protected function getClientClassName()
-	{
-		return 'Prado.WebUI.TButton';
 	}
 
 	/**
@@ -135,8 +103,8 @@ class TButton extends TWebControl implements IPostBackEventHandler, IButtonContr
 	 */
 	protected function needPostBackScript()
 	{
-		//IE needs JS to be rendered for default button to work if no validators are assigned to this button
-		return $this->canCauseValidation() || $this->hasEventHandler('OnClick') || $this->hasEventHandler('OnCommand');
+		return $this->canCauseValidation() || ($this->getButtonType()!==TButtonType::Submit &&
+			($this->hasEventHandler('OnClick') || $this->hasEventHandler('OnCommand')));
 	}
 
 	/**
@@ -219,32 +187,6 @@ class TButton extends TWebControl implements IPostBackEventHandler, IButtonContr
 	public function setText($value)
 	{
 		$this->setViewState('Text',$value,'');
-	}
-
-	/**
-	 * Returns the caption of the button.
-	 * This method is required by {@link IDataRenderer}.
-	 * It is the same as {@link getText()}.
-	 * @return string caption of the button.
-	 * @see getText
-	 * @since 3.1.0
-	 */
-	public function getData()
-	{
-		return $this->getText();
-	}
-
-	/**
-	 * Sets the caption of the button.
-	 * This method is required by {@link IDataRenderer}.
-	 * It is the same as {@link setText()}.
-	 * @param string caption of the button
-	 * @see setText
-	 * @since 3.1.0
-	 */
-	public function setData($value)
-	{
-		$this->setText($value);
 	}
 
 	/**

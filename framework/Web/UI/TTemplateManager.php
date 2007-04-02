@@ -11,11 +11,6 @@
  */
 
 /**
- * Includes TOutputCache class file
- */
-Prado::using('System.Web.UI.WebControls.TOutputCache');
-
-/**
  * TTemplateManager class
  *
  * TTemplateManager manages the loading and parsing of control templates.
@@ -65,7 +60,7 @@ class TTemplateManager extends TModule
 	public function getTemplateByClassName($className)
 	{
 		$class=new ReflectionClass($className);
-		$tplFile=dirname($class->getFileName()).DIRECTORY_SEPARATOR.$className.self::TEMPLATE_FILE_EXT;
+		$tplFile=dirname($class->getFileName()).'/'.$className.self::TEMPLATE_FILE_EXT;
 		return $this->getTemplateByFileName($tplFile);
 	}
 
@@ -122,7 +117,7 @@ class TTemplateManager extends TModule
 	protected function getLocalizedTemplate($filename)
 	{
 		if(($app=$this->getApplication()->getGlobalization(false))===null)
-			return is_file($filename)?$filename:null;
+			return $filename;
 		foreach($app->getLocalizedResource($filename) as $file)
 		{
 			if(($file=realpath($file))!==false && is_file($file))
@@ -143,16 +138,14 @@ class TTemplateManager extends TModule
  * are treated as either property initial values, event handler attachment, or regular
  * tag attributes.
  * - property tags: property tags are used to set large block of attribute values.
- * The property tag name is in the format of <prop:AttributeName> where AttributeName
+ * The property tag name is in the format of prop:AttributeName, where AttributeName
  * can be a property name, an event name or a regular tag attribute name.
- * - group subproperty tags: subproperties of a common property can be configured using
- * <prop:MainProperty SubProperty1="Value1" SubProperty2="Value2" .../>
  * - directive: directive specifies the property values for the template owner.
- * It is in the format of <%@ property name-value pairs %>;
- * - expressions: They are in the formate of <%= PHP expression %> and <%% PHP statements %>
+ * It is in the format of &lt;% property name-value pairs %&gt;
+ * - expressions: They are in the formate of &lt;= PHP expression &gt; and &lt;% PHP statements &gt;
  * - comments: There are two kinds of comments, regular HTML comments and special template comments.
- * The former is in the format of <!-- comments -->, which will be treated as text strings.
- * The latter is in the format of <!-- comments --!>, which will be stripped out.
+ * The former is in the format of &lt;!-- comments --&gt;, which will be treated as text strings.
+ * The latter is in the format of &lt;%* comments %&gt;, which will be stripped out.
  *
  * Tags other than the above are not required to be well-formed.
  *
@@ -175,9 +168,8 @@ class TTemplate extends TApplicationComponent implements ITemplate
 	 *	'<\/?prop:([\w\.]+)\s*>'  - property tags
 	 *	'<%@\s*((?:\s*[\w\.]+\s*=\s*\'.*?\'|\s*[\w\.]+\s*=\s*".*?")*)\s*%>'  - directives
 	 *	'<%[%#~\\$=\\[](.*?)%>'  - expressions
-	 *  '<prop:([\w\.]+)((?:\s*[\w\.]+=\'.*?\'|\s*[\w\.]+=".*?"|\s*[\w\.]+=<%.*?%>)*)\s*\/>' - group subproperty tags
 	 */
-	const REGEX_RULES='/<!--.*?--!>|<!--.*?--->|<\/?com:([\w\.]+)((?:\s*[\w\.]+\s*=\s*\'.*?\'|\s*[\w\.]+\s*=\s*".*?"|\s*[\w\.]+\s*=\s*<%.*?%>)*)\s*\/?>|<\/?prop:([\w\.]+)\s*>|<%@\s*((?:\s*[\w\.]+\s*=\s*\'.*?\'|\s*[\w\.]+\s*=\s*".*?")*)\s*%>|<%[%#~\\$=\\[](.*?)%>|<prop:([\w\.]+)((?:\s*[\w\.]+\s*=\s*\'.*?\'|\s*[\w\.]+\s*=\s*".*?"|\s*[\w\.]+\s*=\s*<%.*?%>)*)\s*\/>/msS';
+	const REGEX_RULES='/<!--.*?--!?>|<\/?com:([\w\.]+)((?:\s*[\w\.]+\s*=\s*\'.*?\'|\s*[\w\.]+\s*=\s*".*?"|\s*[\w\.]+\s*=\s*<%.*?%>)*)\s*\/?>|<\/?prop:([\w\.]+)\s*>|<%@\s*((?:\s*[\w\.]+\s*=\s*\'.*?\'|\s*[\w\.]+\s*=\s*".*?")*)\s*%>|<%[%#~\\$=\\[](.*?)%>/msS';
 
 	/**
 	 * Different configurations of component property/event/attribute
@@ -217,10 +209,6 @@ class TTemplate extends TApplicationComponent implements ITemplate
 	 * @var boolean whether this template is a source template
 	 */
 	private $_sourceTemplate=true;
-	/**
-	 * @var string hash code of the template
-	 */
-	private $_hashCode='';
 	private $_tplControl=null;
 	private $_includedFiles=array();
 	private $_includeAtLine=array();
@@ -244,17 +232,8 @@ class TTemplate extends TApplicationComponent implements ITemplate
 		$this->_tplFile=$tplFile;
 		$this->_startingLine=$startingLine;
 		$this->_content=$template;
-		$this->_hashCode=md5($template);
 		$this->parse($template);
 		$this->_content=null; // reset to save memory
-	}
-
-	/**
-	 * @return string  template file path if available, null otherwise.
-	 */
-	public function getTemplateFile()
-	{
-		return $this->_tplFile;
 	}
 
 	/**
@@ -283,14 +262,6 @@ class TTemplate extends TApplicationComponent implements ITemplate
 	}
 
 	/**
-	 * @return string hash code that can be used to identify the template
-	 */
-	public function getHashCode()
-	{
-		return $this->_hashCode;
-	}
-
-	/**
 	 * @return array the parsed template
 	 */
 	public function &getItems()
@@ -313,11 +284,8 @@ class TTemplate extends TApplicationComponent implements ITemplate
 		$directChildren=array();
 		foreach($this->_tpl as $key=>$object)
 		{
-			if($object[0]===-1)
-				$parent=$tplControl;
-			else if(isset($controls[$object[0]]))
-				$parent=$controls[$object[0]];
-			else
+			$parent=isset($controls[$object[0]])?$controls[$object[0]]:$tplControl;
+			if(($parent instanceof TControl) && !$parent->getAllowChildControls())
 				continue;
 			if(isset($object[2]))	// component
 			{
@@ -325,8 +293,7 @@ class TTemplate extends TApplicationComponent implements ITemplate
 				$properties=&$object[2];
 				if($component instanceof TControl)
 				{
-					if($component instanceof TOutputCache)
-						$component->setCacheKeyPrefix($this->_hashCode.$key);
+					$controls[$key]=$component;
 					$component->setTemplateControl($tplControl);
 					if(isset($properties['id']))
 					{
@@ -350,8 +317,6 @@ class TTemplate extends TApplicationComponent implements ITemplate
 						$directChildren[]=$component;
 					else
 						$component->createdOnTemplate($parent);
-					if($component->getAllowChildControls())
-						$controls[$key]=$component;
 				}
 				else if($component instanceof TComponent)
 				{
@@ -372,7 +337,7 @@ class TTemplate extends TApplicationComponent implements ITemplate
 						$component->createdOnTemplate($parent);
 				}
 			}
-			else
+			else	// string
 			{
 				if($object[1] instanceof TCompositeLiteral)
 				{
@@ -661,38 +626,14 @@ class TTemplate extends TApplicationComponent implements ITemplate
 				}
 				else if(strpos($str,'<prop:')===0)	// opening property
 				{
-					if(strrpos($str,'/>')===strlen($str)-2)  //subproperties
+					$prop=strtolower($match[3][0]);
+					array_push($stack,'@'.$prop);
+					if(!$expectPropEnd)
 					{
-						if($expectPropEnd)
-							continue;
 						if($matchStart>$textStart)
 							$tpl[$c++]=array($container,substr($input,$textStart,$matchStart-$textStart));
 						$textStart=$matchEnd+1;
-						$prop=strtolower($match[6][0]);
-						$attrs=$this->parseAttributes($match[7][0],$match[7][1]);
-						$attributes=array();
-						foreach($attrs as $name=>$value)
-							$attributes[$prop.'.'.$name]=$value;
-						$type=$tpl[$container][1];
-						$this->validateAttributes($type,$attributes);
-						foreach($attributes as $name=>$value)
-						{
-							if(isset($tpl[$container][2][$name]))
-								throw new TConfigurationException('template_property_duplicated',$name);
-							$tpl[$container][2][$name]=$value;
-						}
-					}
-					else  // regular property
-					{
-						$prop=strtolower($match[3][0]);
-						array_push($stack,'@'.$prop);
-						if(!$expectPropEnd)
-						{
-							if($matchStart>$textStart)
-								$tpl[$c++]=array($container,substr($input,$textStart,$matchStart-$textStart));
-							$textStart=$matchEnd+1;
-							$expectPropEnd=true;
-						}
+						$expectPropEnd=true;
 					}
 				}
 				else if(strpos($str,'</prop:')===0)	// closing property
@@ -732,11 +673,15 @@ class TTemplate extends TApplicationComponent implements ITemplate
 				}
 				else if(strpos($str,'<!--')===0)	// comments
 				{
-					if($expectPropEnd)
-						throw new TConfigurationException('template_comments_forbidden');
-					if($matchStart>$textStart)
-						$tpl[$c++]=array($container,substr($input,$textStart,$matchStart-$textStart));
-					$textStart=$matchEnd+1;
+					if(substr($str,-4,4)==='--!>')  // template comments
+					{
+						if($expectPropEnd)
+							throw new TConfigurationException('template_comments_forbidden');
+						if($matchStart>$textStart)
+							$tpl[$c++]=array($container,substr($input,$textStart,$matchStart-$textStart));
+						$textStart=$matchEnd+1;
+					}
+					// else, HTML comments and we do nothing
 				}
 				else
 					throw new TConfigurationException('template_matching_unexpected',$match);
@@ -752,7 +697,7 @@ class TTemplate extends TApplicationComponent implements ITemplate
 		}
 		catch(Exception $e)
 		{
-			if(($e instanceof TException) && ($e instanceof TTemplateException))
+			if(($e instanceof TException) && ($e->getErrorCode()==='template_format_invalid' || $e->getErrorCode()==='template_format_invalid2'))
 				throw $e;
 			if($matchEnd===0)
 				$line=$this->_startingLine+1;
@@ -992,7 +937,6 @@ class TTemplate extends TApplicationComponent implements ITemplate
 	protected function handleException($e,$line,$input=null)
 	{
 		$srcFile=$this->_tplFile;
-
 		if(($n=count($this->_includedFiles))>0) // need to adjust error row number and file name
 		{
 			for($i=$n-1;$i>=0;--$i)
@@ -1010,13 +954,10 @@ class TTemplate extends TApplicationComponent implements ITemplate
 				}
 			}
 		}
-		$exception=new TTemplateException('template_format_invalid',$e->getMessage());
-		$exception->setLineNumber($line);
-		if(!empty($srcFile))
-			$exception->setTemplateFile($srcFile);
+		if(empty($srcFile))
+			throw new TConfigurationException('template_format_invalid2',$line,$e->getMessage(),$input);
 		else
-			$exception->setTemplateSource($input);
-		throw $exception;
+			throw new TConfigurationException('template_format_invalid',$srcFile,$line,$e->getMessage());
 	}
 
 	/**

@@ -17,7 +17,7 @@
  * {@link http://prado.sourceforge.net/}
  *
  * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
- * @version $Id$
+ * @version $Revision: 1.66 $  $Date: Wed Nov 02 10:13:17 EST 2005 10:13:17 $
  * @package Prado.tests
  */
 
@@ -25,7 +25,7 @@
  * Selenium automatic client runner,
  *
  * @author Wei Zhuo<weizhuo[at]gmail[dot]com>
- * @version $Id$
+ * @version $Revision: 1.66 $  $Date: Fri Nov 04 13:20:12 EST 2005 13:20:12 $
  * @package Prado.tests
  */
 

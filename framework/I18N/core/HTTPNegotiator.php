@@ -92,8 +92,6 @@ class HTTPNegotiator
 				}
             }
 
-
-
 			if($info->validCulture($lang))
 				$this->languages[] = $lang;
         }

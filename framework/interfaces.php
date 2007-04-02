@@ -63,14 +63,6 @@ interface IService
 	 */
 	public function setID($id);
 	/**
-	 * @return boolean whether the service is enabled
-	 */
-	public function getEnabled();
-	/**
-	 * @param boolean whether the service is enabled
-	 */
-	public function setEnabled($value);
-	/**
 	 * Runs the service.
 	 */
 	public function run();
@@ -237,8 +229,6 @@ interface ICache
  * This interface must be implemented by classes meant to be used as
  * cache dependencies.
  *
- * Classes implementing this interface must support serialization and unserialization.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @version $Id$
  * @package System
@@ -290,93 +280,4 @@ interface IBindable
 	public function dataBind();
 }
 
-/**
- * IStyleable interface.
- *
- * This interface should be implemented by classes that support CSS styles.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
- * @package System
- * @since 3.1.0
- */
-interface IStyleable
-{
-	/**
-	 * @return boolean whether the object has defined any style information
-	 */
-	public function getHasStyle();
-	/**
-	 * @return TStyle the object representing the css style of the object
-	 */
-	public function getStyle();
-	/**
-	 * Removes all styles associated with the object
-	 */
-	public function clearStyle();
-}
-
-/**
- * IActiveControl interface.
- *
- * Active controls must implement IActiveControl interface.
- *
- * @author Wei Zhuo <weizhuo[at]gamil[dot]com>
- * @version $Id$
- * @package System
- * @since 3.1
- */
-interface IActiveControl
-{
-	/**
-	 * @return TBaseActiveControl Active control properties.
-	 */
-	public function getActiveControl();
-}
-
-/**
- * ICallbackEventHandler interface.
- *
- * If a control wants to respond to callback event, it must implement this
- * interface.
- *
- * @author Wei Zhuo <weizhuo[at]gamil[dot]com>
- * @version $Id$
- * @package System
- * @since 3.1
- */
-interface ICallbackEventHandler
-{
-	/**
-	 * Raises callback event. The implementation of this function should raise
-	 * appropriate event(s) (e.g. OnClick, OnCommand) indicating the component
-	 * is responsible for the callback event.
-	 * @param TCallbackEventParameter the parameter associated with the callback event
-	 */
-	public function raiseCallbackEvent($eventArgument);
-}
-
-/**
- * IDataRenderer interface.
- *
- * If a control wants to be used a renderer for another data-bound control,
- * this interface must be implemented.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
- * @package System
- * @since 3.1
- */
-interface IDataRenderer
-{
-	/**
-	 * @return mixed the data bound to this object
-	 */
-	public function getData();
-
-	/**
-	 * @param mixed the data to be bound to this object
-	 */
-	public function setData($value);
-}
 ?>

@@ -24,14 +24,8 @@ Prado::using('System.Web.UI.WebControls.TDataGridColumn');
  * and {@link setFooterTemplate FooterTemplate} to customize specific
  * type of cells in the column.
  *
- * Since v3.1.0, TTemplateColumn has introduced two new properties {@link setItemRenderer ItemRenderer}
- * and {@link setEditItemRenderer EditItemRenderer} which can be used to specify
- * the layout of the datagrid cells in browsing and editing mode.
- * A renderer refers to a control class that is to be instantiated as a control.
- * For more details, see {@link TRepeater} and {@link TDataList}.
- *
- * When a renderer and a template are both defined for a type of item, the former
- * takes precedence.
+ * Note, if {@link setHeaderTemplate HeaderTemplate} is not set, the column
+ * header will be displayed with {@link setHeaderText HeaderText}.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @version $Id$
@@ -48,56 +42,6 @@ class TTemplateColumn extends TDataGridColumn
 	private $_editItemTemplate=null;
 	private $_headerTemplate=null;
 	private $_footerTemplate=null;
-
-	/**
-	 * @return string the class name for the item cell renderer. Defaults to empty, meaning not set.
-	 * @since 3.1.0
-	 */
-	public function getItemRenderer()
-	{
-		return $this->getViewState('ItemRenderer','');
-	}
-
-	/**
-	 * Sets the item cell renderer class.
-	 *
-	 * If not empty, the class will be used to instantiate as a child control in the item cells of the column.
-	 *
-	 * If the class implements {@link IDataRenderer}, the <b>Data</b> property
-	 * will be set as the row of the data associated with the datagrid item that this cell resides in.
-	 *
-	 * @param string the renderer class name in namespace format.
-	 * @since 3.1.0
-	 */
-	public function setItemRenderer($value)
-	{
-		$this->setViewState('ItemRenderer',$value,'');
-	}
-
-	/**
-	 * @return string the class name for the edit item cell renderer. Defaults to empty, meaning not set.
-	 * @since 3.1.0
-	 */
-	public function getEditItemRenderer()
-	{
-		return $this->getViewState('EditItemRenderer','');
-	}
-
-	/**
-	 * Sets the edit item cell renderer class.
-	 *
-	 * If not empty, the class will be used to instantiate as a child control in the item cell that is in edit mode.
-	 *
-	 * If the class implements {@link IDataRenderer}, the <b>Data</b> property
-	 * will be set as the row of the data associated with the datagrid item that this cell resides in.
-	 *
-	 * @param string the renderer class name in namespace format.
-	 * @since 3.1.0
-	 */
-	public function setEditItemRenderer($value)
-	{
-		$this->setViewState('EditItemRenderer',$value,'');
-	}
 
 	/**
 	 * @return ITemplate the edit item template
@@ -190,65 +134,33 @@ class TTemplateColumn extends TDataGridColumn
 	 */
 	public function initializeCell($cell,$columnIndex,$itemType)
 	{
-		if($itemType===TListItemType::Item || $itemType===TListItemType::AlternatingItem || $itemType===TListItemType::SelectedItem || $itemType===TListItemType::EditItem)
+		parent::initializeCell($cell,$columnIndex,$itemType);
+		$template=null;
+		switch($itemType)
 		{
-			if($itemType===TListItemType::EditItem)
-			{
-				$template=$this->_editItemTemplate===null?$this->_itemTemplate:$this->_editItemTemplate;
-				if(($classPath=$this->getEditItemRenderer())==='')
-					$classPath=$this->getItemRenderer();
-			}
-			else
-			{
+			case TListItemType::Header:
+				$template=$this->_headerTemplate;
+				break;
+			case TListItemType::Footer:
+				$template=$this->_footerTemplate;
+				break;
+			case TListItemType::Item:
+			case TListItemType::AlternatingItem:
+			case TListItemType::SelectedItem:
 				$template=$this->_itemTemplate;
-				$classPath=$this->getItemRenderer();
-			}
-			if($classPath!=='')
-			{
-				$control=Prado::createComponent($classPath);
-				$cell->getControls()->add($control);
-				if($control instanceof IItemDataRenderer)
-				{
-					$control->setItemIndex($cell->getParent()->getItemIndex());
-					$control->setItemType($itemType);
-				}
-				if($control instanceof IDataRenderer)
-					$control->attachEventHandler('OnDataBinding',array($this,'dataBindColumn'));
-			}
-			else if($template!==null)
-				$template->instantiateIn($cell);
-			else if($itemType!==TListItemType::EditItem)
-				$cell->setText('&nbsp;');
+				break;
+			case TListItemType::EditItem:
+				$template=$this->_editItemTemplate===null?$this->_itemTemplate:$this->_editItemTemplate;
+				break;
 		}
-		else if($itemType===TListItemType::Header)
+		if($template!==null)
 		{
-			if(($classPath=$this->getHeaderRenderer())!=='')
-				$this->initializeHeaderCell($cell,$columnIndex);
-			else if($this->_headerTemplate!==null)
-				$this->_headerTemplate->instantiateIn($cell);
-			else
-				$this->initializeHeaderCell($cell,$columnIndex);
+			$cell->setText('');
+			$cell->getControls()->clear();
+			$template->instantiateIn($cell);
 		}
-		else if($itemType===TListItemType::Footer)
-		{
-			if(($classPath=$this->getFooterRenderer())!=='')
-				$this->initializeFooterCell($cell,$columnIndex);
-			else if($this->_footerTemplate!==null)
-				$this->_footerTemplate->instantiateIn($cell);
-			else
-				$this->initializeHeaderCell($cell,$columnIndex);
-		}
-	}
-
-	/**
-	 * Databinds a cell in the column.
-	 * This method is invoked when datagrid performs databinding.
-	 * It populates the content of the cell with the relevant data from data source.
-	 */
-	public function dataBindColumn($sender,$param)
-	{
-		$item=$sender->getNamingContainer();
-		$sender->setData($item->getData());
+		else if($itemType===TListItemType::Item || $itemType===TListItemType::AlternatingItem || $itemType===TListItemType::SelectedItem || $itemType===TListItemType::EditItem)
+			$cell->setText('&nbsp;');
 	}
 }
 

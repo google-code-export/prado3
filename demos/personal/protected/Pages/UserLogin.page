@@ -1,5 +1,18 @@
-<com:TContent ID="content" >
-
-<com:LoginPortlet />
-
+<com:TContent ID="main" >
+Username:
+<com:TTextBox ID="Username" />
+<com:TRequiredFieldValidator
+	ControlToValidate="Username"
+	Text="Username is required."
+	Display="Dynamic"/>
+<br/>
+Password: <com:TTextBox ID="Password" TextMode="Password" /><br/>
+<com:TButton Text="Login" />
+<com:TCustomValidator
+	ControlToValidate="Password"
+	Text="Login failed."
+	Display="Dynamic"
+	OnServerValidate="login"
+	/>
+<com:TLabel ID="Error" />
 </com:TContent>

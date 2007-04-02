@@ -26,7 +26,7 @@ Your current culture is <%= $this->Page->CurrentCulture %>.
 <dd>Subsequent process of translating and adapting a product to a given market's cultural conventions.</dd>
 </dl>
 <p>The following features are supported by PRADO: </p>
-<ul id="u1" class="block-content">
+<ul>
   <li>Text translation</li>
   <li>Attribute translation</li>
   <li>Parameter substitution (with translation if needed) </li>
@@ -158,4 +158,4 @@ Your current culture is <%= $this->Page->CurrentCulture %>.
 	<com:TTranslateParameter Key="time" Value="<%= Time() %>" />
 </com:TTranslate>
 
-<div class="last-modified">$Id$</div></com:TContent>
+</com:TContent>

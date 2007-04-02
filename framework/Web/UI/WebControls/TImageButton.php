@@ -76,22 +76,6 @@ class TImageButton extends TImage implements IPostBackDataHandler, IPostBackEven
 	}
 
 	/**
-	 * @return boolean whether to render javascript.
-	 */
-	public function getEnableClientScript()
-	{
-		return $this->getViewState('EnableClientScript',true);
-	}
-
-	/**
-	 * @param boolean whether to render javascript.
-	 */
-	public function setEnableClientScript($value)
-	{
-		$this->setViewState('EnableClientScript',TPropertyValue::ensureBoolean($value),true);
-	}
-
-	/**
 	 * Adds attribute name-value pairs to renderer.
 	 * This overrides the parent implementation with additional button specific attributes.
 	 * @param THtmlWriter the writer used for the rendering purpose
@@ -105,32 +89,15 @@ class TImageButton extends TImage implements IPostBackDataHandler, IPostBackEven
 			$writer->addAttribute('name',$uniqueID);
 		if($this->getEnabled(true))
 		{
-			if($this->getEnableClientScript() && $this->needPostBackScript())
-				$this->renderClientControlScript($writer);
+			if($this->canCauseValidation())
+			{
+				$writer->addAttribute('id',$this->getClientID());
+				$this->getPage()->getClientScript()->registerPostBackControl('Prado.WebUI.TImageButton',$this->getPostBackOptions());
+			}
 		}
 		else if($this->getEnabled()) // in this case, parent will not render 'disabled'
 			$writer->addAttribute('disabled','disabled');
 		parent::addAttributesToRender($writer);
-	}
-
-	/**
-	 * Renders the client-script code.
-	 */
-	protected function renderClientControlScript($writer)
-	{
-		$writer->addAttribute('id',$this->getClientID());
-		$cs = $this->getPage()->getClientScript();
-		$cs->registerPostBackControl($this->getClientClassName(),$this->getPostBackOptions());
-	}
-
-	/**
-	 * Gets the name of the javascript class responsible for performing postback for this control.
-	 * This method overrides the parent implementation.
-	 * @return string the javascript class name
-	 */
-	protected function getClientClassName()
-	{
-		return 'Prado.WebUI.TImageButton';
 	}
 
 	/**
@@ -145,15 +112,6 @@ class TImageButton extends TImage implements IPostBackDataHandler, IPostBackEven
 		}
 		else
 			return false;
-	}
-
-	/**
-	 * @return boolean whether the button needs javascript to do postback
-	 */
-	protected function needPostBackScript()
-	{
-		//IE needs JS to be rendered for default button to work if no validators are assigned to this button
-		return $this->canCauseValidation() || $this->hasEventHandler('OnClick') || $this->hasEventHandler('OnCommand');
 	}
 
 	/**
@@ -361,12 +319,12 @@ class TImageClickEventParameter extends TEventParameter
 	 * the X coordinate of the clicking point
 	 * @var integer
 	 */
-	private $_x=0;
+	public $_x=0;
 	/**
 	 * the Y coordinate of the clicking point
 	 * @var integer
 	 */
-	private $_y=0;
+	public $_y=0;
 
 	/**
 	 * Constructor.

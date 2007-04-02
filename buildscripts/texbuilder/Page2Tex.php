@@ -4,9 +4,6 @@ class Page2Tex
 {
 	private $_current_page;
 	private static $header_count = 0;
-	private static $p_count=0;
-	private static $hil_count=0;
-	private $page_count=0;
 	private $_base;
 	private $_dir;
 
@@ -91,9 +88,7 @@ class Page2Tex
 
 	function texttt($matches)
 	{
-		$text ='\texttt{'.str_replace(array('#','_','&amp;'),array('\#','\_','\&'), $matches[1]).'}';
-		//$text = preg_replace('/([^\\\\])&([^;]+)/', '$1\&$2', $text);
-		return $text;
+		return '\texttt{'.str_replace(array('#','_','&amp;'),array('\#','\_','\&'), $matches[1]).'}';
 	}
 
 	function get_current_path()
@@ -110,11 +105,8 @@ class Page2Tex
 		{
 			if(strpos($matches[1],'?') ===false)
 			{
-				if(strpos($matches[1],'http://')===false)
-				{
-					$target = $this->get_current_path().'/'.substr($matches[1],1);
-					return '\hyperlink{'.$target.'}{'.$matches[2].'}';
-				}
+				$target = $this->get_current_path().'/'.substr($matches[1],1);
+				return '\hyperlink{'.$target.'}{'.$matches[2].'}';
 			}
 			else
 			{
@@ -129,11 +121,13 @@ class Page2Tex
 			$page = str_replace('?page=','',$matches[1]);
 			return '\hyperlink{'.$page.'}{'.$matches[2].'}';
 		}
-		return '\href{'.str_replace('#','\\#',$matches[1]).'}{'.$matches[2].'}';
+		return '\href{'.$matches[1].'}{'.$matches[2].'}';
 	}
 
 	function parse_html($page,$html)
 	{
+
+
 		$html = preg_replace('/<\/?com:TContent[^>]*>/', '', $html);
 		$html = preg_replace('/<\/?p [^>]*>/', '', $html);
 		$html = preg_replace('/<\/?p>/', '', $html);
@@ -152,7 +146,7 @@ class Page2Tex
 		//codes
 		$html = str_replace('$', '\$', $html);
 
-		$html = preg_replace_callback('/<com:TTextHighlighter[^>]*>((.|\n)*?)<\/com:TTextHighlighter\s*>/', array($this,'escape_verbatim'), $html);
+		$html = preg_replace_callback('/<com:TTextHighlighter[^>]*>((.|\n)*?)<\/com:TTextHighlighter>/', array($this,'escape_verbatim'), $html);
 //		$html = preg_replace('/<\/com:TTextHighlighter>/', '`2`', $html);
 //		$html = preg_replace_callback('/(`1`)([^`]*)(`2`)/m', array($this,'escape_verbatim'), $html);
 		$html = preg_replace_callback('/(<div class="source">)((.|\n)*?)(<\/div>)/', array($this,'escape_verbatim'), $html);
@@ -166,15 +160,12 @@ class Page2Tex
 				'\href{http://www.pradosoft.com/demos/quickstart/index.php?page=$1}{$1 Demo}', $html);
 
 		//DocLink
-		$html = preg_replace('/<com:DocLink\s+ClassPath="([^"]*)[.]([^."]*)"\s+Text="([^"]+)"\s*\/>/',
-	                        '\href{http://www.pradosoft.com/docs/manual/$1/$2.html}{$3}', $html);
-
 		$html = preg_replace('/<com:DocLink\s+ClassPath="([^"]*)[.]([^.]*)"\s+\/>/',
 	                        '\href{http://www.pradosoft.com/docs/manual/$1/$2.html}{$1.$2 API Reference}', $html);
 
 		//text modifiers
-		$html = preg_replace('/<(b|strong)[^>]*>([^<]*)<\/(b|strong)>/', '\textbf{$2}', $html);
-		$html = preg_replace('/<i[^>]*>([^<]*)+?<\/i>/', '\emph{$1}', $html);
+		$html = preg_replace('/<b[^>]*>([^<]*)<\/b>/', '\textbf{$1}', $html);
+		$html = preg_replace('/<i[^>]*>([^<]*)<\/i>/', '\emph{$1}', $html);
 		$html = preg_replace_callback('/<tt>([^<]*)<\/tt>/', array($this,'texttt'), $html);
 
 		//links
@@ -209,10 +200,6 @@ class Page2Tex
 		//tabular
 		$html = preg_replace_callback('/<!--\s*tabular:([^-]*)-->\s*<table[^>]*>((.|\n)*?)<\/table>/',
 						array($this, 'tabular'), $html);
-
-		$html = preg_replace('/<!--(.*)-->/', '', $html);
-		$html = preg_replace('/<div class="last-modified">((.|\n)*?)<\/div>/', '', $html);
-
 
 		$html = html_entity_decode($html);
 
@@ -274,66 +261,29 @@ class Page2Tex
 	}
 
 
-	function set_header_id($content, $j)
+	function set_header_id($content)
 	{
-		$this->page_count=$j;
 		$content = preg_replace_callback('/<h1>/', array($this,"h1"), $content);
 		$content = preg_replace_callback('/<h2>/', array($this,"h2"), $content);
 		$content = preg_replace_callback('/<h3>/', array($this,"h3"), $content);
-		$content = $this->set_block_content_id($content);
 		return $content;
 	}
 
 	function h1($matches)
 	{
-		$page = $this->page_count*1000;
-		return "<h1 id=\"".($page + (++self::$header_count))."\">";
+		return "<h1 id=\"".(++self::$header_count)."\">";
 	}
 
 	function h2($matches)
 	{
-		$page = $this->page_count*1000;
-		return "<h2 id=\"".($page + (++self::$header_count))."\">";
+		return "<h2 id=\"".(++self::$header_count)."\">";
 	}
 
 	function h3($matches)
 	{
-		$page = $this->page_count*1000;
-		return "<h3 id=\"".($page + (++self::$header_count))."\">";
+		return "<h3 id=\"".(++self::$header_count)."\">";
 	}
 
-	function set_block_content_id($content)
-	{
-		$content = preg_replace_callback('/<p>/',  array($this, 'add_p'), $content);
-		$content = preg_replace_callback('/<com:TTextHighlighter([^>]+)>/', array($this, 'hil'), $content);
-		return $content;
-	}
-
-	function hil($matches)
-	{
-		$id = ($this->page_count*10000) + (++self::$hil_count);
-		if(preg_match('/id="code-\d+"/i', $matches[1]))
-		{
-			$code = preg_replace('/id="code-(\d+)"/', 'id="code_$1"', $matches[0]);
-			//var_dump($code);
-			return $code;
-		}
-		else if(preg_match('/id="[^"]+"/i', $matches[1]))
-		{
-			return $matches[0];
-		}
-		else
-		{
-			$changes = str_replace('"source"', '"source block-content" id="code-'.$id.'"', $matches[0]);
-			return $changes;
-		}
-	}
-
-	function add_p($matches)
-	{
-		 $page = $this->page_count*10000;
-		 return "<p id=\"".($page + (++self::$p_count))."\" class=\"block-content\">";
-	}
 }
 
 ?>

@@ -197,6 +197,7 @@ class TErrorHandler extends TModule
 		}
 	}
 
+
 	/**
 	 * Displays exception information.
 	 * Exceptions are displayed with rich context information, including
@@ -206,89 +207,21 @@ class TErrorHandler extends TModule
 	 */
 	protected function displayException($exception)
 	{
-		if(php_sapi_name()==='cli')
-		{
-			echo $exception->getTraceAsString();
-			return;
-		}
-
-		if($exception instanceof TTemplateException)
-		{
-			$fileName=$exception->getTemplateFile();
-			$lines=empty($fileName)?explode("\n",$exception->getTemplateSource()):@file($fileName);
-			$source=$this->getSourceCode($lines,$exception->getLineNumber());
-			if($fileName==='')
-				$fileName='---embedded template---';
-			$errorLine=$exception->getLineNumber();
-		}
-		else
-		{
-			if(($trace=$this->getExactTrace($exception))!==null)
-			{
-				$fileName=$trace['file'];
-				$errorLine=$trace['line'];
-			}
-			else
-			{
-				$fileName=$exception->getFile();
-				$errorLine=$exception->getLine();
-			}
-			$source=$this->getSourceCode(@file($fileName),$errorLine);
-		}
-
-		$tokens=array(
-			'%%ErrorType%%' => get_class($exception),
-			'%%ErrorMessage%%' => $this->addLink(htmlspecialchars($exception->getMessage())),
-			'%%SourceFile%%' => htmlspecialchars($fileName).' ('.$errorLine.')',
-			'%%SourceCode%%' => $source,
-			'%%StackTrace%%' => htmlspecialchars($exception->getTraceAsString()),
-			'%%Version%%' => $_SERVER['SERVER_SOFTWARE'].' <a href="http://www.pradosoft.com/">PRADO</a>/'.Prado::getVersion(),
-			'%%Time%%' => @strftime('%Y-%m-%d %H:%M',time())
-		);
-		$lang=Prado::getPreferredLanguage();
-		$exceptionFile=Prado::getFrameworkPath().'/Exceptions/templates/'.self::EXCEPTION_FILE_NAME.'-'.$lang.'.html';
-		if(!is_file($exceptionFile))
-			$exceptionFile=Prado::getFrameworkPath().'/Exceptions/templates/'.self::EXCEPTION_FILE_NAME.'.html';
-		if(($content=@file_get_contents($exceptionFile))===false)
-			die("Unable to open exception template file '$exceptionFile'.");
-		echo strtr($content,$tokens);
-	}
-
-	private function getExactTrace($exception)
-	{
-		$trace=$exception->getTrace();
-		$result=null;
-		// if PHP exception, we want to show the 2nd stack level context
-		// because the 1st stack level is of little use (it's in error handler)
+		$fileName=$exception->getFile();
+		$errorLine=$exception->getLine();
 		if($exception instanceof TPhpErrorException)
-			$result=$trace[1];
-		else if($exception instanceof TInvalidOperationException)
 		{
-			// in case of getter or setter error, find out the exact file and row
-			if(($result=$this->getPropertyAccessTrace($trace,'__get'))===null)
-				$result=$this->getPropertyAccessTrace($trace,'__set');
+			// if PHP exception, we want to show the 2nd stack level context
+			// because the 1st stack level is of little use (it's in error handler)
+			$trace=$exception->getTrace();
+			if(isset($trace[1]) && isset($trace[1]['file']) && isset($trace[1]['line']))
+			{
+				$fileName=$trace[1]['file'];
+				$errorLine=$trace[1]['line'];
+			}
 		}
-		if($result!==null && strpos($result['file'],': eval()\'d code')!==false)
-			return null;
+		$lines=file($fileName);
 
-		return $result;
-	}
-
-	private function getPropertyAccessTrace($trace,$pattern)
-	{
-		$result=null;
-		foreach($trace as $t)
-		{
-			if(isset($t['function']) && $t['function']===$pattern)
-				$result=$t;
-			else
-				break;
-		}
-		return $result;
-	}
-
-	private function getSourceCode($lines,$errorLine)
-	{
 		$beginLine=$errorLine-self::SOURCE_LINES>=0?$errorLine-self::SOURCE_LINES:0;
 		$endLine=$errorLine+self::SOURCE_LINES<=count($lines)?$errorLine+self::SOURCE_LINES:count($lines);
 
@@ -303,13 +236,23 @@ class TErrorHandler extends TModule
 			else
 				$source.=htmlspecialchars(sprintf("%04d: %s",$i+1,str_replace("\t",'    ',$lines[$i])));
 		}
-		return $source;
-	}
 
-	private function addLink($message)
-	{
-		$baseUrl='http://www.pradosoft.com/docs/classdoc';
-		return preg_replace('/(T[A-Z]\w+)/',"<a href=\"$baseUrl/\${1}\" target=\"_blank\">\${1}</a>",$message);
+		$tokens=array(
+			'%%ErrorType%%' => get_class($exception),
+			'%%ErrorMessage%%' => htmlspecialchars($exception->getMessage()),
+			'%%SourceFile%%' => htmlspecialchars($fileName).' ('.$errorLine.')',
+			'%%SourceCode%%' => $source,
+			'%%StackTrace%%' => htmlspecialchars($exception->getTraceAsString()),
+			'%%Version%%' => $_SERVER['SERVER_SOFTWARE'].' <a href="http://www.pradosoft.com/">PRADO</a>/'.Prado::getVersion(),
+			'%%Time%%' => @strftime('%Y-%m-%d %H:%M',time())
+		);
+		$lang=Prado::getPreferredLanguage();
+		$exceptionFile=Prado::getFrameworkPath().'/Exceptions/templates/'.self::EXCEPTION_FILE_NAME.'-'.$lang.'.html';
+		if(!is_file($exceptionFile))
+			$exceptionFile=Prado::getFrameworkPath().'/Exceptions/templates/'.self::EXCEPTION_FILE_NAME.'.html';
+		if(($content=@file_get_contents($exceptionFile))===false)
+			die("Unable to open exception template file '$exceptionFile'.");
+		echo strtr($content,$tokens);
 	}
 }
 

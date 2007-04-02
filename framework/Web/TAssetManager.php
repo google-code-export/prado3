@@ -218,7 +218,7 @@ class TAssetManager extends TModule
 	 */
 	protected function hash($dir)
 	{
-		return sprintf('%x',crc32($dir.Prado::getVersion()));
+		return sprintf('%x',crc32($dir));
 	}
 
 	/**
@@ -233,7 +233,7 @@ class TAssetManager extends TModule
 		if(!is_dir($dst))
 		{
 			@mkdir($dst);
-			@chmod($dst, PRADO_CHMOD);
+			@chmod($dst, 0777);
 		}
 		$dstFile=$dst.'/'.basename($src);
 		if(@filemtime($dstFile)<@filemtime($src))
@@ -256,7 +256,7 @@ class TAssetManager extends TModule
 		if(!is_dir($dst))
 		{
 			@mkdir($dst);
-			@chmod($dst, PRADO_CHMOD);
+			@chmod($dst, 0777);
 		}
 		$folder=@opendir($src);
 		while($file=@readdir($folder))
