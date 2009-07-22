@@ -27,21 +27,20 @@ Prado::using('System.Data.TDbConnection');
  *   <route class="TFileLogRoute" Categories="System.Web.UI" Levels="Warning" />
  *   <route class="TEmailLogRoute" Categories="Application" Levels="Fatal" Emails="admin@pradosoft.com" />
  * </code>
- * PHP configuration style:
- * <code>
- * 
- * </code>
  * You can specify multiple routes with different filtering conditions and different
  * targets, even if the routes are of the same type.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @author Carl G. Mathisen <carlgmathisen@gmail.com>
  * @version $Id$
  * @package System.Util
  * @since 3.0
  */
 class TLogRouter extends TModule
 {
+	/**
+	 * File extension of external configuration file
+	 */
+	const CONFIG_FILE_EXT='.xml';
 	/**
 	 * @var array list of routes available
 	 */
@@ -54,7 +53,7 @@ class TLogRouter extends TModule
 	/**
 	 * Initializes this module.
 	 * This method is required by the IModule interface.
-	 * @param mixed configuration for this module, can be null
+	 * @param TXmlElement configuration for this module, can be null
 	 * @throws TConfigurationException if {@link getConfigFile ConfigFile} is invalid.
 	 */
 	public function init($config)
@@ -63,17 +62,9 @@ class TLogRouter extends TModule
 		{
  			if(is_file($this->_configFile))
  			{
-				if($this->getApplication()->getConfigurationType()==TApplication::CONFIG_TYPE_PHP)
-				{
-					$phpConfig = include $this->_configFile;
-					$this->loadConfig($phpConfig);
-				}
-				else
-				{
-					$dom=new TXmlDocument;
-					$dom->loadFromFile($this->_configFile);
-					$this->loadConfig($dom);
-				}
+				$dom=new TXmlDocument;
+				$dom->loadFromFile($this->_configFile);
+				$this->loadConfig($dom);
 			}
 			else
 				throw new TConfigurationException('logrouter_configfile_invalid',$this->_configFile);
@@ -83,53 +74,31 @@ class TLogRouter extends TModule
 	}
 
 	/**
-	 * Loads configuration from an XML element or PHP array
-	 * @param mixed configuration node
+	 * Loads configuration from an XML element
+	 * @param TXmlElement configuration node
 	 * @throws TConfigurationException if log route class or type is not specified
 	 */
-	private function loadConfig($config)
+	private function loadConfig($xml)
 	{
-		if(is_array($config))
+		foreach($xml->getElementsByTagName('route') as $routeConfig)
 		{
-			if(isset($config['routes']) && is_array($config['routes']))
-			{
-				foreach($config['routes'] as $route)
-				{
-					$properties = isset($route['properties'])?$route['properties']:array();
-					if(!isset($route['class']))
-						throw new TConfigurationException('logrouter_routeclass_required');
-					$route=Prado::createComponent($route['class']);
-					if(!($route instanceof TLogRoute))
-						throw new TConfigurationException('logrouter_routetype_invalid');
-					foreach($properties as $name=>$value)
-						$route->setSubproperty($name,$value);
-					$this->_routes[]=$route;
-					$route->init($route);
-				}
-			}
-		}
-		else
-		{
-			foreach($config->getElementsByTagName('route') as $routeConfig)
-			{
-				$properties=$routeConfig->getAttributes();
-				if(($class=$properties->remove('class'))===null)
-					throw new TConfigurationException('logrouter_routeclass_required');
-				$route=Prado::createComponent($class);
-				if(!($route instanceof TLogRoute))
-					throw new TConfigurationException('logrouter_routetype_invalid');
-				foreach($properties as $name=>$value)
-					$route->setSubproperty($name,$value);
-				$this->_routes[]=$route;
-				$route->init($routeConfig);
-			}
+			$properties=$routeConfig->getAttributes();
+			if(($class=$properties->remove('class'))===null)
+				throw new TConfigurationException('logrouter_routeclass_required');
+			$route=Prado::createComponent($class);
+			if(!($route instanceof TLogRoute))
+				throw new TConfigurationException('logrouter_routetype_invalid');
+			foreach($properties as $name=>$value)
+				$route->setSubproperty($name,$value);
+			$this->_routes[]=$route;
+			$route->init($routeConfig);
 		}
 	}
 
 	/**
 	 * Adds a TLogRoute instance to the log router.
-	 * 
-	 * @param TLogRoute $route 
+	 *
+	 * @param TLogRoute $route
 	 * @throws TInvalidDataTypeException if the route object is invalid
 	 */
 	public function addRoute($route)
@@ -155,7 +124,7 @@ class TLogRouter extends TModule
 	 */
 	public function setConfigFile($value)
 	{
-		if(($this->_configFile=Prado::getPathOfNamespace($value,$this->getApplication()->getConfigurationFileExt()))===null)
+		if(($this->_configFile=Prado::getPathOfNamespace($value,self::CONFIG_FILE_EXT))===null)
 			throw new TConfigurationException('logrouter_configfile_invalid',$value);
 	}
 
@@ -635,6 +604,11 @@ class TEmailLogRoute extends TLogRoute
  */
 class TBrowserLogRoute extends TLogRoute
 {
+	/**
+	 * @var string css class for indentifying the table structure in the dom tree
+	 */
+	private $_cssClass=null;
+	
 	public function processLogs($logs)
 	{
 		if(empty($logs) || $this->getApplication()->getMode()==='Performance') return;
@@ -659,10 +633,43 @@ class TBrowserLogRoute extends TLogRoute
 		}
 		$response->write($this->renderFooter());
 	}
+	
+	/**
+	 * @param string the css class of the control
+	 */
+	public function setCssClass($value)
+	{
+		$this->_cssClass = TPropertyValue::ensureString($value);
+	}
+
+	/**
+	 * @return string the css class of the control
+	 */
+	public function getCssClass()
+	{
+		return TPropertyValue::ensureString($this->_cssClass);
+	}
 
 	protected function renderHeader()
 	{
-		$string = <<<EOD
+		$string = '';
+		if($className=$this->getCssClass())
+		{
+			$string = <<<EOD
+<table class="$className">
+	<tr class="header">
+		<th colspan="5">
+			Application Log
+		</th>
+	</tr><tr class="description">
+	    <th>&nbsp;</th>
+		<th>Category</th><th>Message</th><th>Time Spent (s)</th><th>Cumulated Time Spent (s)</th>
+	</tr>
+EOD;
+		}
+		else
+		{
+			$string = <<<EOD
 <table cellspacing="0" cellpadding="2" border="0" width="100%" style="table-layout:auto">
 	<tr>
 		<th style="background-color: black; color:white;" colspan="5">
@@ -673,18 +680,36 @@ class TBrowserLogRoute extends TLogRoute
 		<th style="width: auto">Category</th><th style="width: auto">Message</th><th style="width: 120px">Time Spent (s)</th><th style="width: 150px">Cumulated Time Spent (s)</th>
 	</tr>
 EOD;
+		}
 		return $string;
 	}
 
 	protected function renderMessage($log, $info)
 	{
-		$bgcolor = $info['even'] ? "#fff" : "#eee";
+		$string = '';
 		$total = sprintf('%0.6f', $info['total']);
 		$delta = sprintf('%0.6f', $info['delta']);
-		$color = $this->getColorLevel($log[1]);
 		$msg = preg_replace('/\(line[^\)]+\)$/','',$log[0]); //remove line number info
 		$msg = THttpUtility::htmlEncode($msg);
-		$string = <<<EOD
+		if($this->getCssClass())
+		{
+			$colorCssClass = $log[1];
+			$messageCssClass = $info['even'] ? 'even' : 'odd';
+			$string = <<<EOD
+	<tr class="message level$colorCssClass $messageCssClass">
+		<td class="code">&nbsp;</td>
+		<td class="category">{$log[2]}</td>
+		<td class="message">{$msg}</td>
+		<td class="time">{$delta}</td>
+		<td class="cumulatedtime">{$total}</td>
+	</tr>
+EOD;
+		}
+		else
+		{
+			$bgcolor = $info['even'] ? "#fff" : "#eee";
+			$color = $this->getColorLevel($log[1]);
+			$string = <<<EOD
 	<tr style="background-color: {$bgcolor}; color:#000">
 		<td style="border:1px solid silver;background-color: $color;">&nbsp;</td>
 		<td>{$log[2]}</td>
@@ -693,6 +718,7 @@ EOD;
 		<td style="text-align:center">{$total}</td>
 	</tr>
 EOD;
+		}
 		return $string;
 	}
 
@@ -713,13 +739,25 @@ EOD;
 
 	protected function renderFooter()
 	{
-		$string = "<tr><td colspan=\"5\" style=\"text-align:center; background-color:black; border-top: 1px solid #ccc; padding:0.2em;\">";
-		foreach(self::$_levelValues as $name => $level)
+		$string = '';
+		if($this->getCssClass())
 		{
-			$string .= "<span style=\"color:white; border:1px solid white; background-color:".$this->getColorLevel($level);
-			$string .= ";margin: 0.5em; padding:0.01em;\">".strtoupper($name)."</span>";
+			$string .= '<tr class="footer"><td colspan="5">';
+			foreach(self::$_levelValues as $name => $level)
+			{
+				$string .= '<span class="level'.$level.'">'.strtoupper($name)."</span>";
+			}
 		}
-		$string .= "</td></tr></table>";
+		else
+		{
+			$string .= "<tr><td colspan=\"5\" style=\"text-align:center; background-color:black; border-top: 1px solid #ccc; padding:0.2em;\">";
+			foreach(self::$_levelValues as $name => $level)
+			{
+				$string .= "<span style=\"color:white; border:1px solid white; background-color:".$this->getColorLevel($level);
+				$string .= ";margin: 0.5em; padding:0.01em;\">".strtoupper($name)."</span>";
+			}
+		}
+		$string .= '</td></tr></table>';
 		return $string;
 	}
 }
