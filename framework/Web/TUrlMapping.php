@@ -70,6 +70,10 @@ Prado::using('System.Collections.TAttributeCollection');
 class TUrlMapping extends TUrlManager
 {
 	/**
+	 * File extension of external configuration file
+	 */
+	const CONFIG_FILE_EXT='.xml';
+	/**
 	 * @var TUrlMappingPattern[] list of patterns.
 	 */
 	protected $_patterns=array();
@@ -97,17 +101,17 @@ class TUrlMapping extends TUrlManager
 	/**
 	 * Initializes this module.
 	 * This method is required by the IModule interface.
-	 * @param mixed configuration for this module, can be null
+	 * @param TXmlElement configuration for this module, can be null
 	 * @throws TConfigurationException if module is configured in the global scope.
 	 */
-	public function init($config)
+	public function init($xml)
 	{
-		parent::init($config);
+		parent::init($xml);
 		if($this->getRequest()->getRequestResolved())
 			throw new TConfigurationException('urlmapping_global_required');
 		if($this->_configFile!==null)
 			$this->loadConfigFile();
-		$this->loadUrlMappings($config);
+		$this->loadUrlMappings($xml);
 		if($this->_urlPrefix==='')
 			$this->_urlPrefix=$this->getRequest()->getApplicationUrl();
 		$this->_urlPrefix=rtrim($this->_urlPrefix,'/');
@@ -121,17 +125,9 @@ class TUrlMapping extends TUrlManager
 	{
 		if(is_file($this->_configFile))
  		{
-			if($this->getApplication()->getConfigurationType()==TApplication::CONFIG_TYPE_PHP)
-			{
-				$config = include $this->_configFile;
-				$this->loadUrlMappings($dom);
-			}
-			else
-			{
-				$dom=new TXmlDocument;
-				$dom->loadFromFile($this->_configFile);
-				$this->loadUrlMappings($dom);
-			}
+			$dom=new TXmlDocument;
+			$dom->loadFromFile($this->_configFile);
+			$this->loadUrlMappings($dom);
 		}
 		else
 			throw new TConfigurationException('urlmapping_configfile_inexistent',$this->_configFile);
@@ -195,7 +191,7 @@ class TUrlMapping extends TUrlManager
 	 */
 	public function setConfigFile($value)
 	{
-		if(($this->_configFile=Prado::getPathOfNamespace($value,$this->getApplication()->getConfigurationFileExt()))===null)
+		if(($this->_configFile=Prado::getPathOfNamespace($value,self::CONFIG_FILE_EXT))===null)
 			throw new TConfigurationException('urlmapping_configfile_invalid',$value);
 	}
 
@@ -222,51 +218,27 @@ class TUrlMapping extends TUrlManager
 
 	/**
 	 * Load and configure each url mapping pattern.
-	 * @param mixed configuration node
+	 * @param TXmlElement configuration node
 	 * @throws TConfigurationException if specific pattern class is invalid
 	 */
-	protected function loadUrlMappings($config)
+	protected function loadUrlMappings($xml)
 	{
-		if(is_array($config))
+		foreach($xml->getElementsByTagName('url') as $url)
 		{
-			if(isset($config['urls']) && is_array($config['urls']))
-			{
-				foreach($config['urls'] as $url)
-				{
-					$class=null;
-					if(!isset($url['class']))
-						$class=$this->getDefaultMappingClass();
-					$pattern=Prado::createComponent($class,$this);
-					$properties = isset($url['properties'])?$url['properties']:array();
-					$this->buildUrlMapping($class,$pattern,$properties,$url);
-				}
-			}
-		}
-		else
-		{
-			foreach($config->getElementsByTagName('url') as $url)
-			{
-				$properties=$url->getAttributes();
-				if(($class=$properties->remove('class'))===null)
-					$class=$this->getDefaultMappingClass();
-				$pattern=Prado::createComponent($class,$this);
-				$this->buildUrlMapping($class,$pattern,$properties,$url);
-			}
-		}
-	}
-	
-	private function buildUrlMapping($class, $pattern, $properties, $url)
-	{
-		$pattern=Prado::createComponent($class,$this);
-		if(!($pattern instanceof TUrlMappingPattern))
-			throw new TConfigurationException('urlmapping_urlmappingpattern_required');
-		foreach($properties as $name=>$value)
-			$pattern->setSubproperty($name,$value);
-		$this->_patterns[]=$pattern;
-		$pattern->init($url);
+			$properties=$url->getAttributes();
+			if(($class=$properties->remove('class'))===null)
+				$class=$this->getDefaultMappingClass();
+			$pattern=Prado::createComponent($class,$this);
+			if(!($pattern instanceof TUrlMappingPattern))
+				throw new TConfigurationException('urlmapping_urlmappingpattern_required');
+			foreach($properties as $name=>$value)
+				$pattern->setSubproperty($name,$value);
+			$this->_patterns[]=$pattern;
+			$pattern->init($url);
 
-		$key=$pattern->getServiceID().':'.$pattern->getServiceParameter();
-		$this->_constructRules[$key][]=$pattern;
+			$key=$pattern->getServiceID().':'.$pattern->getServiceParameter();
+			$this->_constructRules[$key][]=$pattern;
+		}
 	}
 
 	/**

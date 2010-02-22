@@ -7,7 +7,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2008 PradoSoft
+ * @copyright Copyright &copy; 2005-2010 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System
@@ -71,7 +71,7 @@ class PradoBase
 	 */
 	public static function getVersion()
 	{
-		return '3.2-dev';
+		return '3.1.7';
 	}
 
 	/**
@@ -84,7 +84,7 @@ class PradoBase
 		/**
 		 * Sets error handler to be Prado::phpErrorHandler
 		 */
-		set_error_handler(array('PradoBase','phpErrorHandler'));
+		set_error_handler(array('PradoBase','phpErrorHandler'),error_reporting());
 		/**
 		 * Sets exception handler to be Prado::exceptionHandler
 		 */
@@ -132,7 +132,7 @@ class PradoBase
 	 */
 	public static function phpErrorHandler($errno,$errstr,$errfile,$errline)
 	{
-		if(error_reporting() & $errno)
+		if(error_reporting()!=0)
 			throw new TPhpErrorException($errno,$errstr,$errfile,$errline);
 	}
 
@@ -639,3 +639,5 @@ class TReflectionClass extends ReflectionClass
 PradoBase::using('System.TComponent');
 PradoBase::using('System.Exceptions.TException');
 PradoBase::using('System.Util.TLogger');
+
+?>

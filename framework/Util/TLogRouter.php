@@ -27,21 +27,20 @@ Prado::using('System.Data.TDbConnection');
  *   <route class="TFileLogRoute" Categories="System.Web.UI" Levels="Warning" />
  *   <route class="TEmailLogRoute" Categories="Application" Levels="Fatal" Emails="admin@pradosoft.com" />
  * </code>
- * PHP configuration style:
- * <code>
- * 
- * </code>
  * You can specify multiple routes with different filtering conditions and different
  * targets, even if the routes are of the same type.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @author Carl G. Mathisen <carlgmathisen@gmail.com>
  * @version $Id$
  * @package System.Util
  * @since 3.0
  */
 class TLogRouter extends TModule
 {
+	/**
+	 * File extension of external configuration file
+	 */
+	const CONFIG_FILE_EXT='.xml';
 	/**
 	 * @var array list of routes available
 	 */
@@ -54,7 +53,7 @@ class TLogRouter extends TModule
 	/**
 	 * Initializes this module.
 	 * This method is required by the IModule interface.
-	 * @param mixed configuration for this module, can be null
+	 * @param TXmlElement configuration for this module, can be null
 	 * @throws TConfigurationException if {@link getConfigFile ConfigFile} is invalid.
 	 */
 	public function init($config)
@@ -63,17 +62,9 @@ class TLogRouter extends TModule
 		{
  			if(is_file($this->_configFile))
  			{
-				if($this->getApplication()->getConfigurationType()==TApplication::CONFIG_TYPE_PHP)
-				{
-					$phpConfig = include $this->_configFile;
-					$this->loadConfig($phpConfig);
-				}
-				else
-				{
-					$dom=new TXmlDocument;
-					$dom->loadFromFile($this->_configFile);
-					$this->loadConfig($dom);
-				}
+				$dom=new TXmlDocument;
+				$dom->loadFromFile($this->_configFile);
+				$this->loadConfig($dom);
 			}
 			else
 				throw new TConfigurationException('logrouter_configfile_invalid',$this->_configFile);
@@ -83,53 +74,31 @@ class TLogRouter extends TModule
 	}
 
 	/**
-	 * Loads configuration from an XML element or PHP array
-	 * @param mixed configuration node
+	 * Loads configuration from an XML element
+	 * @param TXmlElement configuration node
 	 * @throws TConfigurationException if log route class or type is not specified
 	 */
-	private function loadConfig($config)
+	private function loadConfig($xml)
 	{
-		if(is_array($config))
+		foreach($xml->getElementsByTagName('route') as $routeConfig)
 		{
-			if(isset($config['routes']) && is_array($config['routes']))
-			{
-				foreach($config['routes'] as $route)
-				{
-					$properties = isset($route['properties'])?$route['properties']:array();
-					if(!isset($route['class']))
-						throw new TConfigurationException('logrouter_routeclass_required');
-					$route=Prado::createComponent($route['class']);
-					if(!($route instanceof TLogRoute))
-						throw new TConfigurationException('logrouter_routetype_invalid');
-					foreach($properties as $name=>$value)
-						$route->setSubproperty($name,$value);
-					$this->_routes[]=$route;
-					$route->init($route);
-				}
-			}
-		}
-		else
-		{
-			foreach($config->getElementsByTagName('route') as $routeConfig)
-			{
-				$properties=$routeConfig->getAttributes();
-				if(($class=$properties->remove('class'))===null)
-					throw new TConfigurationException('logrouter_routeclass_required');
-				$route=Prado::createComponent($class);
-				if(!($route instanceof TLogRoute))
-					throw new TConfigurationException('logrouter_routetype_invalid');
-				foreach($properties as $name=>$value)
-					$route->setSubproperty($name,$value);
-				$this->_routes[]=$route;
-				$route->init($routeConfig);
-			}
+			$properties=$routeConfig->getAttributes();
+			if(($class=$properties->remove('class'))===null)
+				throw new TConfigurationException('logrouter_routeclass_required');
+			$route=Prado::createComponent($class);
+			if(!($route instanceof TLogRoute))
+				throw new TConfigurationException('logrouter_routetype_invalid');
+			foreach($properties as $name=>$value)
+				$route->setSubproperty($name,$value);
+			$this->_routes[]=$route;
+			$route->init($routeConfig);
 		}
 	}
 
 	/**
 	 * Adds a TLogRoute instance to the log router.
-	 * 
-	 * @param TLogRoute $route 
+	 *
+	 * @param TLogRoute $route
 	 * @throws TInvalidDataTypeException if the route object is invalid
 	 */
 	public function addRoute($route)
@@ -155,7 +124,7 @@ class TLogRouter extends TModule
 	 */
 	public function setConfigFile($value)
 	{
-		if(($this->_configFile=Prado::getPathOfNamespace($value,$this->getApplication()->getConfigurationFileExt()))===null)
+		if(($this->_configFile=Prado::getPathOfNamespace($value,self::CONFIG_FILE_EXT))===null)
 			throw new TConfigurationException('logrouter_configfile_invalid',$value);
 	}
 

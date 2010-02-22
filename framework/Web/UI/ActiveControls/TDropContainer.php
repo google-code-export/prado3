@@ -31,9 +31,7 @@ Prado::using('System.Web.UI.ActiveControls.TActivePanel');
  * 
  * Events:
  * 
- * <b>{@link OnDrop OnDrop} : raised when a TDraggable control is dropped. The dropped control id is encapsulated in the event parameter,
- * as well as mouse coordinates and key modifiers status
- *
+ * <b>{@link OnDrop OnDrop}</b> : raised when a TDraggable control is dropped. The dropped control is encapsulated in the event parameter
  * 
  * @author Christophe BOULAIN (Christophe.Boulain@gmail.com)
  * @copyright Copyright &copy; 2008, PradoSoft
@@ -126,13 +124,17 @@ class TDropContainer extends TPanel implements IActiveControl, ICallbackEventHan
 	
 	/**
 	 * Raises the onDrop event. 
-	 * The drop parameters are encapsulated into a {@link TDropContainerEventParameter}
+	 * The dropped control is encapsulated into a {@link TDropContainerEventParameter}
 	 * 
-	 * @param object $dropControlId
+	 * @param string $dropControlId
 	 */
-	public function onDrop ($dropParams)
+	public function onDrop ($dropControlId)
 	{
-		$this->raiseEvent('OnDrop', $this, new TDropContainerEventParameter ($dropParams));
+		// Find the control
+		// Warning, this will not work if you have a '_' in your control Id !
+		$dropControlId=str_replace(TControl::CLIENT_ID_SEPARATOR,TControl::ID_SEPARATOR,$dropControlId);
+		$control=$this->getPage()->findControl($dropControlId);
+		$this->raiseEvent('OnDrop', $this, new TDropContainerEventParameter ($control));
 		
 	}
 	
@@ -252,60 +254,28 @@ class TDropContainer extends TPanel implements IActiveControl, ICallbackEventHan
  */
 class TDropContainerEventParameter extends TEventParameter
 {
-	private $_dragElementId;
-	private $_screenX;
-	private $_screenY;
-	private $_offsetX;
-	private $_offsetY;
-	private $_clientX;
-	private $_clientY;
-	private $_shiftKey;
-	private $_ctrlKey;
-	private $_altKey;
-
-	public function __construct($dropParams)
-	{
-		$this->_dragElementId = $dropParams->DragElementID;
-		$this->_screenX = $dropParams->ScreenX;
-		$this->_screenY = $dropParams->ScreenY;
-		$this->_offsetX = isset($dropParams->OffsetX) ? $dropParams->OffsetX : false;
-		$this->_offsetY = isset($dropParams->OffsetY) ? $dropParams->OffsetY : false;
-		$this->_clientX = $dropParams->ClientX;
-		$this->_clientY = $dropParams->ClientY;
-		$this->_shiftKey = TPropertyValue::ensureBoolean($dropParams->ShiftKey);
-		$this->_ctrlKey = TPropertyValue::ensureBoolean($dropParams->CtrlKey);
-		$this->_altKey = TPropertyValue::ensureBoolean($dropParams->AltKey);
-	}
-
-	public function getDragElementId()			{ return $this->_dragElementId; }
-	public function getScreenX()				{ return $this->_screenX; }
-	public function getScreenY()				{ return $this->_screenY; }
-	public function getOffsetX()				{ return $this->_offsetX; }
-	public function geOffsetY()					{ return $this->_offsetY; }
-	public function getClientX()				{ return $this->_clientX; }
-	public function getClientY()				{ return $this->_clientY; }
-	public function getShiftKey()				{ return $this->_shiftKey; }
-	public function getCtrlKey()				{ return $this->_ctrlKey; }
-	public function getAltKey()					{ return $this->_altKey; }
-
-	/**
-	 * GetDroppedControl
-	 *
-	 * Compatibility method to get the dropped control
-	 * @return TControl dropped control, or null if not found
+	/*
+	 * the id of control which has been dropped
+	 * @var string
 	 */
-	 public function getDroppedControl ()
-	 {
-		 $control=null;
-		 $service=prado::getApplication()->getService();
-		 if ($service instanceof TPageService)
-		 {
-			// Find the control
-			// Warning, this will not work if you have a '_' in your control Id !
-			$dropControlId=str_replace(TControl::CLIENT_ID_SEPARATOR,TControl::ID_SEPARATOR,$this->_dragElementId);
-			$control=$service->getRequestedPage()->findControl($dropControlId);
-		 }
-		 return $control;
-	 }
+	private $_droppedControl;
+	
+	/**
+	 * constructor
+	 *
+	 * @param string the id of control which been dropped
+	 */
+	public function __construct ($control)
+	{
+		$this->_droppedControl=$control;
+	}
+	
+	/**
+	 * @return TDraggable 
+	 */
+	public function getDroppedControl ()
+	{
+		return $this->_droppedControl;
+	}
 }
 ?>

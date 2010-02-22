@@ -361,9 +361,8 @@ class Io
             {
                 if (dirname($path) != $masterPath)
                 {
-                    $mp = explode(PATH_DELIMITER, $masterPath);
-                    $np = explode(PATH_DELIMITER, str_replace('\\', '/', dirname($path)));
-
+                    $mp = split(PATH_DELIMITER,$masterPath);
+                    $np = split(PATH_DELIMITER,str_replace('\\','/',dirname($path)));
                     if (count($np) < count($mp))
                     {
                         $masterPath = join($np, PATH_DELIMITER);

@@ -28,20 +28,6 @@
  *  </service>
  * </code>
  * where each &lt;feed&gt; element specifies a feed identified by its "id" value (case-sensitive).
- *
- * PHP configuration style:
- * <code>
- * array(
- *   'feed' => array(
- *	   'ch1' => array(
- *       'class' => 'Path.To.FeedClass1',
- *       'properties' => array(
- *          ...
- *        ),
- *   ),
- * )
- * </code>
- *
  * The class attribute indicates which PHP class will provide the actual feed
  * content. Note, the class must implement {@link IFeedContentProvider} interface.
  * Other initial properties for the feed class may also be specified in the
@@ -52,7 +38,6 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @author Knut Urdalen <knut.urdalen@gmail.com>
- * @author Carl G. Mathisen <carlgmathisen@gmail.com>
  * @package System.Web.Services
  * @since 3.1
  */
@@ -63,27 +48,16 @@ class TFeedService extends TService
 	/**
 	 * Initializes this module.
 	 * This method is required by the IModule interface.
-	 * @param mixed configuration for this module, can be null
+	 * @param TXmlElement configuration for this module, can be null
 	 */
 	public function init($config)
 	{
-		if($this->getApplication()->getConfigurationType()==TApplication::CONFIG_TYPE_PHP)
+		foreach($config->getElementsByTagName('feed') as $feed)
 		{
-			if(is_array($config))
-			{
-				foreach($config as $id => $feed)
-					$this->_feeds[$id] = $feed;
-			}
-		}
-		else
-		{
-			foreach($config->getElementsByTagName('feed') as $feed)
-			{
-				if(($id=$feed->getAttributes()->remove('id'))!==null)
-					$this->_feeds[$id]=$feed;
-				else
-					throw new TConfigurationException('feedservice_id_required');
-			}
+			if(($id=$feed->getAttributes()->remove('id'))!==null)
+				$this->_feeds[$id]=$feed;
+			else
+				throw new TConfigurationException('feedservice_id_required');
 		}
 	}
 
@@ -105,43 +79,27 @@ class TFeedService extends TService
 		if(isset($this->_feeds[$id]))
 		{
 			$feedConfig=$this->_feeds[$id];
-			$properties = array();
-			$feed = null;
-			if($this->getApplication()->getConfigurationType()==TApplication::CONFIG_TYPE_PHP)
+			$properties=$feedConfig->getAttributes();
+			if(($class=$properties->remove('class'))!==null)
 			{
-				if(isset($feedConfig['class']))
+				$feed=Prado::createComponent($class);
+				if($feed instanceof IFeedContentProvider)
 				{
-					$feed=Prado::createComponent($feedConfig['class']);
-					if($service instanceof IFeedContentProvider)
-						$properties=isset($feedConfig['properties'])?$feedConfig['properties']:array();
-					else
-						throw new TConfigurationException('jsonservice_response_type_invalid',$id);
+					// init feed properties
+					foreach($properties as $name=>$value)
+						$feed->setSubproperty($name,$value);
+					$feed->init($feedConfig);
+
+					$content=$feed->getFeedContent();
+				    //$this->getResponse()->setContentType('application/rss+xml');
+				    $this->getResponse()->setContentType($feed->getContentType());
+				    $this->getResponse()->write($content);
 				}
 				else
-					throw new TConfigurationException('jsonservice_class_required',$id);
+					throw new TConfigurationException('feedservice_feedtype_invalid',$id);
 			}
 			else
-			{
-				$properties=$feedConfig->getAttributes();
-				if(($class=$properties->remove('class'))!==null)
-				{
-					$feed=Prado::createComponent($class);
-					if(!($feed instanceof IFeedContentProvider))
-						throw new TConfigurationException('feedservice_feedtype_invalid',$id);
-				}
-				else
-					throw new TConfigurationException('feedservice_class_required',$id);
-			}
-			
-			// init feed properties
-			foreach($properties as $name=>$value)
-				$feed->setSubproperty($name,$value);
-			$feed->init($feedConfig);
-
-			$content=$feed->getFeedContent();
-		    //$this->getResponse()->setContentType('application/rss+xml');
-		    $this->getResponse()->setContentType($feed->getContentType());
-		    $this->getResponse()->write($content);
+				throw new TConfigurationException('feedservice_class_required',$id);
 		}
 		else
 			throw new THttpException(404,'feedservice_feed_unknown',$id);
