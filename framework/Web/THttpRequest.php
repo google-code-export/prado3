@@ -70,6 +70,8 @@ Prado::using('System.Web.TUrlManager');
  */
 class THttpRequest extends TApplicationComponent implements IteratorAggregate,ArrayAccess,Countable,IModule
 {
+	const CGIFIX__PATH_INFO		= 1;
+	const CGIFIX__SCRIPT_NAME	= 2;
 	/**
 	 * @var TUrlManager the URL manager module
 	 */
@@ -110,6 +112,7 @@ class THttpRequest extends TApplicationComponent implements IteratorAggregate,Ar
 	private $_services;
 	private $_requestResolved=false;
 	private $_enableCookieValidation=false;
+	private $_cgiFix=0;
 	/**
 	 * @var string request URL
 	 */
@@ -183,7 +186,9 @@ class THttpRequest extends TApplicationComponent implements IteratorAggregate,Ar
 		else  // TBD: in this case, SCRIPT_NAME need to be escaped
 			$this->_requestUri=$_SERVER['SCRIPT_NAME'].(empty($_SERVER['QUERY_STRING'])?'':'?'.$_SERVER['QUERY_STRING']);
 
-		if(isset($_SERVER['PATH_INFO']))
+		if($this->_cgiFix&self::CGIFIX__PATH_INFO && isset($_SERVER['ORIG_PATH_INFO']))
+			$this->_pathInfo=substr($_SERVER['ORIG_PATH_INFO'], strlen($_SERVER['SCRIPT_NAME']));
+		elseif(isset($_SERVER['PATH_INFO']))
 			$this->_pathInfo=$_SERVER['PATH_INFO'];
 		else if(strpos($_SERVER['PHP_SELF'],$_SERVER['SCRIPT_NAME'])===0 && $_SERVER['PHP_SELF']!==$_SERVER['SCRIPT_NAME'])
 			$this->_pathInfo=substr($_SERVER['PHP_SELF'],strlen($_SERVER['SCRIPT_NAME']));
@@ -319,21 +324,6 @@ class THttpRequest extends TApplicationComponent implements IteratorAggregate,Ar
 	}
 
 	/**
-	 * @param boolean $mimetypeOnly whether to return only the mimetype (default: true)
-	 * @return string content type (e.g. 'application/json' or 'text/html; encoding=gzip') or null if not specified
-	 */
-	public function getContentType($mimetypeOnly = true)
-	{
-		if(!isset($_SERVER['CONTENT_TYPE']))
-			return null;
-
-		if($mimetypeOnly === true && ($_pos = strpos(';', $_SERVER['CONTENT_TYPE'])) !== false)
-			return substr($_SERVER['CONTENT_TYPE'], 0, $_pos);
-
-		return $_SERVER['CONTENT_TYPE'];
-	}
-
-	/**
 	 * @return boolean if the request is sent via secure channel (https)
 	 */
 	public function getIsSecureConnection()
@@ -374,16 +364,13 @@ class THttpRequest extends TApplicationComponent implements IteratorAggregate,Ar
 	}
 
 	/**
-	 * @param boolean|null whether to use HTTPS instead of HTTP even if the current request is sent via HTTP or vice versa
-	 * 						null - keep current schema
-	 * 						true - force https
-	 * 						false - force http
+	 * @param boolean whether to use HTTPS instead of HTTP even if the current request is sent via HTTP
 	 * @return string schema and hostname of the requested URL
 	 */
-	public function getBaseUrl($forceSecureConnection=null)
+	public function getBaseUrl($forceSecureConnection=false)
 	{
 		$url=$this->getUrl();
-		$scheme=($forceSecureConnection)?"https": (($forceSecureConnection === null)?$url->getScheme():'http');
+		$scheme=($forceSecureConnection)?"https":$url->getScheme();
 		$host=$url->getHost();
 		if (($port=$url->getPort())) $host.=':'.$port;
 		return $scheme.'://'.$host;
@@ -394,17 +381,17 @@ class THttpRequest extends TApplicationComponent implements IteratorAggregate,Ar
 	 */
 	public function getApplicationUrl()
 	{
+		if($this->_cgiFix&self::CGIFIX__SCRIPT_NAME && isset($_SERVER['ORIG_SCRIPT_NAME']))
+			return $_SERVER['ORIG_SCRIPT_NAME'];
+
 		return $_SERVER['SCRIPT_NAME'];
 	}
 
 	/**
-	 * @param boolean|null whether to use HTTPS instead of HTTP even if the current request is sent via HTTP or vice versa
-	 * 						null - keep current schema
-	 * 						true - force https
-	 * 						false - force http
+	 * @param boolean whether to use HTTPS instead of HTTP even if the current request is sent via HTTP
 	 * @return string entry script URL (w/ host part)
 	 */
-	public function getAbsoluteApplicationUrl($forceSecureConnection=null)
+	public function getAbsoluteApplicationUrl($forceSecureConnection=false)
 	{
 		return $this->getBaseUrl($forceSecureConnection) . $this->getApplicationUrl();
 	}
@@ -516,6 +503,26 @@ class THttpRequest extends TApplicationComponent implements IteratorAggregate,Ar
 	public function setEnableCookieValidation($value)
 	{
 		$this->_enableCookieValidation=TPropertyValue::ensureBoolean($value);
+	}
+
+	/**
+	 * @return integer whether to use ORIG_PATH_INFO and/or ORIG_SCRIPT_NAME. Defaults to 0.
+	 * @see THttpRequest::CGIFIX__PATH_INFO, THttpRequest::CGIFIX__SCRIPT_NAME
+	 */
+	public function getCgiFix()
+	{
+		return $this->_cgiFix;
+	}
+
+	/**
+	 * Enable this, if you're using PHP via CGI with php.ini setting "cgi.fix_pathinfo=1"
+	 * and have trouble with friendly URL feature. Enable this only if you really know what you are doing!
+	 * @param integer enable bitwise to use ORIG_PATH_INFO and/or ORIG_SCRIPT_NAME.
+	 * @see THttpRequest::CGIFIX__PATH_INFO, THttpRequest::CGIFIX__SCRIPT_NAME
+	 */
+	public function setCgiFix($value)
+	{
+		$this->_cgiFix=TPropertyValue::ensureInteger($value);
 	}
 
 	/**
@@ -857,7 +864,6 @@ class THttpCookieCollection extends TList
 	public function __construct($owner=null)
 	{
 		$this->_o=$owner;
-		parent::__construct();
 	}
 
 	/**

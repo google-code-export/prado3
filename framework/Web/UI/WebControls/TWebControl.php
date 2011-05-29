@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2010 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web.UI.WebControls
@@ -15,7 +15,6 @@
  */
 Prado::using('System.Web.UI.WebControls.TStyle');
 Prado::using('System.Web.UI.WebControls.TWebControlAdapter');
-Prado::using('System.Web.UI.WebControls.TWebControlDecorator');
 
 /**
  * TWebControl class
@@ -41,46 +40,6 @@ Prado::using('System.Web.UI.WebControls.TWebControlDecorator');
  */
 class TWebControl extends TControl implements IStyleable
 {
-	/**
-	 *	@var boolean ensures the inclusion the id in the tag rendering.
-	 */
-	private $_ensureid=false;
-	
-	/**
-	 *	@var TWebControlDecorator this render things before and after both the open and close tag
-	 */
-	protected $_decorator;
-	
-
-	/**
-	 * Subclasses can override getEnsureId or just set this property.  eg. If your subclass
-	 * control does work with javascript and your class wants to flag that it requires an id
-	 * to operate properly.  Once set to true, it stays that way.
-	 * @param boolean pass true to enable enforcement of the tag attribute id.
-	 */
-	public function setEnsureId($value)
-	{
-		$this->_ensureid |= TPropertyValue::ensureBoolean($value);
-	}
-
-	/**
-	 * @return whether this web control must have an id
-	 */
-	public function getEnsureId()
-	{
-		return $this->_ensureid;
-	}
-
-	/**
-	 * @return TWebControlDecorator
-	 */
-	public function getDecorator($create=true)
-	{
-		if($create && !$this->_decorator)
-			$this->_decorator = Prado::createComponent('TWebControlDecorator', $this);
-		return $this->_decorator;
-	}
-	
 	/**
 	 * Copies basic control attributes from another control.
 	 * Properties including AccessKey, ToolTip, TabIndex, Enabled
@@ -397,20 +356,6 @@ class TWebControl extends TControl implements IStyleable
 	{
 		$this->getStyle()->setWidth($value);
 	}
-	
-
-	/**
-	 * If your subclass overrides the onPreRender method be sure to call 
-	 * this method through parent::onPreRender($param); so your sub-class can be decorated,
-	 * among other things.
-	 * @param TEventParameter event parameter to be passed to the event handlers
-	 */
-	public function onPreRender($param) {
-		if($decorator = $this->getDecorator(false))
-			$decorator->instantiate();
-		
-		parent::onPreRender($param);
-	}
 
 	/**
 	 * Adds attribute name-value pairs to renderer.
@@ -421,7 +366,7 @@ class TWebControl extends TControl implements IStyleable
 	 */
 	protected function addAttributesToRender($writer)
 	{
-		if($this->getID()!=='' || $this->getEnsureId())
+		if($this->getID()!=='')
 			$writer->addAttribute('id',$this->getClientID());
 		if(($accessKey=$this->getAccessKey())!=='')
 			$writer->addAttribute('accesskey',$accessKey);
@@ -451,9 +396,6 @@ class TWebControl extends TControl implements IStyleable
 	 */
 	public function render($writer)
 	{
-		if($this->getIsRenderBlocked())
-			return;
-		
 		$this->renderBeginTag($writer);
 		$this->renderContents($writer);
 		$this->renderEndTag($writer);
@@ -465,15 +407,8 @@ class TWebControl extends TControl implements IStyleable
 	 */
 	public function renderBeginTag($writer)
 	{
-		if($decorator = $this->getDecorator(false)) {
-			$decorator->renderPreTagText($writer);
-			$this->addAttributesToRender($writer);
-			$writer->renderBeginTag($this->getTagName());
-			$decorator->renderPreContentsText($writer);
-		} else {
-			$this->addAttributesToRender($writer);
-			$writer->renderBeginTag($this->getTagName());
-		}
+		$this->addAttributesToRender($writer);
+		$writer->renderBeginTag($this->getTagName());
 	}
 
 	/**
@@ -493,11 +428,7 @@ class TWebControl extends TControl implements IStyleable
 	 */
 	public function renderEndTag($writer)
 	{
-		if($decorator = $this->getDecorator(false)) {
-			$decorator->renderPostContentsText($writer);
-			$writer->renderEndTag();
-			$decorator->renderPostTagText($writer);
-		} else 
-			$writer->renderEndTag($writer);
+		$writer->renderEndTag();
 	}
 }
+

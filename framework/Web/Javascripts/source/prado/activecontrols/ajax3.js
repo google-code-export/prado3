@@ -471,10 +471,9 @@ Prado.CallbackRequest.prototype = Object.extend(Prado.AjaxRequest.prototype,
 		this.transport = Ajax.getTransport();
 		this.Enabled = true;
 		this.id = id;
-		this.randomId = this.randomString();
 		
 		if(typeof(id)=="string"){
-			Prado.CallbackRequest.requests[id+"__"+this.randomId] = this;
+			Prado.CallbackRequest.requests[id] = this;
 		}
 		
 		this.setOptions(Object.extend(
@@ -488,7 +487,6 @@ Prado.CallbackRequest.prototype = Object.extend(Prado.AjaxRequest.prototype,
 		}, options || {}));
 
 		this.ActiveControl = this.options;
-		Prado.CallbackRequest.requests[id+"__"+this.randomId].ActiveControl = this.options;
 	},
 	
 	/**
@@ -530,9 +528,7 @@ Prado.CallbackRequest.prototype = Object.extend(Prado.AjaxRequest.prototype,
 	 */
 	setCallbackParameter : function(value)
 	{
-		var requestId = this.id+"__"+this.randomId;
 		this.ActiveControl['CallbackParameter'] = value;
-		Prado.CallbackRequest.requests[requestId].ActiveControl['CallbackParameter'] = value;
 	},
 
 	/**
@@ -540,7 +536,7 @@ Prado.CallbackRequest.prototype = Object.extend(Prado.AjaxRequest.prototype,
 	 */
 	getCallbackParameter : function()
 	{
-		return Prado.CallbackRequest.requests[this.id+"__"+this.randomId].ActiveControl['CallbackParameter'];
+		return this.ActiveControl['CallbackParameter'];
 	},
 
 	/**
@@ -674,7 +670,7 @@ Prado.CallbackRequest.prototype = Object.extend(Prado.AjaxRequest.prototype,
 			})
 		}
 		if(typeof(this.ActiveControl.CallbackParameter) != "undefined")
-			data[callback.FIELD_CALLBACK_PARAMETER] = callback.encode(this.getCallbackParameter());
+			data[callback.FIELD_CALLBACK_PARAMETER] = callback.encode(this.ActiveControl.CallbackParameter);
 		var pageState = $F(callback.FIELD_CALLBACK_PAGESTATE);
 		if(typeof(pageState) != "undefined")
 			data[callback.FIELD_CALLBACK_PAGESTATE] = pageState;
@@ -684,19 +680,6 @@ Prado.CallbackRequest.prototype = Object.extend(Prado.AjaxRequest.prototype,
 		if(this.ActiveControl.EventParameter)
 			data[callback.FIELD_POSTBACK_PARAMETER] = this.ActiveControl.EventParameter;
 		return $H(data).toQueryString();
-	},
-
-	/**
-	 * Creates a random string with a length of 8 chars.
-	 * @return string
-	 */
-	randomString : function()
-	{
-		chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-		randomString = "";
-		for(x=0;x<8;x++)
-			randomString += chars.charAt(Math.floor(Math.random() * 62));
-		return randomString
 	}
 });
 
