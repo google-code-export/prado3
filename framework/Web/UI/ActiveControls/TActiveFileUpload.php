@@ -38,8 +38,8 @@ Prado::using('System.Web.UI.WebControls.TFileUpload');
  *  
  * @author Bradley Booms <Bradley.Booms@nsighttel.com>
  * @author Christophe Boulain <Christophe.Boulain@gmail.com>
- * @version $Id$
  * @package System.Web.UI.ActiveControls
+ * @version $Id$
  */
 class TActiveFileUpload extends TFileUpload implements IActiveControl, ICallbackEventHandler, INamingContainer 
 {
@@ -97,7 +97,7 @@ class TActiveFileUpload extends TFileUpload implements IActiveControl, ICallback
 	 * @param TEventParameter event parameter to be passed to the event handlers
 	 */
 	public function onFileUpload($param){
-		if ($this->_flag->getValue() && $this->getPage()->getIsPostBack() && $param == $this->_target->getUniqueID()){
+		if ($this->_flag->getValue() && $this->getPage()->getIsPostBack()){
 			// save the file so that it will persist past the end of this return.
 			$localName = str_replace('\\', '/', tempnam(Prado::getPathOfNamespace($this->getTempPath()),''));
 			parent::saveAs($localName);
@@ -192,43 +192,14 @@ EOS;
 	}
 
 	/**
-	 * Raises postdata changed event.
-	 * This method calls {@link onFileUpload} method
-	 * This method is primarily used by framework developers.
-	 */
-	public function raisePostDataChangedEvent()
-	{
-		$this->onFileUpload($this->getPage()->getRequest()->itemAt('tempActiveUploadField'));
-	}
-
-	/**
 	 * Publish the javascript
 	 */
 	public function onPreRender($param){
 		parent::onPreRender($param);
 		$this->getPage()->getClientScript()->registerPradoScript('effects');
 		$this->getPage()->getClientScript()->registerPradoScript('activefileupload');
-
-		if(!$this->getPage()->getIsPostBack() && isset($_GET['TActiveFileUpload_InputId']) && isset($_GET['TActiveFileUpload_TargetId']) && $_GET['TActiveFileUpload_InputId'] == $this->getClientID())
-		{
-			$this->_errorCode = UPLOAD_ERR_FORM_SIZE;
-			$localName = str_replace('\\', '/', tempnam(Prado::getPathOfNamespace($this->getTempPath()),''));
-			$filename = addslashes($this->getFileName());
-			echo <<<EOS
-<script language="Javascript">
-	Options = new Object();
-	Options.clientID = '{$_GET['TActiveFileUpload_InputId']}';
-	Options.targetID = '{$_GET['TActiveFileUpload_TargetId']}';
-	Options.localName = '{$localName}';
-	Options.fileName = '{$fileName}';
-	Options.fileSize = '{$this->getFileSize()}';
-	Options.fileType = '{$this->getFileType()}';
-	Options.errorCode = '{$this->getErrorCode()}';
-	parent.Prado.WebUI.TactiveFileUpload.onFileUpload(Options);
-</script>
-EOS;
-		}
 	}
+	
 	
 	public function createChildControls(){
 		$this->_flag = Prado::createComponent('THiddenField');

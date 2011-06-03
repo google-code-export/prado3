@@ -58,17 +58,6 @@ class TDataSourceConfig extends TModule
 	 */
 	public function init($xml)
 	{
-		if($this->getApplication()->getConfigurationType()==TApplication::CONFIG_TYPE_PHP)
-		{
-			if(isset($xml['database']) && is_array($xml['database']))
-			{
-				$db=$this->getDbConnection();
-				foreach($xml['database'] as $name=>$value)
-					$db->setSubProperty($name,$value);
-			}
-		}
-		else
-		{
 			if($prop=$xml->getElementByTagName('database'))
 			{
 				$db=$this->getDbConnection();
@@ -76,7 +65,6 @@ class TDataSourceConfig extends TModule
 					$db->setSubproperty($name,$value);
 			}
 		}
-	}
 
 	/**
 	 * The module ID of another TDataSourceConfig. The {@link getDbConnection DbConnection}

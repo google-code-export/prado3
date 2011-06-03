@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2010 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web.Services
@@ -68,27 +68,17 @@ Prado::using('System.Web.UI.TThemeManager');
  * The first matching rule will be used. The last rule always allows all users
  * accessing to any resources.
  *
- * The TPageService replicates the {@link TPage} events through {@link IPageEvents}.
- * When the TPage is run, the TPageService events attach to all the corresponding TPage 
- * events.  This allows modules to handle page events.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @author Carl G. Mathisen <carlgmathisen@gmail.com>
- * @author Brad Anderson <javalizard@gmail.com>
  * @version $Id$
  * @package System.Web.Services
  * @since 3.0
  */
-class TPageService extends TService implements IPageEvents
+class TPageService extends TService
 {
 	/**
 	 * Configuration file name
 	 */
-	const CONFIG_FILE_XML='config.xml';
-	/**
-	 * Configuration file name
-	 */
-	const CONFIG_FILE_PHP='config.php';
+	const CONFIG_FILE='config.xml';
 	/**
 	 * Default base path
 	 */
@@ -142,11 +132,7 @@ class TPageService extends TService implements IPageEvents
 	 * @var TTemplateManager template manager
 	 */
 	private $_templateManager=null;
-	/**
-	 * @var boolean if the onPageNotFound event is specifically blocked
-	 */
-	private $_blockOnPageNotFound = false;
-	
+
 	/**
 	 * Initializes the service.
 	 * This method is required by IService interface and is invoked by application.
@@ -197,7 +183,7 @@ class TPageService extends TService implements IPageEvents
 				$condition=$this->evaluateExpression($condition);
 			if($condition)
 			{
-				if(($path=Prado::getPathOfNamespace($filePath,Prado::getApplication()->getConfigurationFileExt()))===null || !is_file($path))
+				if(($path=Prado::getPathOfNamespace($filePath,TApplication::CONFIG_FILE_EXT))===null || !is_file($path))
 					throw new TConfigurationException('pageservice_includefile_invalid',$filePath);
 				$c=new TPageConfiguration($pagePath);
 				$c->loadFromFile($path,$configPagePath);
@@ -232,12 +218,7 @@ class TPageService extends TService implements IPageEvents
 		{
 			$pageConfig=new TPageConfiguration($pagePath);
 			if($config!==null)
-			{
-				if($application->getConfigurationType()==TApplication::CONFIG_TYPE_PHP)
-					$pageConfig->loadPageConfigurationFromPhp($config,$application->getBasePath(),'');
-				else
-					$pageConfig->loadPageConfigurationFromXml($config,$application->getBasePath(),'');
-			}
+				$pageConfig->loadPageConfigurationFromXml($config,$application->getBasePath(),'');
 			$pageConfig->loadFromFiles($this->getBasePath());
 		}
 		else
@@ -273,12 +254,9 @@ class TPageService extends TService implements IPageEvents
 				$configCached=false;
 				$paths=explode('.',$pagePath);
 				$configPath=$this->getBasePath();
-				$fileName = $this->getApplication()->getConfigurationType()==TApplication::CONFIG_TYPE_PHP
-					? self::CONFIG_FILE_PHP
-					: self::CONFIG_FILE_XML;
 				foreach($paths as $path)
 				{
-					$configFile=$configPath.DIRECTORY_SEPARATOR.$fileName;
+					$configFile=$configPath.DIRECTORY_SEPARATOR.self::CONFIG_FILE;
 					$currentTimestamp[$configFile]=@filemtime($configFile);
 					$configPath.=DIRECTORY_SEPARATOR.$path;
 				}
@@ -289,12 +267,7 @@ class TPageService extends TService implements IPageEvents
 			{
 				$pageConfig=new TPageConfiguration($pagePath);
 				if($config!==null)
-				{
-					if($application->getConfigurationType()==TApplication::CONFIG_TYPE_PHP)
-						$pageConfig->loadPageConfigurationFromPhp($config,$application->getBasePath(),'');
-					else
-						$pageConfig->loadPageConfigurationFromXml($config,$application->getBasePath(),'');
-				}
+					$pageConfig->loadPageConfigurationFromXml($config,$application->getBasePath(),'');
 				$pageConfig->loadFromFiles($this->getBasePath());
 				$cache->set(self::CONFIG_CACHE_PREFIX.$this->getID().$pagePath,array($pageConfig,$currentTimestamp));
 			}
@@ -393,29 +366,6 @@ class TPageService extends TService implements IPageEvents
 	{
 		return $this->constructUrl($this->getDefaultPage());
 	}
-	
-	/**
-	 *	This event is triggered when a 404 in the normal page tree hierarchy is generated
-	 * @param mixed $sender
-	 * @param mixed $param
-	 */
-	public function onPageNotFound($sender, $param) {
-	}
-	
-	/**
-	 * @return boolean whether the onPageNotFound event is blocked
-	 */
-	public function getBlockOnPageNotFoundEvent() { return $this->_blockOnPageNotFound; }
-	
-	/**
-	 * For security reasons, you may want to turn off the onPageNotFound event.  For instance, 
-	 * if your website has a "maintenence mode" where the website is offline and want to ensure
-	 * that modules cannot use this event and provide content when they shouldn't be.
-	 * @param boolean whether the onPageNotFound event is blocked
-	 */
-	public function setBlockOnPageNotFoundEvent($v) {
-		$this->_blockOnPageNotFound = TPropertyValue::ensureBoolean($v);
-	}
 
 	/**
 	 * @return string the root directory for storing pages. Defaults to the 'pages' directory under the application base path.
@@ -497,25 +447,18 @@ class TPageService extends TService implements IPageEvents
 	/**
 	 * Creates a page instance based on requested page path.
 	 * @param string requested page path
-	 * @param (boolean|null) can specify if this is allowed to call onPageNotFound if no page is found; defaults to true.
 	 * @return TPage the requested page instance
 	 * @throws THttpException if requested page path is invalid
 	 * @throws TConfigurationException if the page class cannot be found
 	 */
-	protected function createPage($pagePath, $doOnPageNotFound = true)
+	protected function createPage($pagePath)
 	{
 		$path=$this->getBasePath().DIRECTORY_SEPARATOR.strtr($pagePath,'.',DIRECTORY_SEPARATOR);
 		$hasTemplateFile=is_file($path.self::PAGE_FILE_EXT);
 		$hasClassFile=is_file($path.Prado::CLASS_FILE_EXT);
 
-		if(!$hasTemplateFile && !$hasClassFile) {
-			$param = new TPageNotFoundEventParameter($pagePath);
-			if(!$this->BlockOnPageNotFoundEvent && $doOnPageNotFound)
-				$this->raiseEvent('onPageNotFound', $this, $param);
-			if(!$param->FoundPage)
-				throw new THttpException(404,'pageservice_page_unknown',$pagePath);
-			return $param->FoundPage;
-		}
+		if(!$hasTemplateFile && !$hasClassFile)
+			throw new THttpException(404,'pageservice_page_unknown',$pagePath);
 
 		if($hasClassFile)
 		{
@@ -552,19 +495,6 @@ class TPageService extends TService implements IPageEvents
 	{
 		foreach($properties as $name=>$value)
 			$page->setSubProperty($name,$value);
-		
-		$page->OnDataBinding[] = array($this, 'OnDataBinding');
-		$page->OnPreInit[] = array($this, 'OnPreInit');
-		$page->OnInit[] = array($this, 'OnInit');
-		$page->OnInitComplete[] = array($this, 'OnInitComplete');
-		$page->OnPreLoad[] = array($this, 'OnPreLoad');
-		$page->OnLoad[] = array($this, 'OnLoad');
-		$page->OnLoadComplete[] = array($this, 'OnLoadComplete');
-		$page->OnPreRender[] = array($this, 'OnPreRender');
-		$page->OnPreRenderComplete[] = array($this, 'OnPreRenderComplete');
-		$page->OnSaveStateComplete[] = array($this, 'OnSaveStateComplete');
-		$page->OnUnload[] = array($this, 'OnUnload');
-		
 		$page->run($this->getResponse()->createHtmlWriter());
 	}
 
@@ -580,130 +510,6 @@ class TPageService extends TService implements IPageEvents
 	{
 		return $this->getRequest()->constructUrl($this->getID(),$pagePath,$getParams,$encodeAmpersand,$encodeGetItems);
 	}
-	
-	
-	/**
-	 * Raises 'OnDataBinding' event. (inherited from TControl)
-	 */
-	public function onDataBinding($param) {
-		Prado::trace("onDataBinding",'System.Web.Services.TPageService');
-		$this->raiseEvent('OnDataBinding',$this,$param);
-	}
-	/**
-	 * This method is invoked when the control enters 'OnInit' stage. (inherited from TControl)
-	 */
-	public function onInit($param) {
-		Prado::trace("onInit",'System.Web.Services.TPageService');
-		$this->raiseEvent('OnInit',$this,$param);
-	}
-	/**
-	 * Raises OnInitComplete event.
-	 */
-	public function onInitComplete($param) {
-		Prado::trace("onInitComplete",'System.Web.Services.TPageService');
-		$this->raiseEvent('OnInitComplete',$this,$param);
-	}
-	/**
-	 * This method is invoked when the control enters 'OnLoad' stage. (inherited from TControl)
-	 */
-	public function onLoad($param) {
-		Prado::trace("OnLoad",'System.Web.Services.TPageService');
-		$this->raiseEvent('OnLoad',$this,$param);
-	}
-	/**
-	 * Raises OnLoadComplete event.
-	 */
-	public function onLoadComplete($param) {
-		Prado::trace("OnLoadComplete",'System.Web.Services.TPageService');
-		$this->raiseEvent('OnLoadComplete',$this,$param);
-	}
-	/**
-	 * Raises OnPreInit event.
-	 */
-	public function onPreInit($param) {
-		Prado::trace("OnPreInit",'System.Web.Services.TPageService');
-		$this->raiseEvent('OnPreInit',$this,$param);
-	}
-	/**
-	 * Raises OnPreLoad event.
-	 */
-	public function onPreLoad($param) {
-		Prado::trace("OnPreLoad",'System.Web.Services.TPageService');
-		$this->raiseEvent('OnPreLoad',$this,$param);
-	}
-	/**
-	 * This method is invoked when the control enters 'OnPreRender' stage. (inherited from TControl)
-	 */
-	public function onPreRender($param) {
-		Prado::trace("OnPreRender",'System.Web.Services.TPageService');
-		$this->raiseEvent('OnPreRender',$this,$param);
-	}
-	/**
-	 * Raises OnPreRenderComplete event.
-	 */
-	public function onPreRenderComplete($param) {
-		Prado::trace("OnPreRenderComplete",'System.Web.Services.TPageService');
-		$this->raiseEvent('OnPreRenderComplete',$this,$param);
-	}
-	/**
-	 * Raises OnSaveStateComplete event.
-	 */
-	public function onSaveStateComplete($param) {
-		Prado::trace("OnSaveStateComplete",'System.Web.Services.TPageService');
-		$this->raiseEvent('OnSaveStateComplete',$this,$param);
-	}
-	/**
-	 * This method is invoked when the control enters 'OnUnload' stage. (inherited from TControl)
-	 */
-	public function onUnload($param) {
-		Prado::trace("OnUnload",'System.Web.Services.TPageService');
-		$this->raiseEvent('OnUnload',$this,$param);
-	}
-}
-
-
-
-/**
- * TPageNotFoundEventParameter class.
- * TPageNotFoundEventParameter is the parameter sent when no page is found and the code is allowed to call the onPageNotFound.
- *
- * @author Brad Anderson <javalizard@gmail.com>
- * @version $Id$
- * @package System.Web.Services
- * @since 3.2a
- */
-class TPageNotFoundEventParameter extends TEventParameter {
-	
-	private $_foundpage;
-	private $_path;
-	
-	/**
-	 * Holds the parameters for the Class Behavior Events
-	 *	@param string $class this is the class to get the behavior
-	 *	@param string $name the name of the behavior
-	 *	@param object $behavior this is the behavior to implement the class behavior
-	 */
-	public function __construct($path) {
-		parent::__construct();
-		$this->_path = $path;
-	}
-	
-	/**
-	 * This is the path of the page to be found
-	 * @return string the page path to find
-	 */
-	public function getPath() { return $this->_path; }
-	
-	/**
-	 * the found TPage, if found
-	 * @return string the name to get the behavior
-	 */
-	public function getFoundPage() { return $this->_foundpage; }
-	
-	/**
-	 * This sets the found page
-	 */
-	public function setFoundPage($value) { $this->_foundpage = $value; }
 }
 
 
@@ -748,7 +554,6 @@ class TPageConfiguration extends TComponent
 	 */
 	public function __construct($pagePath)
 	{
-		parent::__construct();
 		$this->_pagePath=$pagePath;
 	}
 
@@ -800,19 +605,16 @@ class TPageConfiguration extends TComponent
 		$page=array_pop($paths);
 		$path=$basePath;
 		$configPagePath='';
-		$fileName = Prado::getApplication()->getConfigurationType()==TApplication::CONFIG_TYPE_PHP
-			? TPageService::CONFIG_FILE_PHP
-			: TPageService::CONFIG_FILE_XML;
 		foreach($paths as $p)
 		{
-			$this->loadFromFile($path.DIRECTORY_SEPARATOR.$fileName,$configPagePath);
+			$this->loadFromFile($path.DIRECTORY_SEPARATOR.TPageService::CONFIG_FILE,$configPagePath);
 			$path.=DIRECTORY_SEPARATOR.$p;
 			if($configPagePath==='')
 				$configPagePath=$p;
 			else
 				$configPagePath.='.'.$p;
 		}
-		$this->loadFromFile($path.DIRECTORY_SEPARATOR.$fileName,$configPagePath);
+		$this->loadFromFile($path.DIRECTORY_SEPARATOR.TPageService::CONFIG_FILE,$configPagePath);
 		$this->_rules=new TAuthorizationRuleCollection($this->_rules);
 	}
 
@@ -826,26 +628,11 @@ class TPageConfiguration extends TComponent
 		Prado::trace("Loading page configuration file $fname",'System.Web.Services.TPageService');
 		if(empty($fname) || !is_file($fname))
 			return;
-		
-		if(Prado::getApplication()->getConfigurationType()==TApplication::CONFIG_TYPE_PHP)
-		{
-			$fcontent = include $fname;
-			$this->loadFromPhp($fcontent,dirname($fname),$configPagePath);
-		}
+		$dom=new TXmlDocument;
+		if($dom->loadFromFile($fname))
+			$this->loadFromXml($dom,dirname($fname),$configPagePath);
 		else
-		{	
-			$dom=new TXmlDocument;
-			if($dom->loadFromFile($fname))
-				$this->loadFromXml($dom,dirname($fname),$configPagePath);
-			else
-				throw new TConfigurationException('pageserviceconf_file_invalid',$fname);
-		}
-	}
-
-	public function loadFromPhp($config,$configPath,$configPagePath)
-	{
-		$this->loadApplicationConfigurationFromPhp($config,$configPath);
-		$this->loadPageConfigurationFromPhp($config,$configPath,$configPagePath);
+			throw new TConfigurationException('pageserviceconf_file_invalid',$fname);
 	}
 
 	/**
@@ -861,13 +648,6 @@ class TPageConfiguration extends TComponent
 		$this->loadApplicationConfigurationFromXml($dom,$configPath);
 		$this->loadPageConfigurationFromXml($dom,$configPath,$configPagePath);
 	}
-	
-	public function loadApplicationConfigurationFromPhp($config,$configPath)
-	{
-		$appConfig=new TApplicationConfiguration;
-		$appConfig->loadFromPhp($config,$configPath);
-		$this->_appConfigs[]=$appConfig;
-	}
 
 	/**
 	 * Loads the configuration specific for application part
@@ -879,99 +659,6 @@ class TPageConfiguration extends TComponent
 		$appConfig=new TApplicationConfiguration;
 		$appConfig->loadFromXml($dom,$configPath);
 		$this->_appConfigs[]=$appConfig;
-	}
-
-	public function loadPageConfigurationFromPhp($config, $configPath, $configPagePath)
-	{
-		// authorization
-		if(isset($config['authorization']) && is_array($config['authorization']))
-		{
-			$rules = array();
-			foreach($config['authorization'] as $authorization)
-			{
-				$patterns=isset($authorization['pages'])?$authorization['pages']:'';
-				$ruleApplies=false;
-				if(empty($patterns) || trim($patterns)==='*') // null or empty string
-					$ruleApplies=true;
-				else
-				{
-					foreach(explode(',',$patterns) as $pattern)
-					{
-						if(($pattern=trim($pattern))!=='')
-						{
-							// we know $configPagePath and $this->_pagePath
-							if($configPagePath!=='')  // prepend the pattern with ConfigPagePath
-								$pattern=$configPagePath.'.'.$pattern;
-							if(strcasecmp($pattern,$this->_pagePath)===0)
-							{
-								$ruleApplies=true;
-								break;
-							}
-							if($pattern[strlen($pattern)-1]==='*') // try wildcard matching
-							{
-								if(strncasecmp($this->_pagePath,$pattern,strlen($pattern)-1)===0)
-								{
-									$ruleApplies=true;
-									break;
-								}
-							}
-						}
-					}
-				}
-				if($ruleApplies)
-				{
-					$action = isset($authorization['action'])?$authorization['action']:'';
-					$users = isset($authorization['users'])?$authorization['users']:'';
-					$roles = isset($authorization['roles'])?$authorization['roles']:'';
-					$verb = isset($authorization['verb'])?$authorization['verb']:'';
-					$ips = isset($authorization['ips'])?$authorization['ips']:'';
-					$rules[]=new TAuthorizationRule($action,$users,$roles,$verb,$ips);
-				}
-			}
-			$this->_rules=array_merge($rules,$this->_rules);
-		}
-		// pages
-		if(isset($config['pages']) && is_array($config['pages']))
-		{
-			if(isset($config['pages']['properties']))
-			{
-				$this->_properties = array_merge($this->_properties, $config['pages']['properties']);
-				unset($config['pages']['properties']);
-			}
-			foreach($config['pages'] as $id => $page)
-			{
-				$properties = array();
-				if(isset($page['properties']))
-				{
-					$properties=$page['properties'];
-					unset($page['properties']);	
-				}
-				$matching=false;
-				$id=($configPagePath==='')?$id:$configPagePath.'.'.$id;
-				if(strcasecmp($id,$this->_pagePath)===0)
-					$matching=true;
-				else if($id[strlen($id)-1]==='*') // try wildcard matching
-					$matching=strncasecmp($this->_pagePath,$id,strlen($id)-1)===0;
-				if($matching)
-					$this->_properties=array_merge($this->_properties,$properties);
-			}
-		}
-		
-		// external configurations
-		if(isset($config['includes']) && is_array($config['includes']))
-		{
-			foreach($config['includes'] as $include)
-			{
-				$when = isset($include['when'])?true:false;
-				if(!isset($include['file']))
-					throw new TConfigurationException('pageserviceconf_includefile_required');
-				$filePath = $include['file'];
-				if(isset($this->_includes[$filePath]))
-					$this->_includes[$filePath]=array($configPagePath,'('.$this->_includes[$filePath][1].') || ('.$when.')');
-				else
-					$this->_includes[$filePath]=array($configPagePath,$when);
-			}
-		}
 	}
 
 	/**

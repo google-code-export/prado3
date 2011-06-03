@@ -14,13 +14,6 @@ Prado.WebUI.TActiveFileUpload = Base.extend(
 		this.error = $(options.errorID);
 		
 		Prado.Registry.set(options.inputID, this);
-
-		var tempfield = document.createElement('input');
-		tempfield.id = "tempActiveUploadField";
-		tempfield.name = "tempActiveUploadField";
-		tempfield.value = this.options.targetID;
-		tempfield.type = "hidden";
-		this.form.appendChild(tempfield);
 		
 		// set up events
 		if (options.autoPostBack){
@@ -34,14 +27,11 @@ Prado.WebUI.TActiveFileUpload = Base.extend(
 		this.complete.style.display = 'none';
 		this.error.style.display = 'none';
 		this.indicator.style.display = '';
-
+		
 		// set the form to submit in the iframe, submit it, and then reset it.
 		this.oldtargetID = this.form.target;
-		this.oldFormAction = this.form.action;
-		this.form.action += (this.form.action.indexOf('?')>0 ? '&' : '?')+'TActiveFileUpload_InputId='+this.options.inputID+'&TActiveFileUpload_TargetId='+this.options.targetID;
 		this.form.target = this.options.targetID;
 		this.form.submit();
-		this.form.action = this.oldFormAction;
 		this.form.target = this.oldtargetID;
 	},
 	

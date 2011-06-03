@@ -1,6 +1,6 @@
 <?php
 /**
- * TUrlMapping, TUrlMappingPattern and TUrlMappingPatternSecureConnection class file.
+ * TUrlMapping and TUrlMappingPattern class file.
  *
  * @author Wei Zhuo <weizhuo[at]gamil[dot]com>
  * @link http://www.pradosoft.com/
@@ -70,6 +70,10 @@ Prado::using('System.Collections.TAttributeCollection');
 class TUrlMapping extends TUrlManager
 {
 	/**
+	 * File extension of external configuration file
+	 */
+	const CONFIG_FILE_EXT='.xml';
+	/**
 	 * @var TUrlMappingPattern[] list of patterns.
 	 */
 	protected $_patterns=array();
@@ -97,17 +101,17 @@ class TUrlMapping extends TUrlManager
 	/**
 	 * Initializes this module.
 	 * This method is required by the IModule interface.
-	 * @param mixed configuration for this module, can be null
+	 * @param TXmlElement configuration for this module, can be null
 	 * @throws TConfigurationException if module is configured in the global scope.
 	 */
-	public function init($config)
+	public function init($xml)
 	{
-		parent::init($config);
+		parent::init($xml);
 		if($this->getRequest()->getRequestResolved())
 			throw new TConfigurationException('urlmapping_global_required');
 		if($this->_configFile!==null)
 			$this->loadConfigFile();
-		$this->loadUrlMappings($config);
+		$this->loadUrlMappings($xml);
 		if($this->_urlPrefix==='')
 			$this->_urlPrefix=$this->getRequest()->getApplicationUrl();
 		$this->_urlPrefix=rtrim($this->_urlPrefix,'/');
@@ -121,17 +125,9 @@ class TUrlMapping extends TUrlManager
 	{
 		if(is_file($this->_configFile))
  		{
-			if($this->getApplication()->getConfigurationType()==TApplication::CONFIG_TYPE_PHP)
-			{
-				$config = include $this->_configFile;
-				$this->loadUrlMappings($dom);
-			}
-			else
-			{
-				$dom=new TXmlDocument;
-				$dom->loadFromFile($this->_configFile);
-				$this->loadUrlMappings($dom);
-			}
+			$dom=new TXmlDocument;
+			$dom->loadFromFile($this->_configFile);
+			$this->loadUrlMappings($dom);
 		}
 		else
 			throw new TConfigurationException('urlmapping_configfile_inexistent',$this->_configFile);
@@ -195,7 +191,7 @@ class TUrlMapping extends TUrlManager
 	 */
 	public function setConfigFile($value)
 	{
-		if(($this->_configFile=Prado::getPathOfNamespace($value,$this->getApplication()->getConfigurationFileExt()))===null)
+		if(($this->_configFile=Prado::getPathOfNamespace($value,self::CONFIG_FILE_EXT))===null)
 			throw new TConfigurationException('urlmapping_configfile_invalid',$value);
 	}
 
@@ -222,51 +218,27 @@ class TUrlMapping extends TUrlManager
 
 	/**
 	 * Load and configure each url mapping pattern.
-	 * @param mixed configuration node
+	 * @param TXmlElement configuration node
 	 * @throws TConfigurationException if specific pattern class is invalid
 	 */
-	protected function loadUrlMappings($config)
+	protected function loadUrlMappings($xml)
 	{
-		if(is_array($config))
+		foreach($xml->getElementsByTagName('url') as $url)
 		{
-			if(isset($config['urls']) && is_array($config['urls']))
-			{
-				foreach($config['urls'] as $url)
-				{
-					$class=null;
-					if(!isset($url['class']))
-						$class=$this->getDefaultMappingClass();
-					$pattern=Prado::createComponent($class,$this);
-					$properties = isset($url['properties'])?$url['properties']:array();
-					$this->buildUrlMapping($class,$pattern,$properties,$url);
-				}
-			}
-		}
-		else
-		{
-			foreach($config->getElementsByTagName('url') as $url)
-			{
-				$properties=$url->getAttributes();
-				if(($class=$properties->remove('class'))===null)
-					$class=$this->getDefaultMappingClass();
-				$pattern=Prado::createComponent($class,$this);
-				$this->buildUrlMapping($class,$pattern,$properties,$url);
-			}
-		}
-	}
+			$properties=$url->getAttributes();
+			if(($class=$properties->remove('class'))===null)
+				$class=$this->getDefaultMappingClass();
+			$pattern=Prado::createComponent($class,$this);
+			if(!($pattern instanceof TUrlMappingPattern))
+				throw new TConfigurationException('urlmapping_urlmappingpattern_required');
+			foreach($properties as $name=>$value)
+				$pattern->setSubproperty($name,$value);
+			$this->_patterns[]=$pattern;
+			$pattern->init($url);
 
-	private function buildUrlMapping($class, $pattern, $properties, $url)
-	{
-		$pattern=Prado::createComponent($class,$this);
-		if(!($pattern instanceof TUrlMappingPattern))
-			throw new TConfigurationException('urlmapping_urlmappingpattern_required');
-		foreach($properties as $name=>$value)
-			$pattern->setSubproperty($name,$value);
-		$this->_patterns[]=$pattern;
-		$pattern->init($url);
-
-		$key=$pattern->getServiceID().':'.$pattern->getServiceParameter();
-		$this->_constructRules[$key][]=$pattern;
+			$key=$pattern->getServiceID().':'.$pattern->getServiceParameter();
+			$this->_constructRules[$key][]=$pattern;
+		}
 	}
 
 	/**
@@ -337,7 +309,7 @@ class TUrlMapping extends TUrlManager
 					if($rule->supportCustomUrl($getItems))
 						return $rule->constructUrl($getItems,$encodeAmpersand,$encodeGetItems);
 				}
-			}
+			} 
 			elseif(isset($this->_constructRules[$wildCardKey]))
 			{
 				foreach($this->_constructRules[$wildCardKey] as $rule)
@@ -409,7 +381,7 @@ class TUrlMapping extends TUrlManager
  * (the default ID is 'page') set the service parameter and service id respectively.
  *
  * Since 3.1.4 you can also use simplyfied wildcard patterns to match multiple
- * ServiceParameters with a single rule. The pattern must contain the placeholder
+ * ServiceParameters with a single rule. The pattern must contain the placeholder 
  * {*} for the ServiceParameter. For example
  *
  * <url ServiceParameter="adminpages.*" pattern="admin/{*}" />
@@ -417,24 +389,24 @@ class TUrlMapping extends TUrlManager
  * This rule will match an URL like <tt>http://example.com/index.php/admin/edituser</tt>
  * and resolve it to the page Application.pages.admin.edituser. The wildcard matching
  * is non-recursive. That means you have to add a rule for every subdirectory you
- * want to access pages in:
+ * want to access pages in: 
  *
  * <url ServiceParameter="adminpages.users.*" pattern="useradmin/{*}" />
  *
  * It is still possible to define an explicit rule for a page in the wildcard path.
  * This rule has to preceed the wildcard rule.
  *
- * You can also use parameters with wildcard patterns. The parameters are then
+ * You can also use parameters with wildcard patterns. The parameters are then 
  * available with every matching page:
  *
  * <url ServiceParameter="adminpages.*" pattern="admin/{*}/{id}" parameters.id="\d+" />
  *
- * To enable automatic parameter encoding in a path format fro wildcard patterns you can set
- * {@setUrlFormat UrlFormat} to 'Path':
+ * To enable automatic parameter encoding in a path format fro wildcard patterns you can set 
+ * {@setUrlFormat UrlFormat} to 'Path': 
  *
  * <url ServiceParameter="adminpages.*" pattern="admin/{*}" UrlFormat="Path" />
  *
- * This will create and parse URLs of the form
+ * This will create and parse URLs of the form 
  * <tt>.../index.php/admin/listuser/param1/value1/param2/value2</tt>.
  *
  * Use {@setUrlParamSeparator} to define another separator character between parameter
@@ -485,18 +457,11 @@ class TUrlMappingPattern extends TComponent
 	private $_separator='/';
 
 	/**
-	 * @var TUrlMappingPatternSecureConnection
-	 * @since 3.2
-	 */
-	private $_secureConnection = TUrlMappingPatternSecureConnection::Automatic;
-
-	/**
 	 * Constructor.
 	 * @param TUrlManager the URL manager instance
 	 */
 	public function __construct(TUrlManager $manager)
 	{
-		parent::__construct();
 		$this->_manager=$manager;
 		$this->_parameters=new TAttributeCollection;
 		$this->_parameters->setCaseSensitive(true);
@@ -519,7 +484,7 @@ class TUrlMappingPattern extends TComponent
 	{
 		if($this->_serviceParameter===null)
 			throw new TConfigurationException('urlmappingpattern_serviceparameter_required', $this->getPattern());
-		if(strpos($this->_serviceParameter,'*')!==false)
+		if(strpos($this->_serviceParameter,'*')!==false) 
 		    $this->_isWildCardPattern=true;
 	}
 
@@ -547,7 +512,7 @@ class TUrlMappingPattern extends TComponent
 		$regexp=str_replace($params,$values,trim($this->getPattern(),'/').'/');
 		if ($this->_urlFormat===THttpRequestUrlFormat::Get)
 		    $regexp='/^'.$regexp.'$/u';
-		else
+		else 
 		    $regexp='/^'.$regexp.'(?P<urlparams>.*)$/u';
 
 		if(!$this->getCaseSensitive())
@@ -671,12 +636,12 @@ class TUrlMappingPattern extends TComponent
 		if (isset($matches['urlparams']))
 		{
 			$params=explode('/',$matches['urlparams']);
-			if ($this->_separator==='/')
+			if ($this->_separator==='/') 
 			{
 				while($key=array_shift($params))
 					$matches[$key]=($value=array_shift($params)) ? $value : '';
-			}
-			else
+			} 
+			else 
 			{
 				array_pop($params);
 				foreach($params as $param)
@@ -730,7 +695,7 @@ class TUrlMappingPattern extends TComponent
 	 * Sets the format of URLs constructed and interpreted by this pattern.
 	 * A Get URL format is like index.php?name1=value1&name2=value2
 	 * while a Path URL format is like index.php/name1/value1/name2/value.
-	 * The separating character between name and value can be configured with
+	 * The separating character between name and value can be configured with 
 	 * {@link setUrlParamSeparator} and defaults to '/'.
 	 * Changing the UrlFormat will affect {@link constructUrl} and how GET variables
 	 * are parsed.
@@ -760,24 +725,6 @@ class TUrlMappingPattern extends TComponent
 			$this->_separator=$value;
 		else
 			throw new TInvalidDataValueException('httprequest_separator_invalid');
-	}
-
-	/**
-	 * @return TUrlMappingPatternSecureConnection the SecureConnection behavior. Defaults to {@link TUrlMappingPatternSecureConnection::Automatic Automatic}
-	 * @since 3.2
-	 */
-	public function getSecureConnection()
-	{
-		return $this->_secureConnection;
-	}
-
-	/**
-	 * @param TUrlMappingPatternSecureConnection the SecureConnection behavior.
-	 * @since 3.2
-	 */
-	public function setSecureConnection($value)
-	{
-		$this->_secureConnection = TPropertyValue::ensureEnum($value, 'TUrlMappingPatternSecureConnection');
 	}
 
 	/**
@@ -860,89 +807,7 @@ class TUrlMappingPattern extends TComponent
 			}
 			$url=$url.'?'.substr($url2,strlen($amp));
 		}
-		return $this -> applySecureConnectionPrefix($url);
-	}
-
-	/**
-	 * Apply behavior of {@link SecureConnection} property by conditionaly prefixing
-	 * URL with {@link THttpRequest::getBaseUrl()}
-	 *
-	 * @param string $url
-	 * @return string
-	 * @since 3.2
-	 */
-	protected function applySecureConnectionPrefix($url)
-	{
-		static $request;
-		if($request === null) $request = Prado::getApplication() -> getRequest();
-
-		static $isSecureConnection;
-		if($isSecureConnection === null) $isSecureConnection = $request -> getIsSecureConnection();
-
-		switch($this -> getSecureConnection())
-		{
-			case TUrlMappingPatternSecureConnection::EnableIfNotSecure:
-				if($isSecureConnection) return $url;
-				return $request -> getBaseUrl(true) . $url;
-			break;
-			case TUrlMappingPatternSecureConnection::DisableIfSecure:
-				if(!$isSecureConnection) return $url;
-				return $request -> getBaseUrl(false) . $url;
-			break;
-			case TUrlMappingPatternSecureConnection::Enable:
-				return $request -> getBaseUrl(true) . $url;
-			break;
-			case TUrlMappingPatternSecureConnection::Disable:
-				return $request -> getBaseUrl(false) . $url;
-			break;
-			case TUrlMappingPatternSecureConnection::Automatic:
-			default:
-				return $url;
-			break;
-		}
+		return $url;
 	}
 }
 
-/**
- * TUrlMappingPatternSecureConnection class
- *
- * TUrlMappingPatternSecureConnection defines the enumerable type for the possible SecureConnection
- * URL prefix behavior that can be used by {@link TUrlMappingPattern::constructUrl()}.
- *
- * @author Yves Berkholz <godzilla80[at]gmx[dot]net>
- * @version $Id$
- * @package System.Web
- * @since 3.2
- */
-class TUrlMappingPatternSecureConnection extends TEnumerable
-{
-	/**
-	 * Keep current SecureConnection status
-	 * means no prefixing
-	 */
-	const Automatic = 'Automatic';
-
-	/**
-	 * Force use secured connection
-	 * always prefixing with https://example.com/path/to/app
-	 */
-	const Enable = 'Enable';
-
-	/**
-	 * Force use unsecured connection
-	 * always prefixing with http://example.com/path/to/app
-	 */
-	const Disable = 'Disable';
-
-	/**
-	 * Force use secured connection, if in unsecured mode
-	 * prefixing with https://example.com/path/to/app
-	 */
-	const EnableIfNotSecure = 'EnableIfNotSecure';
-
-	/**
-	 * Force use unsecured connection, if in secured mode
-	 * prefixing with https://example.com/path/to/app
-	 */
-	const DisableIfSecure = 'DisableIfSecure';
-}

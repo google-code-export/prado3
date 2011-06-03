@@ -26,7 +26,7 @@ Prado::using('System.Web.UI.TClientScriptManager');
  * @package System.Web.UI
  * @since 3.0
  */
-class TPage extends TTemplateControl implements IPageEvents
+class TPage extends TTemplateControl
 {
 	/**
 	 * system post fields
@@ -50,21 +50,13 @@ class TPage extends TTemplateControl implements IPageEvents
 		'PRADO_CALLBACK_PARAMETER'=>true
 	);
 	/**
-	 * @var THtml html instance
+	 * @var TForm form instance
 	 */
-	private $_html;
+	private $_form;
 	/**
 	 * @var THead head instance
 	 */
 	private $_head;
-	/**
-	 * @var TBody body instance
-	 */
-	private $_body;
-	/**
-	 * @var TForm form instance
-	 */
-	private $_form;
 	/**
 	 * @var array list of registered validators
 	 */
@@ -77,10 +69,6 @@ class TPage extends TTemplateControl implements IPageEvents
 	 * @var TTheme page theme
 	 */
 	private $_theme;
-	/**
-	 * @var collection of all the skins
-	 */
-	private $_skincontrols = array();
 	/**
 	 * @var string page title set when Head is not in page yet
 	 */
@@ -213,30 +201,30 @@ class TPage extends TTemplateControl implements IPageEvents
 	protected function processNormalRequest($writer)
 	{
 		Prado::trace("Page onPreInit()",'System.Web.UI.TPage');
-		$this->onPreInit($this);
+		$this->onPreInit(null);
 
 		Prado::trace("Page initRecursive()",'System.Web.UI.TPage');
 		$this->initRecursive();
 
 		Prado::trace("Page onInitComplete()",'System.Web.UI.TPage');
-		$this->onInitComplete($this);
+		$this->onInitComplete(null);
 
 		Prado::trace("Page onPreLoad()",'System.Web.UI.TPage');
-		$this->onPreLoad($this);
+		$this->onPreLoad(null);
 		Prado::trace("Page loadRecursive()",'System.Web.UI.TPage');
 		$this->loadRecursive();
 		Prado::trace("Page onLoadComplete()",'System.Web.UI.TPage');
-		$this->onLoadComplete($this);
+		$this->onLoadComplete(null);
 
 		Prado::trace("Page preRenderRecursive()",'System.Web.UI.TPage');
 		$this->preRenderRecursive();
 		Prado::trace("Page onPreRenderComplete()",'System.Web.UI.TPage');
-		$this->onPreRenderComplete($this);
+		$this->onPreRenderComplete(null);
 
 		Prado::trace("Page savePageState()",'System.Web.UI.TPage');
 		$this->savePageState();
 		Prado::trace("Page onSaveStateComplete()",'System.Web.UI.TPage');
-		$this->onSaveStateComplete($this);
+		$this->onSaveStateComplete(null);
 
 		Prado::trace("Page renderControl()",'System.Web.UI.TPage');
 		$this->renderControl($writer);
@@ -247,13 +235,13 @@ class TPage extends TTemplateControl implements IPageEvents
 	protected function processPostBackRequest($writer)
 	{
 		Prado::trace("Page onPreInit()",'System.Web.UI.TPage');
-		$this->onPreInit($this);
+		$this->onPreInit(null);
 
 		Prado::trace("Page initRecursive()",'System.Web.UI.TPage');
 		$this->initRecursive();
 
 		Prado::trace("Page onInitComplete()",'System.Web.UI.TPage');
-		$this->onInitComplete($this);
+		$this->onInitComplete(null);
 
 		$this->_restPostData=new TMap;
 		Prado::trace("Page loadPageState()",'System.Web.UI.TPage');
@@ -261,7 +249,7 @@ class TPage extends TTemplateControl implements IPageEvents
 		Prado::trace("Page processPostData()",'System.Web.UI.TPage');
 		$this->processPostData($this->_postData,true);
 		Prado::trace("Page onPreLoad()",'System.Web.UI.TPage');
-		$this->onPreLoad($this);
+		$this->onPreLoad(null);
 		Prado::trace("Page loadRecursive()",'System.Web.UI.TPage');
 		$this->loadRecursive();
 		Prado::trace("Page processPostData()",'System.Web.UI.TPage');
@@ -271,17 +259,17 @@ class TPage extends TTemplateControl implements IPageEvents
 		Prado::trace("Page raisePostBackEvent()",'System.Web.UI.TPage');
 		$this->raisePostBackEvent();
 		Prado::trace("Page onLoadComplete()",'System.Web.UI.TPage');
-		$this->onLoadComplete($this);
+		$this->onLoadComplete(null);
 
 		Prado::trace("Page preRenderRecursive()",'System.Web.UI.TPage');
 		$this->preRenderRecursive();
 		Prado::trace("Page onPreRenderComplete()",'System.Web.UI.TPage');
-		$this->onPreRenderComplete($this);
+		$this->onPreRenderComplete(null);
 
 		Prado::trace("Page savePageState()",'System.Web.UI.TPage');
 		$this->savePageState();
 		Prado::trace("Page onSaveStateComplete()",'System.Web.UI.TPage');
-		$this->onSaveStateComplete($this);
+		$this->onSaveStateComplete(null);
 
 		Prado::trace("Page renderControl()",'System.Web.UI.TPage');
 		$this->renderControl($writer);
@@ -306,13 +294,13 @@ class TPage extends TTemplateControl implements IPageEvents
                     $this->_postData[$k]=iconv('UTF-8',$enc.'//IGNORE',$v);
 
 		Prado::trace("Page onPreInit()",'System.Web.UI.TPage');
-		$this->onPreInit($this);
+		$this->onPreInit(null);
 
 		Prado::trace("Page initRecursive()",'System.Web.UI.TPage');
 		$this->initRecursive();
 
 		Prado::trace("Page onInitComplete()",'System.Web.UI.TPage');
-		$this->onInitComplete($this);
+		$this->onInitComplete(null);
 
 		$this->_restPostData=new TMap;
 		Prado::trace("Page loadPageState()",'System.Web.UI.TPage');
@@ -320,7 +308,7 @@ class TPage extends TTemplateControl implements IPageEvents
 		Prado::trace("Page processPostData()",'System.Web.UI.TPage');
 		$this->processPostData($this->_postData,true);
 		Prado::trace("Page onPreLoad()",'System.Web.UI.TPage');
-		$this->onPreLoad($this);
+		$this->onPreLoad(null);
 		Prado::trace("Page loadRecursive()",'System.Web.UI.TPage');
 		$this->loadRecursive();
 
@@ -338,17 +326,17 @@ class TPage extends TTemplateControl implements IPageEvents
 		$this->raisePostBackEvent();
 */
 		Prado::trace("Page onLoadComplete()",'System.Web.UI.TPage');
-		$this->onLoadComplete($this);
+		$this->onLoadComplete(null);
 
 		Prado::trace("Page preRenderRecursive()",'System.Web.UI.TPage');
 		$this->preRenderRecursive();
 		Prado::trace("Page onPreRenderComplete()",'System.Web.UI.TPage');
-		$this->onPreRenderComplete($this);
+		$this->onPreRenderComplete(null);
 
 		Prado::trace("Page savePageState()",'System.Web.UI.TPage');
 		$this->savePageState();
 		Prado::trace("Page onSaveStateComplete()",'System.Web.UI.TPage');
-		$this->onSaveStateComplete($this);
+		$this->onSaveStateComplete(null);
 
 /*
 		Prado::trace("Page renderControl()",'System.Web.UI.TPage');
@@ -470,7 +458,7 @@ class TPage extends TTemplateControl implements IPageEvents
 	{
 		if(!$this->_validators)
 			$this->_validators=new TList;
-		if(empty($validationGroup) === true)
+		if($validationGroup===null)
 			return $this->_validators;
 		else
 		{
@@ -578,11 +566,8 @@ class TPage extends TTemplateControl implements IPageEvents
 	 */
 	public function applyControlSkin($control)
 	{
-		if(($theme=$this->getTheme())!==null) {
+		if(($theme=$this->getTheme())!==null)
 			$theme->applySkin($control);
-			if($control->SkinID)
-				$this->registerSkin($control);
-		}
 	}
 
 	/**
@@ -1013,48 +998,6 @@ class TPage extends TTemplateControl implements IPageEvents
 	}
 
 	/**
-	 * @return THtml, null if not available
-	 */
-	public function getHtml()
-	{
-		return $this->_html;
-	}
-
-	/**
-	 * @param THead page head
-	 * @throws TInvalidOperationException if a head already exists
-	 */
-	public function setHtml(THtml $value)
-	{
-		if($this->_html===null)
-			$this->_html = $value;
-		else
-			throw new TInvalidOperationException('page_body_duplicated');
-	}
-
-	/**
-	 * @return TBody the body on the page
-	 */
-	public function getBody()
-	{
-		return $this->_body;
-	}
-
-	/**
-	 * Registers the TBody instance on the page.
-	 * Note, a page can contain at most one TBody instance.
-	 * @param TBody the form on the page
-	 * @throws TInvalidOperationException if this method is invoked more than once.
-	 */
-	public function setBody(TBody $body)
-	{
-		if($this->_body===null)
-			$this->_body=$body;
-		else
-			throw new TInvalidOperationException('page_body_duplicated');
-	}
-
-	/**
 	 * @return THead page head, null if not available
 	 */
 	public function getHead()
@@ -1247,78 +1190,6 @@ class TPage extends TTemplateControl implements IPageEvents
 	}
 
 	/**
-	 * Registers a controls skin id with the page.  This function links the control to its skin on the page for access.
-	 * @param TControl the object to register the skinid
-	 */
-	protected function registerSkin($control)
-	{
-		$id = $control->SkinID;
-		if(!$id) return;
-		
-		if(!is_array($this->_skincontrols))
-			$this->_skincontrols = array();
-			
-		if(!isset($this->_skincontrols[$id]))
-			$this->_skincontrols[$id] = array();
-			
-		$this->_skincontrols[$id][] = $control;
-	}
-	
-	/**
-	 *	This gets a control based on its SkinId.  If there are multiple controls with the same skin, 
-	 * you can give this method the second parameter for an index into all the controls with that
-	 * skin id.  This will return the first one if and index is not specifiec
-	 * @param string $skinid the skin to look for within the page
-	 * @param index $index the index of the skin if there are many of the same name,  defaults to 0 or the first
-	 */
-	public function getSkinControl($skinid, $index = 0)
-	{
-		if(isset($this->_skincontrols[$skinid][$index]))
-			return $this->_skincontrols[$skinid][$index];
-	}
-	
-	/**
-	 *	This gets a control based on its SkinId.  If there are multiple controls with the same skin, 
-	 * you can give this method the second parameter for an index into all the controls with that
-	 * skin id.  This will return the first one if and index is not specifiec
-	 * @param string $skinid the skin to look for within the page
-	 */
-	public function getSkinControls($skinid)
-	{
-		if(isset($this->_skincontrols[$skinid]))
-			return $this->_skincontrols[$skinid];
-	}
-	
-	/**
-	 *	Return the count of the skins with that id
-	 * @param integer $skinid the skin to look for within the page
-	 */
-	public function getSkinControlCount($skinid)
-	{
-		if(isset($this->_skincontrols[$skinid]))
-			return count($this->_skincontrols[$skinid]);
-	}
-	public function getSkinControlsByType($skinid, $type)
-	{
-		$result = array();
-		if(isset($this->_skincontrols[$skinid]))
-			foreach($this->_skincontrols[$skinid] as $ctl)
-				if($ctl instanceof $type)
-					$result[] = $ctl;
-		
-		return $result;
-	}
-	
-	public function getSkinControlByType($skinid, $type, $index = 0)
-	{
-		if(isset($this->_skincontrols[$skinid]))
-			foreach($this->_skincontrols[$skinid] as $ctl)
-				if(($ctl instanceof $type) && $index--)
-					return $ctl;
-	}
-	
-
-	/**
 	 * @return TStack stack of {@link TOutputCache} objects
 	 */
 	public function getCachingStack()
@@ -1327,64 +1198,6 @@ class TPage extends TTemplateControl implements IPageEvents
 			$this->_cachingStack=new TStack;
 		return $this->_cachingStack;
 	}
-}
-
-
-/**
- * IPageEvents interface.
- *
- * IPageEvents interface has all the events a page uses during its life cycle.
- *
- * @author Brad Anderson <javalizard@gmail.com>
- * @version $Id$
- * @package System.Web.UI
- * @since 3.2
- */
-interface IPageEvents {
-	/**
-	 * Raises 'OnDataBinding' event. (inherited from TControl)
-	 */
-	public function onDataBinding($param);
-	/**
-	 * This method is invoked when the control enters 'OnInit' stage. (inherited from TControl)
-	 */
-	public function onInit($param);
-	/**
-	 * Raises OnInitComplete event.
-	 */
-	public function onInitComplete($param);
-	/**
-	 * This method is invoked when the control enters 'OnLoad' stage. (inherited from TControl)
-	 */
-	public function onLoad($param);
-	/**
-	 * Raises OnLoadComplete event.
-	 */
-	public function onLoadComplete($param);
-	/**
-	 * Raises OnPreInit event.
-	 */
-	public function onPreInit($param);
-	/**
-	 * Raises OnPreLoad event.
-	 */
-	public function onPreLoad($param);
-	/**
-	 * This method is invoked when the control enters 'OnPreRender' stage. (inherited from TControl)
-	 */
-	public function onPreRender($param);
-	/**
-	 * Raises OnPreRenderComplete event.
-	 */
-	public function onPreRenderComplete($param);
-	/**
-	 * Raises OnSaveStateComplete event.
-	 */
-	public function onSaveStateComplete($param);
-	/**
-	 * This method is invoked when the control enters 'OnUnload' stage. (inherited from TControl)
-	 */
-	public function onUnload($param);
 }
 
 /**

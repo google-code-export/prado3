@@ -67,7 +67,7 @@ class TDataFieldAccessor
 				{
 					$object=$data;
 					foreach(explode('.',$field) as $f)
-						$object = TDataFieldAccessor::getDataFieldValue($object, $f);
+						$object=$object->$f;
 					return $object;
 				}
 			}

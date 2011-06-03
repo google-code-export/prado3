@@ -96,7 +96,7 @@ Dependencies of the packages are automatically resolved by the script loader php
 &lt;/script&gt;
 </com:TTextHighlighter>
 
-<p id="310009" class="block-content">Each <tt>&lt;com:TClientScriptLoader&gt;</tt> generates an HTML <tt>&lt;script&gt;</tt>
+<p id="310008" class="block-content">Each <tt>&lt;com:TClientScriptLoader&gt;</tt> generates an HTML <tt>&lt;script&gt;</tt>
 element to load the required javascript files.</p>
 
 <h2 id="62006">Removing Javascript Comments</h2>
