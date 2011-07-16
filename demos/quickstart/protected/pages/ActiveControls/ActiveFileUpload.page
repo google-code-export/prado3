@@ -1,6 +1,6 @@
 <com:TContent ID="body" >
 
-<h1 id="156003">TActiveFileUpload</h1>
+<h1 id="158012">TActiveFileUpload</h1>
 <com:DocLink ClassPath="System.Web.UI.ActiveControls.TActiveFileUpload" />
 
 <p class="block-content">
@@ -30,4 +30,4 @@ or a red x if there was an error.
 
 <com:RunBar PagePath="ActiveControls.Samples.TActiveFileUpload.Home" />
 
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

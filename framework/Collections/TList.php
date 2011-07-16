@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Collections
@@ -16,7 +16,7 @@
  * TList implements an integer-indexed collection class.
  *
  * You can access, append, insert, remove an item by using
- * {@link itemAt}, {@link add}, {@link insertAt}, {@link remove}, and {@link removeAt}.
+ * {@link itemAt}, {@link add}, {@link insert}, {@link remove}, and {@link removeAt}.
  * To get the number of the items in the list, use {@link getCount}.
  * TList can also be used like a regular array as follows,
  * <code>
@@ -130,7 +130,6 @@ class TList extends TComponent implements IteratorAggregate,ArrayAccess,Countabl
 	 * Appends an item at the end of the list.
 	 * @param mixed new item
 	 * @return integer the zero-based index at which the item is added
-	 * @throws TInvalidOperationException if the list is read-only
 	 */
 	public function add($item)
 	{
@@ -172,22 +171,16 @@ class TList extends TComponent implements IteratorAggregate,ArrayAccess,Countabl
 	 * @param mixed the item to be removed.
 	 * @return integer the index at which the item is being removed
 	 * @throws TInvalidDataValueException If the item does not exist
-	 * @throws TInvalidOperationException if the list is read-only
 	 */
 	public function remove($item)
 	{
-		if(!$this->_r)
+		if(($index=$this->indexOf($item))>=0)
 		{
-			if(($index=$this->indexOf($item))>=0)
-			{
-				$this->removeAt($index);
-				return $index;
-			}
-			else
-				throw new TInvalidDataValueException('list_item_inexistent');
+			$this->removeAt($index);
+			return $index;
 		}
 		else
-			throw new TInvalidOperationException('list_readonly',get_class($this));
+			throw new TInvalidDataValueException('list_item_inexistent');
 	}
 
 	/**
@@ -222,7 +215,6 @@ class TList extends TComponent implements IteratorAggregate,ArrayAccess,Countabl
 
 	/**
 	 * Removes all items in the list.
-	 * @throws TInvalidOperationException if the list is read-only
 	 */
 	public function clear()
 	{
@@ -249,54 +241,6 @@ class TList extends TComponent implements IteratorAggregate,ArrayAccess,Countabl
 			return -1;
 		else
 			return $index;
-	}
-
-	/**
-	 * Finds the base item.  If found, the item is inserted before it.  
-	 * @param mixed the base item which will be pushed back by the second parameter
-	 * @param mixed the item
-	 * @return int the index where the item is inserted
-	 * @throws TInvalidDataValueException if the base item is not within this list
-	 * @throws TInvalidOperationException if the list is read-only
-	 * @since 3.2a
-	 */
-	public function insertBefore($baseitem, $item)
-	{
-		if(!$this->_r)
-		{
-			if(($index = $this->indexOf($baseitem)) == -1)
-				throw new TInvalidDataValueException('list_item_inexistent');
-			
-			$this->insertAt($index, $item);
-			
-			return $index;
-		}
-		else
-			throw new TInvalidOperationException('list_readonly',get_class($this));
-	}
-
-	/**
-	 * Finds the base item.  If found, the item is inserted after it.  
-	 * @param mixed the base item which comes before the second parameter when added to the list
-	 * @param mixed the item
-	 * @return int the index where the item is inserted
-	 * @throws TInvalidDataValueException if the base item is not within this list
-	 * @throws TInvalidOperationException if the list is read-only
-	 * @since 3.2a
-	 */
-	public function insertAfter($baseitem, $item)
-	{
-		if(!$this->_r)
-		{
-			if(($index = $this->indexOf($baseitem)) == -1)
-				throw new TInvalidDataValueException('list_item_inexistent');
-			
-			$this->insertAt($index + 1, $item);
-			
-			return $index + 1;
-		}
-		else
-			throw new TInvalidOperationException('list_readonly',get_class($this));
 	}
 
 	/**

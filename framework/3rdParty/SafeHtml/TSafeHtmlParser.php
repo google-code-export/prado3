@@ -24,7 +24,7 @@ Prado::using('System.3rdParty.SafeHtml.HTMLSax3');
 
 /**
  *
- * TSafeHtmlParser
+ * SafeHTML Parser
  *
  * This parser strips down all potentially dangerous content within HTML:
  * <ul>
@@ -43,7 +43,7 @@ Prado::using('System.3rdParty.SafeHtml.HTMLSax3');
  *
  * <b>Example:</b>
  * <pre>
- * $parser = Prado::createComponent('System.3rdParty.SafeHtml.TSafeHtmlParser');
+ * $parser =& new SafeHTML();
  * $result = $parser->parse($doc);
  * </pre>
  *
@@ -589,7 +589,7 @@ class TSafeHtmlParser
      * @return string Processed (X)HTML document
      * @access public
      */
-    public function parse($doc, $isUTF7=false)
+    public function parse($doc)
     {
 	   $this->clear();
 
@@ -603,8 +603,7 @@ class TSafeHtmlParser
        $doc = str_replace("\xC0\xBC", '&lt;', $doc);
 
        // UTF-7 encoding ASCII decode
-       if($isUTF7)
-            $doc = $this->repackUTF7($doc);
+       $doc = $this->repackUTF7($doc);
 
        // Instantiate the parser
        $parser= new TSax3();

@@ -1,6 +1,6 @@
 <com:TContent ID="body" >
 
-<h1 id="174027">TActiveRadioButtonList</h1>
+<h1 id="182015">TActiveRadioButtonList</h1>
 <com:DocLink ClassPath="System.Web.UI.ActiveControls.TActiveRadioButtonList" />
 
 <p class="block-content">
@@ -29,4 +29,4 @@ Please refer to the original documentation of <a href="?page=Controls.List">TRad
 
 <com:RunBar PagePath="ActiveControls.Samples.TActiveRadioButtonList.Home" />
 
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

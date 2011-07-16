@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web
@@ -182,7 +182,7 @@ class TAssetManager extends TModule
 	 * @return array List of published assets
 	 * @since 3.1.6
 	 */
-	public function getPublished()
+	protected function getPublished()
 	{
 		return $this->_published;
 	}

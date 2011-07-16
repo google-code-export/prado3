@@ -15,7 +15,6 @@ $exclusions=array(
 	'.svn',
 	'/I18N/core',
 	'/3rdParty',
-	'/Testing',
 	'/Web/UI/WebControls/assets',
 	);
 $a=new ClassTreeBuilder($frameworkPath,$exclusions);

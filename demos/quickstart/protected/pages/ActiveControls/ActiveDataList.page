@@ -1,6 +1,6 @@
 <com:TContent ID="body" >
 
-<h1 id="148011">TActiveDataList</h1>
+<h1 id="150003">TActiveDataList</h1>
 <com:DocLink ClassPath="System.Web.UI.ActiveControls.TActiveDataList" />
 
 <p class="block-content">
@@ -20,4 +20,4 @@ Please refer to the original documentation of <a href="?page=Controls.DataList">
 
 <com:RunBar PagePath="ActiveControls.Samples.TActiveDataList.Home" />
 
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

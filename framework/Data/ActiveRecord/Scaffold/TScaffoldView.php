@@ -4,7 +4,7 @@
  *
  * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Data.ActiveRecord.Scaffold
@@ -113,8 +113,8 @@ class TScaffoldView extends TScaffoldBase
 	{
 		$this->getListView()->setVisible(false);
 		$this->getEditView()->setVisible(true);
-		$this->_panForNewButton->setVisible(false);
-		$this->_panForSearch->setVisible(false);
+		$this->getAddButton()->setVisible(false);
+		$this->getSearchControl()->setVisible(false);
 		$this->getEditView()->getCancelButton()->setVisible(true);
 		$this->getEditView()->getClearButton()->setVisible(false);
 	}
@@ -126,8 +126,8 @@ class TScaffoldView extends TScaffoldBase
 	{
 		$this->getListView()->setVisible(true);
 		$this->getEditView()->setVisible(false);
-		$this->_panForNewButton->setVisible(true);
-		$this->_panForSearch->setVisible(true);
+		$this->getAddButton()->setVisible(true);
+		$this->getSearchControl()->setVisible(true);
 	}
 
 	/**

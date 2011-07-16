@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2010 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Data
@@ -58,7 +58,8 @@ class TDbCommand extends TComponent
 	 */
 	public function __sleep()
 	{
-		return array_diff(parent::__sleep(),array("\0TDbCommand\0_statement")); 
+		$this->_statement=null;
+		return array_keys(get_object_vars($this));
 	}
 
 	/**

@@ -4,7 +4,7 @@
  *
  * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Data.SqlMap.Configuration
@@ -133,18 +133,6 @@ class TParameterProperty extends TComponent
 	public function setNullValue($value)
 	{
 		$this->_nullValue = $value;
-	}
-
-	public function __sleep()
-	{
-		$exprops = array(); $cn = 'TParameterProperty'; 
-		if ($this->_typeHandler===null) $exprops[] = "\0$cn\0_typeHandler";
-		if ($this->_type===null) $exprops[] = "\0$cn\0_type";
-		if ($this->_column===null) $exprops[] = "\0$cn\0_column";
-		if ($this->_dbType===null) $exprops[] = "\0$cn\0_dbType";
-		if ($this->_property===null) $exprops[] = "\0$cn\0_property";
-		if ($this->_nullValue===null) $exprops[] = "\0$cn\0_nullValue";
-		return array_diff(parent::__sleep(),$exprops);
 	}
 }
 

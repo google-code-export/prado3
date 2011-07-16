@@ -4,7 +4,7 @@
  *
  * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2010 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Data.ActiveRecord
@@ -203,7 +203,8 @@ abstract class TActiveRecord extends TComponent
 	 */
 	public function __sleep()
 	{
-		return array_diff(parent::__sleep(),array("\0*\0_connection"));
+		$this->_connection=null;
+		return array_keys(get_object_vars($this));
 	}
 
 	/**

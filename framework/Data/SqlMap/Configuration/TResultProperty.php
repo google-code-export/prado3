@@ -4,7 +4,7 @@
  *
  * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2010 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Data.SqlMap.Configuration
@@ -323,22 +323,6 @@ class TResultProperty extends TComponent
 			return is_array($prop);
 		}
 		return $this->getPropertyValueType() == self::ARRAY_TYPE;
-	}
-
-	public function __sleep()
-	{
-		$exprops = array(); $cn = 'TResultProperty'; 
-		if ($this->_nullValue===null) $exprops[] = "\0$cn\0_nullValue";
-		if ($this->_propertyName===null) $exprops[] = "\0$cn\0_propertyNama";
-		if ($this->_columnName===null) $exprops[] = "\0$cn\0_columnName";
-		if ($this->_columnIndex==-1) $exprops[] = "\0$cn\0_columnIndex";
-		if ($this->_nestedResultMapName===null) $exprops[] = "\0$cn\0_nestedResultMapName";
-		if ($this->_nestedResultMap===null) $exprops[] = "\0$cn\0_nestedResultMap";
-		if ($this->_valueType===null) $exprops[] = "\0$cn\0_valueType";
-		if ($this->_typeHandler===null) $exprops[] = "\0$cn\0_typeHandler";
-		if ($this->_isLazyLoad===false) $exprops[] = "\0$cn\0_isLazyLoad";
-		if ($this->_select===null) $exprops[] = "\0$cn\0_select";
-		return array_diff(parent::__sleep(),$exprops);
 	}
 }
 

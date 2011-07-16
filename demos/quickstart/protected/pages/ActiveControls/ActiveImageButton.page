@@ -1,6 +1,6 @@
 <com:TContent ID="body" >
 
-<h1 id="158020">TActiveImageButton</h1>
+<h1 id="152011">TActiveImageButton</h1>
 <com:DocLink ClassPath="System.Web.UI.ActiveControls.TActiveImageButton" />
 
 <p class="block-content">
@@ -14,4 +14,4 @@ The<tt>OnCallback</tt> event is raised during a callback request and it is raise
 </p>
 <com:RunBar PagePath="ActiveControls.Samples.TActiveImageButton.Home" />
 
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

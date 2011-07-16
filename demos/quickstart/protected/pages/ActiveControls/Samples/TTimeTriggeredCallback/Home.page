@@ -21,4 +21,4 @@ A timer updating a label with the current time every 5 seconds:
 
 </table>
 
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

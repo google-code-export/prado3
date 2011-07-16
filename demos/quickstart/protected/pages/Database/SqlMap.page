@@ -1,4 +1,5 @@
 <com:TContent ID="body">
+<!-- $Id $ -->
 
 <h1 id="140062">Data Mapper</h1>
 <com:SinceVersion Version="3.1a" />
@@ -262,4 +263,4 @@ $user->save(); //save it using Active Record
     <a href="http://ibatis.apache.org">http://ibatis.apache.org</a>.</li>
 </ul>
 
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

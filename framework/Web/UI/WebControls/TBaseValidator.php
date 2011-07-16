@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web.UI.WebControls
@@ -239,6 +239,7 @@ abstract class TBaseValidator extends TLabel implements IValidator
 		{
 			$manager['FormID'] = $formID;
 			$options = TJavaScript::encode($manager);
+			$scripts->registerPradoScript('validator');
 			$scripts->registerEndScript($scriptKey, "new Prado.ValidationManager({$options});");
 		}
 		if($this->getEnableClientScript())
@@ -253,8 +254,6 @@ abstract class TBaseValidator extends TLabel implements IValidator
 	{
 		parent::onPreRender($param);
 		$this->updateControlCssClass();
-		if ($this->getEnableClientScript())
-			$this->getPage()->getClientScript()->registerPradoScript('validator');
 	}
 
 	/**

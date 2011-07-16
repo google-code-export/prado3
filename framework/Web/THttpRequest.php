@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web
@@ -324,21 +324,6 @@ class THttpRequest extends TApplicationComponent implements IteratorAggregate,Ar
 	}
 
 	/**
-	 * @param boolean $mimetypeOnly whether to return only the mimetype (default: true)
-	 * @return string content type (e.g. 'application/json' or 'text/html; encoding=gzip') or null if not specified
-	 */
-	public function getContentType($mimetypeOnly = true)
-	{
-		if(!isset($_SERVER['CONTENT_TYPE']))
-			return null;
-
-		if($mimetypeOnly === true && ($_pos = strpos(';', $_SERVER['CONTENT_TYPE'])) !== false)
-			return substr($_SERVER['CONTENT_TYPE'], 0, $_pos);
-
-		return $_SERVER['CONTENT_TYPE'];
-	}
-
-	/**
 	 * @return boolean if the request is sent via secure channel (https)
 	 */
 	public function getIsSecureConnection()
@@ -379,16 +364,13 @@ class THttpRequest extends TApplicationComponent implements IteratorAggregate,Ar
 	}
 
 	/**
-	 * @param boolean|null whether to use HTTPS instead of HTTP even if the current request is sent via HTTP or vice versa
-	 * 						null - keep current schema
-	 * 						true - force https
-	 * 						false - force http
+	 * @param boolean whether to use HTTPS instead of HTTP even if the current request is sent via HTTP
 	 * @return string schema and hostname of the requested URL
 	 */
-	public function getBaseUrl($forceSecureConnection=null)
+	public function getBaseUrl($forceSecureConnection=false)
 	{
 		$url=$this->getUrl();
-		$scheme=($forceSecureConnection)?"https": (($forceSecureConnection === null)?$url->getScheme():'http');
+		$scheme=($forceSecureConnection)?"https":$url->getScheme();
 		$host=$url->getHost();
 		if (($port=$url->getPort())) $host.=':'.$port;
 		return $scheme.'://'.$host;
@@ -406,13 +388,10 @@ class THttpRequest extends TApplicationComponent implements IteratorAggregate,Ar
 	}
 
 	/**
-	 * @param boolean|null whether to use HTTPS instead of HTTP even if the current request is sent via HTTP or vice versa
-	 * 						null - keep current schema
-	 * 						true - force https
-	 * 						false - force http
+	 * @param boolean whether to use HTTPS instead of HTTP even if the current request is sent via HTTP
 	 * @return string entry script URL (w/ host part)
 	 */
-	public function getAbsoluteApplicationUrl($forceSecureConnection=null)
+	public function getAbsoluteApplicationUrl($forceSecureConnection=false)
 	{
 		return $this->getBaseUrl($forceSecureConnection) . $this->getApplicationUrl();
 	}

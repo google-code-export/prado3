@@ -4,7 +4,7 @@
  *
  * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web.UI.WebControls
@@ -407,7 +407,6 @@ class TDatePicker extends TTextBox
 			$page->registerPostDataLoader($uniqueID.TControl::ID_SEPARATOR.'year');
 		}
 		$this->publishCalendarStyle();
-		$this->registerCalendarClientScriptPre();
 	}
 
 	/**
@@ -428,7 +427,7 @@ class TDatePicker extends TTextBox
 			$this->renderDropDownListCalendar($writer);
 			if($this->hasDayPattern())
 			{
-				$this->registerCalendarClientScriptPost();
+				$this->registerCalendarClientScript();
 				$this->renderDatePickerButtons($writer);
 			}
 		}
@@ -841,27 +840,20 @@ class TDatePicker extends TTextBox
 	{
 		parent::addAttributesToRender($writer);
 		$writer->addAttribute('id',$this->getClientID());
-		$this->registerCalendarClientScriptPost();
+		$this->registerCalendarClientScript();
 	}
 
 
 	/**
 	 * Registers the javascript code to initialize the date picker.
 	 */
-	protected function registerCalendarClientScriptPre()
+	protected function registerCalendarClientScript()
 	{
 		if($this->getShowCalendar())
 		{
 			$cs = $this->getPage()->getClientScript();
 			$cs->registerPradoScript("datepicker");
-		}
-	}
 
-	protected function registerCalendarClientScriptPost()
-	{
-		if($this->getShowCalendar())
-		{
-			$cs = $this->getPage()->getClientScript();
 			if(!$cs->isEndScriptRegistered('TDatePicker.spacer'))
 			{
 				$spacer = $this->getAssetUrl('spacer.gif');

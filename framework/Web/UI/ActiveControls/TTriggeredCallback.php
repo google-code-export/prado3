@@ -4,13 +4,14 @@
  *
  * @author Wei Zhuo <weizhuo[at]gamil[dot]com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web.UI.ActiveControls
  */
 
 Prado::using('System.Web.UI.ActiveControls.TCallback');
+
 /**
  * TTriggeredCallback abstract Class
  *

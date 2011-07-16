@@ -5,7 +5,7 @@
  * @author Bradley Booms <Bradley.Booms@nsighttel.com>
  * @author Christophe Boulain <Christophe.Boulain@gmail.com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web.UI.ActiveControls
@@ -107,16 +107,12 @@ class TActiveDatePicker extends TDatePicker  implements ICallbackEventHandler, I
 	/**
 	 * Registers the javascript code to initialize the date picker.
 	 */
-
-	protected function registerCalendarClientScriptPre()
+	protected function registerCalendarClientScript()
 	{
+	
 		$cs = $this->getPage()->getClientScript();
 		$cs->registerPradoScript("activedatepicker");
-	}
 
-	protected function registerCalendarClientScriptPost()
-	{
-		$cs = $this->getPage()->getClientScript();
 		if(!$cs->isEndScriptRegistered('TDatePicker.spacer'))
 		{
 			$spacer = $this->getAssetUrl('spacer.gif');

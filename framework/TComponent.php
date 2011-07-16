@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System
@@ -53,7 +53,7 @@
  * To attach an event handler to an event, use one of the following ways,
  * <code>
  * $component->OnClick=$callback;  // or $component->OnClick->add($callback);
- * $component->attachEventHandler('OnClick',$callback);
+ * $$component->attachEventHandler('OnClick',$callback);
  * </code>
  * The first two ways make use of the fact that $component->OnClick refers to
  * the event handler list {@link TList} for the 'OnClick' event.
@@ -451,31 +451,6 @@ class TComponent
 	public function addParsedObject($object)
 	{
 	}
-
-	/**
-	 * Do not call this method. This is a PHP magic method that will be called automatically
-	 * after any unserialization; it can perform reinitialization tasks on the object.
-	 */
-	public function __wakeup()
-	{
-		if ($this->_e===null)
-			$this->_e = array();
-	}
-
-	/**
-	 * Returns an array with the names of all variables of that object that should be serialized.
-	 * Do not call this method. This is a PHP magic method that will be called automatically
-	 * prior to any serialization.
-	 */
-	public function __sleep()
-	{
-		$a = (array)$this;
-		$a = array_keys($a);
-		$exprops = array(); 
-		if ($this->_e===array())
-			$exprops[] = "\0TComponent\0_e";
-		return array_diff($a,$exprops);
-	}
 }
 
 /**
@@ -500,34 +475,8 @@ class TComponent
  * @package System
  * @since 3.0
  */
-class TEnumerable implements Iterator
+class TEnumerable
 {
-	private $_enums = array();
-
-	public function __construct() {
-		$reflection = new ReflectionClass($this);
-		$this->_enums = $reflection->getConstants();
-	}
-
-	public function current() {
-		return current($this->_enums);
-	}
-
-	public function key() {
-		return key($this->_enums);
-	}
-
-	public function next() {
-		return next($this->_enums);
-	}
-
-	public function rewind() {
-		reset($this->_enums);
-	}
-
-	public function valid() {
-		return $this->current() !== false;
-	}
 }
 
 /**
@@ -693,16 +642,6 @@ class TPropertyValue
 		else
 			throw new TInvalidDataValueException('propertyvalue_enumvalue_invalid',$value,implode(' | ',$enums));
 	}
-
-	/**
-	 * Converts the value to 'null' if the given value is empty
-	 * @param mixed value to be converted
-	 * @return mixed input or NULL if input is empty
-	 */
-	public static function ensureNullIfEmpty($value)
-	{
-		return empty($value) ? null : $value;
-	}
 }
 
 /**
@@ -776,7 +715,7 @@ class TComponentReflection extends TComponent
 
 	private function reflect()
 	{
-		$class=new ReflectionClass($this->_className);
+		$class=new TReflectionClass($this->_className);
 		$properties=array();
 		$events=array();
 		$methods=array();
@@ -899,3 +838,4 @@ class TComponentReflection extends TComponent
 		return $this->_methods;
 	}
 }
+

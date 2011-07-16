@@ -7,7 +7,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2010 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System
@@ -71,7 +71,7 @@ class PradoBase
 	 */
 	public static function getVersion()
 	{
-		return '3.2-dev';
+		return '3.1.10';
 	}
 
 	/**
@@ -84,7 +84,7 @@ class PradoBase
 		/**
 		 * Sets error handler to be Prado::phpErrorHandler
 		 */
-		set_error_handler(array('PradoBase','phpErrorHandler'));
+		set_error_handler(array('PradoBase','phpErrorHandler'),error_reporting());
 		/**
 		 * Sets exception handler to be Prado::exceptionHandler
 		 */
@@ -132,7 +132,7 @@ class PradoBase
 	 */
 	public static function phpErrorHandler($errno,$errstr,$errfile,$errline)
 	{
-		if(error_reporting() & $errno)
+		if(error_reporting()!=0)
 			throw new TPhpErrorException($errno,$errstr,$errfile,$errline);
 	}
 
@@ -420,7 +420,7 @@ class PradoBase
 			if(isset($t['file']))
 				echo basename($t['file']) . ':' . $t['line'];
 			else
-				 echo '<PHP inner-code>';
+			   echo '<PHP inner-code>';
 			echo ' -- ';
 			if(isset($t['class']))
 				echo $t['class'] . $t['type'];
@@ -520,10 +520,9 @@ class PradoBase
 	 * Otherwise, the message is logged at INFO level.
 	 * @param string message to be logged
 	 * @param string category of the message
-	 * @param (string|TControl) control of the message
 	 * @see log, getLogger
 	 */
-	public static function trace($msg,$category='Uncategorized',$ctl=null)
+	public static function trace($msg,$category='Uncategorized')
 	{
 		if(self::$_application && self::$_application->getMode()===TApplicationMode::Performance)
 			return;
@@ -536,7 +535,7 @@ class PradoBase
 		}
 		else
 			$level=TLogger::INFO;
-		self::log($msg,$level,$category,$ctl);
+		self::log($msg,$level,$category);
 	}
 
 	/**
@@ -549,13 +548,12 @@ class PradoBase
 	 * TLogger::DEBUG, TLogger::INFO, TLogger::NOTICE, TLogger::WARNING,
 	 * TLogger::ERROR, TLogger::ALERT, TLogger::FATAL.
 	 * @param string category of the message
-	 * @param (string|TControl) control of the message
 	 */
-	public static function log($msg,$level=TLogger::INFO,$category='Uncategorized',$ctl=null)
+	public static function log($msg,$level=TLogger::INFO,$category='Uncategorized')
 	{
 		if(self::$_logger===null)
 			self::$_logger=new TLogger;
-		self::$_logger->log($msg,$level,$category,$ctl);
+		self::$_logger->log($msg,$level,$category);
 	}
 
 	/**
@@ -625,6 +623,18 @@ class PradoBase
 	}
 }
 
+/**
+ * TReflectionClass class.
+ * This class was originally written to cope with the incompatibility between different PHP versions.
+ * It is equivalent to ReflectionClass for PHP version >= 5.1.0
+ * @author Qiang Xue <qiang.xue@gmail.com>
+ * @version $Id$
+ * @package System
+ * @since 3.0
+ */
+class TReflectionClass extends ReflectionClass
+{
+}
 
 /**
  * Includes the classes essential for PradoBase class
@@ -632,3 +642,5 @@ class PradoBase
 PradoBase::using('System.TComponent');
 PradoBase::using('System.Exceptions.TException');
 PradoBase::using('System.Util.TLogger');
+
+?>

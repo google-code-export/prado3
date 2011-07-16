@@ -1,12 +1,7 @@
 <com:TContent ID="body" >
 
 <h1 id="52001">Standard Controls</h1>
-<p id="260001" class="block-content">* the tutorial for this control is not completed yet.</p>
 <ul id="u1" class="block-content">
-  <li>
-  <a href="?page=Controls.Accordion">TAccordion</a> displays an accordion consisting of multiple views. At any time, only one view is visible.
-  </li>
-
   <li>
   <a href="?page=Controls.Button">TButton</a> represents a click button on a Web page. It is mainly used to trigger page postback.
   </li>
@@ -45,10 +40,6 @@
 
   <li>
   <a href="?page=Controls.FileUpload">TFileUpload</a> represents a file upload field. It allows users to upload a file to server.
-  </li>
-
-  <li>
-  <a href="?page=Controls.FlushOutput">TFlushOutput</a> enables forced flushing of the current output buffer at (a) certain point(s) in the page.
   </li>
 
   <li>
@@ -159,4 +150,4 @@
   </li>
 </ul>
 
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

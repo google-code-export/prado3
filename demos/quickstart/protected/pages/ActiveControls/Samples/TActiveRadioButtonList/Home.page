@@ -62,4 +62,5 @@ RadioButton list causing validation:
 </tr>
 
 </table>
-</com:TContent>
+
+<div class="last-modified">$Id$</div></com:TContent>

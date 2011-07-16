@@ -1,6 +1,6 @@
 <com:TContent ID="body" >
 
-<h1 id="152002">TActiveDatePicker</h1>
+<h1 id="154010">TActiveDatePicker</h1>
 <com:DocLink ClassPath="System.Web.UI.ActiveControls.TActiveDatePicker" />
 
 <p class="block-content">
@@ -13,4 +13,4 @@ Please refer to the documentation of <tt>TDatePicker</tt> for further usage info
 
 <com:RunBar PagePath="ActiveControls.Samples.TActiveDatePicker.Home" />
 
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

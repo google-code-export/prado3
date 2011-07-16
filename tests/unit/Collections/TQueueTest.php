@@ -57,7 +57,7 @@ class TQueueTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function testPeek() {
-		$queue = new TQueue(array(1,2,3));
+		$queue = new TQueue(array(1));
 		self::assertEquals(1, $queue->peek());
 	}
 	
@@ -96,7 +96,7 @@ class TQueueTest extends PHPUnit_Framework_TestCase {
 
  	public function testGetIterator() {
 		$queue = new TQueue(array(1, 2));
-		self::assertInstanceOf('ArrayIterator', $queue->getIterator());
+		self::assertType('ArrayIterator', $queue->getIterator());
 		$n = 0;
 		$found = 0;
 		foreach($queue as $index => $item) {

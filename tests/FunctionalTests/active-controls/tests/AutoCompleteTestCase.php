@@ -4,7 +4,6 @@ class AutoCompleteTestCase extends SeleniumTestCase
 {
 	function test()
 	{
-		$this->disabled();
 		$this->skipBrowsers(self::INTERNET_EXPLORER);
 
 		$this->open("active-controls/index.php?page=AutoCompleteTest");

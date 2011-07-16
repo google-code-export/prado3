@@ -1,6 +1,6 @@
 
-         Upgrading Instructions for PRADO Framework v3.2
-         =================================================
+         Upgrading Instructions for PRADO Framework v3.1.10
+         ==================================================
 
 !!!IMPORTANT!!!
 
@@ -9,9 +9,8 @@ if you want to upgrade from version A to version C and there is
 version B between A and C, you need to following the instructions
 for both A and B.
 
-Upgrading from v3.1.x
+Upgrading from v3.1.9
 ---------------------
-- Prado 3.2 requires PHP >= 5.2 
 
 Upgrading from v3.1.8
 ---------------------
@@ -30,19 +29,16 @@ Upgrading from v3.1.8
 
 Upgrading from v3.1.7
 ---------------------
-- behavior of THttpRequest::getBaseUrl() and THttpRequest::getAbsoluteApplicationUrl() changed:
-	null - keep current schema
-	true - force https
-	false - force http
-  relevance, only if invoking methods with explicit "false"
-
+- tinyMCE has been updated to support Internet Explorer 9; a lot of new languages and plugins are now supported,
+  but some of the old ones changed their name. If you have problems in getting THtmlArea localized with your language,
+  check if the language code for your locale has changed and update it.
 
 Upgrading from v3.1.6
 ---------------------
 - The different SQLMap cache engines (TSQLMapFifoCache, TSQLMapLRUCache, TSQLMapApplicationCache) doesn't
-take anymore the cache size in their constructor. Instead, they take the cachemodel object who instanciated them.
-It shouldn't affect existing code, except if you instanciate one of this cache directly (i.e, without a <cachemodel>
-directive in your SQLMap configuration)
+  take anymore the cache size in their constructor. Instead, they take the cachemodel object who instanciated them.
+  It shouldn't affect existing code, except if you instanciate one of this cache directly (i.e, without a <cachemodel>
+  directive in your SQLMap configuration)
 
 Upgrading from v3.1.5
 ---------------------

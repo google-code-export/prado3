@@ -39,8 +39,8 @@ Prado::using('System.Web.UI.WebControls.TFileUpload');
  *  
  * @author Bradley Booms <Bradley.Booms@nsighttel.com>
  * @author Christophe Boulain <Christophe.Boulain@gmail.com>
- * @version $Id$
  * @package System.Web.UI.ActiveControls
+ * @version $Id$
  */
 class TActiveFileUpload extends TFileUpload implements IActiveControl, ICallbackEventHandler, INamingContainer 
 {
@@ -98,14 +98,13 @@ class TActiveFileUpload extends TFileUpload implements IActiveControl, ICallback
 	 * @param TEventParameter event parameter to be passed to the event handlers
 	 */
 	public function onFileUpload($param){
-		if ($this->_flag->getValue() && $this->getPage()->getIsPostBack() && $param == $this->_target->getUniqueID()){
+		if ($this->_flag->getValue() && $this->getPage()->getIsPostBack()){
 			// save the file so that it will persist past the end of this return.
 			$localName = str_replace('\\', '/', tempnam(Prado::getPathOfNamespace($this->getTempPath()),''));
 			parent::saveAs($localName);
 			
 			$filename=addslashes($this->getFileName());
-			
-			
+
 			$params = new TActiveFileUploadCallbackParams;
 			$params->localName = $localName;
 			$params->fileName = $filename;
@@ -127,7 +126,6 @@ class TActiveFileUpload extends TFileUpload implements IActiveControl, ICallback
 	parent.Prado.WebUI.TActiveFileUpload.onFileUpload(Options);
 </script>
 EOS;
-			
 			exit();
 		}
 	}
@@ -174,13 +172,14 @@ EOS;
 	/**
 	 * @throws TInvalidDataValueException if the {@link getTempPath TempPath} is not writable.
 	 */
-	public function onInit($sender){
+	public function onInit($sender)
+	{
 		parent::onInit($sender);
-		
+
 		if (!Prado::getApplication()->getCache())
 		  if (!Prado::getApplication()->getSecurityManager())
 			throw new Exception('TActiveFileUpload needs either an application level cache or a security manager to work securely');
-		
+
 		if (!is_writable(Prado::getPathOfNamespace($this->getTempPath()))){
 			throw new TInvalidDataValueException("activefileupload_temppath_invalid", $this->getTempPath());
 		}
@@ -193,10 +192,11 @@ EOS;
 	 * This method is mainly used by framework and control developers.
 	 * @param TCallbackEventParameter the event parameter
 	 */
- 	public function raiseCallbackEvent($param){
+ 	public function raiseCallbackEvent($param)
+	{
  		$cp = $param->getCallbackParameter();
-		if ($key = $cp->targetID == $this->_target->getUniqueID()){
-		
+		if ($key = $cp->targetID == $this->_target->getUniqueID())
+		{	
 			$params = $this->popParamsByToken($cp->callbackToken);
 		
 			$_FILES[$key]['name'] = $params->fileName;
@@ -204,22 +204,13 @@ EOS;
 			$_FILES[$key]['type'] = $params->fileType;
 			$_FILES[$key]['error'] = intval($params->errorCode);
 			$_FILES[$key]['tmp_name'] = $params->localName;
+
 			$this->loadPostData($key, null);
 			
 			$this->raiseEvent('OnFileUpload', $this, $param);
 		}
 	}
 
-	/**
-	 * Raises postdata changed event.
-	 * This method calls {@link onFileUpload} method
-	 * This method is primarily used by framework developers.
-	 */
-	public function raisePostDataChangedEvent()
-	{
-		$this->onFileUpload($this->getPage()->getRequest()->itemAt('tempActiveUploadField'));
-	}
-	
 	protected function pushParamsAndGetToken(TActiveFileUploadCallbackParams $params)
 	{
 		if ($cache = Prado::getApplication()->getCache())
@@ -257,7 +248,7 @@ EOS;
 			}
 		else
 			throw new Exception('TActiveFileUpload needs either an application level cache or a security manager to work securely');
-
+ 
 		assert($params instanceof TActiveFileUploadCallbackParams);
 		
 		return $params;
@@ -266,39 +257,12 @@ EOS;
 	/**
 	 * Publish the javascript
 	 */
-	public function onPreRender($param)
-	{
+	public function onPreRender($param){
 		parent::onPreRender($param);
+		$this->getPage()->getClientScript()->registerPradoScript('effects');
 		$this->getPage()->getClientScript()->registerPradoScript('activefileupload');
-
-		if(!$this->getPage()->getIsPostBack() && isset($_GET['TActiveFileUpload_InputId']) && isset($_GET['TActiveFileUpload_TargetId']) && $_GET['TActiveFileUpload_InputId'] == $this->getClientID())
-		{
-			$this->_errorCode = UPLOAD_ERR_FORM_SIZE;
-			$localName = str_replace('\\', '/', tempnam(Prado::getPathOfNamespace($this->getTempPath()),''));
-			$filename = addslashes($this->getFileName());
-			
-			$params = new TActiveFileUploadCallbackParams;
-			$params->localName = $localName;
-			$params->fileName = $fileName;
-			$params->fileSize = $this->getFileSize();
-			$params->fileType = $this->getFileType();
-			$params->errorCode = $this->getErrorCode();
-			
-			echo <<<EOS
-<script language="Javascript">
-	Options = new Object();
-	Options.clientID = '{$_GET['TActiveFileUpload_InputId']}';
-	Options.targetID = '{$_GET['TActiveFileUpload_TargetId']}';
-	Options.fileName = '{$params->fileName}';
-	Options.fileSize = '{$params->fileSize}';
-	Options.fileType = '{$params->fileType}';
-	Options.errorCode = '{$params->errorCode}';
-	Options.callbackToken = '{$this->pushParamsAndGetToken($params)}';
-	parent.Prado.WebUI.TactiveFileUpload.onFileUpload(Options);
-</script>
-EOS;
-		}
 	}
+	
 	
 	public function createChildControls(){
 		$this->_flag = Prado::createComponent('THiddenField');

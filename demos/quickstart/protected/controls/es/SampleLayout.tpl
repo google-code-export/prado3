@@ -12,14 +12,14 @@
 <div class="sampleheader">
 
 <div class="title">
-<a href="?">Gu√≠a de comienzo r√°pida con PRADO</a> Ejemplo
+<a href="?">GuÌa de comienzo r·pida con PRADO</a> Ejemplo
 </div>
 <div class="image"></div>
 
 </div>
 <div class="samplemenu">
     <div class="copyright">
-        Copyright &copy; 2005-2011 <a href="http://www.pradosoft.com">PradoSoft</a>
+        Copyright &copy; 2005-2006 <a href="http://www.pradosoft.com">PradoSoft</a>
     </div>
 </div>
 

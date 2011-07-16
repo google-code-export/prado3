@@ -1,6 +1,6 @@
 <com:TContent ID="body" >
 
-<h1 id="176028">TActiveRepeater</h1>
+<h1 id="184016">TActiveRepeater</h1>
 <com:DocLink ClassPath="System.Web.UI.ActiveControls.TActiveRepeater" />
 
 <p class="block-content">
@@ -19,4 +19,6 @@ Please refer to the original documentation of <a href="?page=Controls.Repeater">
 </p>
 
 <com:RunBar PagePath="ActiveControls.Samples.TActiveRepeater.Home" />
-</com:TContent>
+
+
+<div class="last-modified">$Id$</div></com:TContent>

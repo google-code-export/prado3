@@ -1,6 +1,6 @@
 <com:TContent ID="body" >
 
-<h1 id="160021">TActiveLabel</h1>
+<h1 id="154012">TActiveLabel</h1>
 <com:DocLink ClassPath="System.Web.UI.ActiveControls.TActiveLabel" />
 
 <p class="block-content">
@@ -13,4 +13,4 @@ the client-side "for" attribute on the label.
 
 <com:RunBar PagePath="ActiveControls.Samples.TActiveLabel.Home" />
 
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

@@ -4,7 +4,7 @@
  *
  * @author Wei Zhuo <weizhuo[at]gamil[dot]com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web.UI.ActiveControls
@@ -139,17 +139,7 @@ class TActiveCustomValidator extends TCustomValidator
 		}
 	}
 
-
-	/**
-	 * It's mandatory for the EnableClientScript to be activated or the TActiveCustomValidator won't work.
-	 * @return boolean whether client-side validation is enabled.
-	 */
-	public function getEnableClientScript()
-	{
-		return true;
-	}
-
-	/**
+		/**
 	 * Ensure that the ID attribute is rendered and registers the javascript code
 	 * for initializing the active control.
 	 */

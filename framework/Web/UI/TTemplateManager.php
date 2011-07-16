@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web.UI
@@ -149,7 +149,7 @@ class TTemplateManager extends TModule
  * <prop:MainProperty SubProperty1="Value1" SubProperty2="Value2" .../>
  * - directive: directive specifies the property values for the template owner.
  * It is in the format of <%@ property name-value pairs %>;
- * - expressions: They are in the format of <%= PHP expression %> and <%% PHP statements %>
+ * - expressions: They are in the formate of <%= PHP expression %> and <%% PHP statements %>
  * - comments: There are two kinds of comments, regular HTML comments and special template comments.
  * The former is in the format of <!-- comments -->, which will be treated as text strings.
  * The latter is in the format of <!-- comments --!>, which will be stripped out.
@@ -170,7 +170,7 @@ class TTemplate extends TApplicationComponent implements ITemplate
 {
 	/**
 	 *  '<!--.*?--!>' - template comments
-		 *  '<!--.*?-->'  - HTML comments
+     *  '<!--.*?-->'  - HTML comments
 	 *	'<\/?com:([\w\.]+)((?:\s*[\w\.]+\s*=\s*\'.*?\'|\s*[\w\.]+\s*=\s*".*?"|\s*[\w\.]+\s*=\s*<%.*?%>)*)\s*\/?>' - component tags
 	 *	'<\/?prop:([\w\.]+)\s*>'  - property tags
 	 *	'<%@\s*((?:\s*[\w\.]+\s*=\s*\'.*?\'|\s*[\w\.]+\s*=\s*".*?")*)\s*%>'  - directives
@@ -582,7 +582,7 @@ class TTemplate extends TApplicationComponent implements ITemplate
 		$n=preg_match_all(self::REGEX_RULES,$input,$matches,PREG_SET_ORDER|PREG_OFFSET_CAPTURE);
 		$expectPropEnd=false;
 		$textStart=0;
-				$stack=array();
+        $stack=array();
 		$container=-1;
 		$matchEnd=0;
 		$c=0;
@@ -915,7 +915,7 @@ class TTemplate extends TApplicationComponent implements ITemplate
 			$className=substr($type,$pos+1);
 		else
 			$className=$type;
-		$class=new ReflectionClass($className);
+		$class=new TReflectionClass($className);
 		if(is_subclass_of($className,'TControl') || $className==='TControl')
 		{
 			foreach($attributes as $name=>$att)

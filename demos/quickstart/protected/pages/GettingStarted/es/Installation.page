@@ -2,7 +2,7 @@
 <h1 id="301">Installing PRADO</h1>
 <div id="install-info" class="block-content">
 <p id="30018">
-Su usted esta viendo esta pagina desde su explorador Web, usted ha ya realizado la instalaciÃ³n.
+Su usted esta viendo esta pagina desde su explorador Web, usted ha ya realizado la instalación.
 </p>
 <p id="30019">
 Los requerimientos minimos por PRADO, son que el servidor Web soporte PHP version 5. PRADO ha sido probado con el servidor Web Apache en las plataformas Windows y Linux. Existen muchas probabilidades de que tambien pueda correr en otras plataformas con otros servidores Webs siempre y cuando estos soporten PHP 5.
@@ -26,4 +26,4 @@ Su instalacion de PRADO esta lista y usted puede comenzar a probarlo con las apl
 Si encuentra algun problema con las aplicaciones demostrativa de PRADO, utilice por favor el script de chequeo de requerimientos que viene con PRADO , accesible desde <tt>http://web-server-address/prado/requirements/index.php</tt>, para comprobar primeramente si la configuracion de su server cumple con las condiciones requeridas por PRADO.
 </p>
 </div>
-</com:TContent>
+<div class="last-modified">$Id: Installation.page 1650 2007-01-24 06:55:32Z wei $</div></com:TContent>

@@ -4,7 +4,7 @@
  *
  * @author Wei Zhuo<weizhuo[at]gmail[dot]com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web.Javascripts
@@ -84,37 +84,10 @@ class TJavaScript
 	 */
 	public static function quoteString($js,$forUrl=false)
 	{
-		return self::quoteUTF8(($forUrl) ? strtr($js,array('%'=>'%25',"\t"=>'\t',"\n"=>'\n',"\r"=>'\r','"'=>'\"','\''=>'\\\'','\\'=>'\\\\')) : strtr($js,array("\t"=>'\t',"\n"=>'\n',"\r"=>'\r','"'=>'\"','\''=>'\\\'','\\'=>'\\\\')));
-	}
-
-	public static function quoteUTF8($str)
-	{
-		$entities = '';
-		$length = strlen($str);
-		$lookingFor = 1;
-		$unicode = array();
-		$values = array();
-
-		for($i=0;$i<$length;$i++) {
-			$thisValue = ord($str[$i]);
-			if($thisValue < 128)
-				$unicode[] = $thisValue;
-			else {
-				if(count($values)==0)
-					$lookingFor = ($thisValue<224) ? 2 : 3;
-				$values[] = $thisValue;
-				if(count($values)==$lookingFor) {
-					$unicode[] = ($lookingFor == 3) ? (($values[0]%16)*4096)+(($values[1]%64)*64)+($values[2]%64) : (($values[0]%32)*64)+($values[1]%64);
-					$values = array();
-					$lookingFor = 1;
-				}
-			}
-		}
-
-		foreach($unicode as $value)
-			$entities .= ($value < 128) ? chr($value) : '\u'.str_pad(dechex($value), 4, '0', STR_PAD_LEFT);
-
-		return $entities;
+		if($forUrl)
+			return strtr($js,array('%'=>'%25',"\t"=>'\t',"\n"=>'\n',"\r"=>'\r','"'=>'\"','\''=>'\\\'','\\'=>'\\\\'));
+		else
+			return strtr($js,array("\t"=>'\t',"\n"=>'\n',"\r"=>'\r','"'=>'\"','\''=>'\\\'','\\'=>'\\\\'));
 	}
 
 	/**
@@ -237,15 +210,6 @@ class TJavaScript
 	 */
 	public static function jsonEncode($value)
 	{
-		if (function_exists('json_encode'))
-		{
-			if (is_string($value) &&
-				($g=Prado::getApplication()->getGlobalization(false))!==null &&
-				strtoupper($enc=$g->getCharset())!='UTF-8')
-				$value=iconv($enc, 'UTF-8', $value);
-			return json_encode($value);
-		}
-
 		if(self::$_json === null)
 			self::$_json = Prado::createComponent('System.Web.Javascripts.TJSON');
 		return self::$_json->encode($value);
@@ -259,9 +223,6 @@ class TJavaScript
 	 */
 	public static function jsonDecode($value)
 	{
-		if (function_exists('json_decode'))
-			return json_decode($value);
-
 		if(self::$_json === null)
 			self::$_json = Prado::createComponent('System.Web.Javascripts.TJSON');
 		return self::$_json->decode($value);

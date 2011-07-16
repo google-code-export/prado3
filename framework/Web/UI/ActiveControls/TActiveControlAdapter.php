@@ -4,7 +4,7 @@
  *
  * @author Wei Zhuo <weizhuo[at]gamil[dot]com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web.UI.ActiveControls
@@ -75,15 +75,6 @@ class TActiveControlAdapter extends TControlAdapter
 			$this->_activeControlType = $type;
 	}
 
- 	/**
-	 * Publish the ajax script
-	 */
-	public function onPreRender($param)
-	{
-		parent::onPreRender($param);
-		$this->getPage()->getClientScript()->registerPradoScript('ajax');
-	}
-
 	/**
 	 * Renders the callback client scripts.
 	 */
@@ -102,6 +93,7 @@ class TActiveControlAdapter extends TControlAdapter
 		$key = 'Prado.CallbackRequest.addPostLoaders';
 		if(!$cs->isEndScriptRegistered($key))
 		{
+			$cs->registerPradoScript('ajax');
 			$data = $this->getPage()->getPostDataLoaders();
 			if(count($data) > 0)
 			{

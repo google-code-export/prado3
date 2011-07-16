@@ -1,4 +1,5 @@
 <com:TContent ID="body" >
+<!-- $Id$ -->
 <h1 id="128031">Active Controls (AJAX enabled Controls)</h1>
 <p id="640423" class="block-content">See the <a href="?page=ActiveControls.Introduction">Introduction</a>
 for a quick overview of the concept behind active controls (AJAX enabled controls).
@@ -379,7 +380,7 @@ realize the active controls. They can be useful to develop new active controls, 
 to use them.</p>
 <ul id="u4" class="block-content">
 	<li>
-	<h3 id="190038">TActiveControlAdapter</h3>
+	<h3 id="210028">TActiveControlAdapter</h3>
 	<com:DocLink ClassPath="System.Web.UI.ActiveControls.TActiveControlAdapter" />
 	<p class="block-content">
 		<tt>TActiveControlAdapter</tt> customizes the parent TControl class for active control classes.
@@ -389,7 +390,7 @@ to use them.</p>
 	</li>
 
 	<li>
-	<h3 id="190039">TActiveListControlAdapter</h3>
+	<h3 id="210029">TActiveListControlAdapter</h3>
 	<com:DocLink ClassPath="System.Web.UI.ActiveControls.TActiveListControlAdapter" />
 	<p class="block-content">
 		<tt>TActiveListControlAdapter</tt> allows the adapted list controls to change the selections
@@ -398,7 +399,7 @@ to use them.</p>
 	</li>
 
 	<li>
-	<h3 id="190040">TActivePageAdapter</h3>
+	<h3 id="210030">TActivePageAdapter</h3>
 	<com:DocLink ClassPath="System.Web.UI.ActiveControls.TActivePageAdapter" />
 	<p class="block-content">
 		<tt>TActivePageAdapter</tt> process the page life-cycle for callback requests.
@@ -406,7 +407,7 @@ to use them.</p>
 	</li>
 
 	<li>
-	<h3 id="190041">TBaseActiveControl</h3>
+	<h3 id="210031">TBaseActiveControl</h3>
 	<com:DocLink ClassPath="System.Web.UI.ActiveControls.TBaseActiveControl" />
 	<p class="block-content">
 		<tt>TBaseActiveControl</tt> class provided additional basic properties common for every
@@ -420,7 +421,7 @@ to use them.</p>
 	</li>
 
 	<li>
-	<h3 id="190042">TCallbackResponseAdapter</h3>
+	<h3 id="210032">TCallbackResponseAdapter</h3>
 	<com:DocLink ClassPath="System.Web.UI.ActiveControls.TCallbackResponseAdapter" />
 	<p class="block-content">
 		<tt>TCallbackResponseAdapter</tt> alters the <tt>THttpResponse</tt>'s outputs.
@@ -434,7 +435,7 @@ to use them.</p>
 
 </ul>
 
-<h2 id="190037">Active Control Infrastructure Advanced Classes</h2>
+<h2 id="210027">Active Control Infrastructure Advanced Classes</h2>
 <p class="block-content">The following classes provide advanced properties and events needed to realize the active controls.
 A Prado user can use them to customize active controls behaviour and interact directly with the client side during a callback.
 </p>
@@ -461,4 +462,4 @@ A Prado user can use them to customize active controls behaviour and interact di
 	</li>
 </ul>
 
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

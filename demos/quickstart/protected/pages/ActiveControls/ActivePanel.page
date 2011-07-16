@@ -1,6 +1,6 @@
 <com:TContent ID="body" >
 
-<h1 id="170025">TActivePanel</h1>
+<h1 id="162015">TActivePanel</h1>
 <com:DocLink ClassPath="System.Web.UI.ActiveControls.TActivePanel" />
 
 <p class="block-content">
@@ -21,4 +21,4 @@ function callback1_requested($sender, $param)
 
 <com:RunBar PagePath="ActiveControls.Samples.TActivePanel.Home" />
 
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

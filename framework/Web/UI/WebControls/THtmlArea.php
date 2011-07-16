@@ -4,10 +4,10 @@
  *
  * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
- * @package System.Web.UI.WebControls
+ * @package System.Web.UI
  */
 
 /**
@@ -341,20 +341,6 @@ class THtmlArea extends TTextBox
 	}
 
 	/**
-	 * Registers clientscripts
-	 *
-	 * This method overrides the parent implementation and is invoked before render.
-	 * @param mixed event parameter
-	 */
-	public function onPreRender($param)
-	{
-		parent::onPreRender($param);
-		$this->loadJavascriptLibrary();
-		if($this->getEnableCompression())
-			$this->preLoadCompressedScript();
-	}
-
-	/**
 	 * Adds attribute name-value pairs to renderer.
 	 * This method overrides the parent implementation by registering
 	 * additional javacript code.
@@ -367,6 +353,10 @@ class THtmlArea extends TTextBox
 			$writer->addAttribute('id',$this->getClientID());
 			$this->registerEditorClientScript($writer);
 		}
+
+		$this->loadJavascriptLibrary();
+		if($this->getEnableCompression())
+			$this->preLoadCompressedScript();
 
 		parent::addAttributesToRender($writer);
 	}
@@ -402,9 +392,7 @@ class THtmlArea extends TTextBox
 			$options['debug'] = false;
 			$js = TJavaScript::encode($options,true,true);
 			$script = "if(typeof(tinyMCE_GZ)!='undefined'){ tinyMCE_GZ.init({$js}); }";
-			if ($this->getPage()->getIsCallback())
-				$script.= 'tinymce.dom.Event._pageInit();';
-			$scripts->registerEndScript($key, $script);
+			$scripts->registerBeginScript($key, $script);
 		}
 	}
 
@@ -422,7 +410,7 @@ class THtmlArea extends TTextBox
 	{
 		$scripts = $this->getPage()->getClientScript();
 		$options = TJavaScript::encode($this->getEditorOptions(),true,true); // Force encoding of empty strings
-		$script = "if(typeof(tinyMCE)!='undefined')\r\n{ tinyMCE.init($options); }";
+		$script = "if(typeof(tinyMCE)!='undefined'){ tinyMCE.init($options); }";
 		$scripts->registerEndScript('prado:THtmlArea'.$this->ClientID,$script);
 	}
 

@@ -1,7 +1,8 @@
 <com:TContent ID="body">
+<!-- $Id$ -->
 <h1 id="130037">Overview of Active Controls</h1>
 
 TODO:
 
 <img src=<%~ postback-callback.png %> class="figure" />
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

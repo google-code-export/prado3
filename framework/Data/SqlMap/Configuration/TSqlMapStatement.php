@@ -5,7 +5,7 @@
  *
  * @author Wei Zhuo <weizhuo[at]gmail[dot]com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Data.SqlMap.Configuration
@@ -292,12 +292,6 @@ class TSqlMapStatement extends TComponent
 		if(strlen($type= $this->getResultClass()) > 0)
 			return $this->createInstanceOf($registry,$type,$row);
 	}
-
-	public function __sleep()
-	{
-		return array_diff(parent::__sleep(),array("\0TSqlMapStatement\0_resultMap"));
-	}
-
 }
 
 /**

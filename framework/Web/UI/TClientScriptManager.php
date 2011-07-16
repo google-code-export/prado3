@@ -3,9 +3,8 @@
  * TClientScriptManager and TClientSideOptions class file.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @author Gabor Berczi <gabor.berczi@devworx.hu> (lazyload additions & progressive rendering)
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web.UI
@@ -17,7 +16,6 @@
  * TClientScriptManager manages javascript and CSS stylesheets for a page.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @author Gabor Berczi <gabor.berczi@devworx.hu> (lazyload additions & progressive rendering)
  * @version $Id$
  * @package System.Web.UI
  * @since 3.0
@@ -82,14 +80,8 @@ class TClientScriptManager extends TApplicationComponent
 	 * Client-side javascript library packages, loads from SCRIPT_PATH.'/packages.php';
 	 * @var array
 	 */
-	private static $_pradoPackages;
-
-	private $_renderedHiddenFields;
-
-	private $_renderedScriptFiles;
-
-	private $_renderedPradoScripts;
-
+	 private static $_pradoPackages;
+	 
 	/**
 	 * Constructor.
 	 * @param TPage page that owns this client script manager
@@ -109,16 +101,6 @@ class TClientScriptManager extends TApplicationComponent
 			|| count($this->_headScriptFiles) || count($this->_headScripts);
 	}
 
-	public static function getPradoPackages()
-	{
-		return self::$_pradoPackages;
-	}
-
-	public static function getPradoScripts()
-	{
-		return self::$_pradoScripts;
-	}
-
 	/**
 	 * Registers Prado javascript by library name. See "Web/Javascripts/source/packages.php"
 	 * for library names.
@@ -136,7 +118,6 @@ class TClientScriptManager extends TApplicationComponent
 	 */
 	private function registerPradoScriptInternal($name)
 	{
-		// $this->checkIfNotInRender();
 		if(!isset($this->_registeredPradoScripts[$name]))
 		{
 			if(self::$_pradoScripts === null)
@@ -168,11 +149,9 @@ class TClientScriptManager extends TApplicationComponent
 	 * Renders the HTML tags for PRADO js files
 	 * @param THtmlWriter writer
 	 */
-	protected function renderPradoScriptsInt($writer, $initial)
+	protected function renderPradoScripts($writer)
 	{
-		if($initial) $this->_renderedPradoScripts = array();
-		$addedScripts = array_diff($this->_registeredPradoScripts,$this->_renderedPradoScripts);
-		if(($packages=array_keys($addedScripts))!==array())
+		if(($packages=array_keys($this->_registeredPradoScripts))!==array())
 		{
 			if (Prado::getApplication()->getMode()!==TApplicationMode::Debug)
 			{
@@ -199,39 +178,7 @@ class TClientScriptManager extends TApplicationComponent
 				}
 				$writer->write(TJavaScript::renderScriptFiles($packagesUrl));
 			}
-			$this->_renderedPradoScripts = $this->_registeredPradoScripts;
 		}
-	}
-
-	/**
-	 * Returns the URLs of all script files referenced on the page
-	 * @return array Combined list of all script urls used in the page
-	 */
-	public function getScriptUrls()
-	{
-		$scripts = array();
-
-		$packages=array_keys($this->_registeredPradoScripts);
-		$base = Prado::getFrameworkPath().DIRECTORY_SEPARATOR.self::SCRIPT_PATH;
-		list($path,$baseUrl)=$this->getPackagePathUrl($base);
-		foreach ($packages as $p)
-		{
-			foreach (self::$_pradoScripts[$p] as $dep)
-			{
-				foreach (self::$_pradoPackages[$dep] as $script)
-				{
-					if (!in_array($url=$baseUrl.'/'.$script,$scripts))
-						$scripts[]=$url;
-				}
-			}
-		}
-
-		$scripts = array_merge($scripts, array_values($this->_headScriptFiles));
-		$scripts = array_merge($scripts, array_values($this->_scriptFiles));
-
-		$scripts = array_unique($scripts);
-
-		return $scripts;
 	}
 
 	/**
@@ -311,7 +258,7 @@ class TClientScriptManager extends TApplicationComponent
 	public function getCallbackReference(ICallbackEventHandler $callbackHandler, $options=null)
 	{
 		$options = !is_array($options) ? array() : $options;
-		$class = new ReflectionClass($callbackHandler);
+		$class = new TReflectionClass($callbackHandler);
 		$clientSide = $callbackHandler->getActiveControl()->getClientSide();
 		$options = array_merge($options, $clientSide->getOptions()->toArray());
 		$optionString = TJavaScript::encode($options);
@@ -422,7 +369,7 @@ class TClientScriptManager extends TApplicationComponent
 	/**
 	 * Registers a CSS file to be rendered in the page head
 	 *
-	 * The CSS files in themes are registered in {@link OnPreRenderComplete onPreRenderComplete} if you want to override
+	 * The CSS files in themes are registered in {@link OnPreRenderComplete onPreRenderComplete} if you want to override 
 	 * CSS styles in themes you need to register it after this event is completed.
 	 *
 	 * Example:
@@ -467,30 +414,12 @@ class TClientScriptManager extends TApplicationComponent
 	}
 
 	/**
-	 * Returns the URLs of all stylesheet files referenced on the page
-	 * @return array Combined list of all stylesheet urls used in the page
-	 */
-	public function getStyleSheetUrls()
-	{
-		$stylesheets = array_values($this->_styleSheets);
-
-		foreach(Prado::getApplication()->getAssetManager()->getPublished() as $path=>$url)
-			if (substr($url,strlen($url)-4)=='.css')
-				$stylesheets[] = $url;
-
-		$stylesheets = array_unique($stylesheets);
-
-		return $stylesheets;
-	}
-
-	/**
 	 * Registers a javascript file in the page head
 	 * @param string a unique key identifying the file
 	 * @param string URL to the javascript file
 	 */
 	public function registerHeadScriptFile($key,$url)
 	{
-		$this->checkIfNotInRender();
 		$this->_headScriptFiles[$key]=$url;
 
 		$params=func_get_args();
@@ -504,7 +433,6 @@ class TClientScriptManager extends TApplicationComponent
 	 */
 	public function registerHeadScript($key,$script)
 	{
-		$this->checkIfNotInRender();
 		$this->_headScripts[$key]=$script;
 
 		$params=func_get_args();
@@ -518,7 +446,6 @@ class TClientScriptManager extends TApplicationComponent
 	 */
 	public function registerScriptFile($key,$url)
 	{
-		$this->checkIfNotInRender();
 		$this->_scriptFiles[$key]=$url;
 
 		$params=func_get_args();
@@ -532,7 +459,6 @@ class TClientScriptManager extends TApplicationComponent
 	 */
 	public function registerBeginScript($key,$script)
 	{
-		$this->checkIfNotInRender();
 		$this->_beginScripts[$key]=$script;
 
 		$params=func_get_args();
@@ -560,7 +486,6 @@ class TClientScriptManager extends TApplicationComponent
 	 */
 	public function registerHiddenField($name,$value)
 	{
-		$this->checkIfNotInRender();
 		$this->_hiddenFields[$name]=$value;
 
 		$params=func_get_args();
@@ -696,30 +621,14 @@ class TClientScriptManager extends TApplicationComponent
 		$writer->write(TJavaScript::renderScriptBlocks($this->_headScripts));
 	}
 
-	public function renderScriptFilesBegin($writer)
-	{
-		$this->renderScriptFilesInt($writer,true);
-	}
-
-	public function renderScriptFilesEnd($writer)
-	{
-		$this->renderScriptFilesInt($writer,false);
-	}
-
 	/**
 	 * @param THtmlWriter writer for the rendering purpose
 	 */
-	public function renderScriptFilesInt($writer, $initial)
+	public function renderScriptFiles($writer)
 	{
-		if ($initial) $this->_renderedScriptFiles = array();
-		$this->renderPradoScriptsInt($writer, $initial);
+		$this->renderPradoScripts($writer);
 		if(!empty($this->_scriptFiles))
-		{
-			$addedScripts = array_diff($this->_scriptFiles,$this->_renderedScriptFiles);
-			if (count($addedScripts)>0)
-				$writer->write(TJavaScript::renderScriptFiles($addedScripts));
-			$this->_renderedScriptFiles = $this->_scriptFiles;
-		}
+			$writer->write(TJavaScript::renderScriptFiles($this->_scriptFiles));
 	}
 
 	/**
@@ -738,26 +647,14 @@ class TClientScriptManager extends TApplicationComponent
 		$writer->write(TJavaScript::renderScriptBlocks($this->_endScripts));
 	}
 
-	public function renderHiddenFieldsBegin($writer)
-	{
-		$this->renderHiddenFieldsInt($writer,true);
-	}
-
-	public function renderHiddenFieldsEnd($writer)
-	{
-		$this->renderHiddenFieldsInt($writer,false);
-	}
-
 	/**
 	 * @param THtmlWriter writer for the rendering purpose
 	 */
-	protected function renderHiddenFieldsInt($writer, $initial)
- 	{
-		if ($initial) $this->_renderedHiddenFields = array();
+	public function renderHiddenFields($writer)
+	{
 		$str='';
 		foreach($this->_hiddenFields as $name=>$value)
 		{
-			if (in_array($name,$this->_renderedHiddenFields)) continue;
 			$id=strtr($name,':','_');
 			if(is_array($value))
 			{
@@ -768,24 +665,9 @@ class TClientScriptManager extends TApplicationComponent
 			{
 				$str.='<input type="hidden" name="'.$name.'" id="'.$id.'" value="'.THttpUtility::htmlEncode($value)."\" />\n";
 			}
-			$this->_renderedHiddenFields[] = $name;
 		}
 		if($str!=='')
 			$writer->write("<div style=\"visibility:hidden;\">\n".$str."</div>\n");
-	}
-
-	public function getHiddenFields()	
-	{
-		return $this->_hiddenFields;
-	}
-
-	/**
-	 * Checks whether page rendering has not begun yet
-	 */
-	protected function checkIfNotInRender()
-	{
-		if ($form = $this->_page->InFormRender)
-			throw new Exception('Operation invalid when page is already rendering');
 	}
 }
 

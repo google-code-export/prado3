@@ -52,4 +52,4 @@ To use TTabPanel, write a template like following:
 
 <com:RunBar PagePath="Controls.Samples.TTabPanel.Home" />
 
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

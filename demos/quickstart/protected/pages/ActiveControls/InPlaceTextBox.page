@@ -1,6 +1,6 @@
 <com:TContent ID="body" >
 
-<h1 id="202008">TInPlaceTextBox</h1>
+<h1 id="204024">TInPlaceTextBox</h1>
 <com:DocLink ClassPath="System.Web.UI.ActiveControls.TInPlaceTextBox" />
 
 <p class="block-content">
@@ -39,4 +39,4 @@ the control not editable. This property can be also changed on callback
 
 <com:RunBar PagePath="ActiveControls.Samples.TInPlaceTextBox.Home" />
 
-</com:TContent>
+<div class="last-modified">$Id$</div></com:TContent>

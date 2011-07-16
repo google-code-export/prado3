@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.pradosoft.com/
- * @copyright Copyright &copy; 2005-2011 PradoSoft
+ * @copyright Copyright &copy; 2005-2008 PradoSoft
  * @license http://www.pradosoft.com/license/
  * @version $Id$
  * @package System.Web.UI
@@ -72,6 +72,11 @@ class TForm extends TControl
 	public function render($writer)
 	{
 		$page=$this->getPage();
+		$page->beginFormRender($writer);
+		$htmlWriter = Prado::createComponent($this->GetResponse()->getHtmlWriterType(), new TTextWriter());
+		$this->renderChildren( $htmlWriter );
+		$content = $htmlWriter->flush();
+		$page->endFormRender($writer);
 
 		$this->addAttributesToRender($writer);
 		$writer->renderBeginTag('form');
@@ -79,27 +84,18 @@ class TForm extends TControl
 		$cs=$page->getClientScript();
 		if($page->getClientSupportsJavaScript())
 		{
-			$cs->renderHiddenFieldsBegin($writer);
-			$cs->renderScriptFilesBegin($writer);
+			$cs->renderHiddenFields($writer);
+			$cs->renderScriptFiles($writer);
 			$cs->renderBeginScripts($writer);
 
- 			$page->beginFormRender($writer);
- 			$this->renderChildren($writer);
-			$cs->renderHiddenFieldsEnd($writer);
- 			$page->endFormRender($writer);
- 
-			$cs->renderScriptFilesEnd($writer);
+			$writer->write($content);
+
 			$cs->renderEndScripts($writer);
 		}
 		else
 		{
-			$cs->renderHiddenFieldsBegin($writer);
-
-			$page->beginFormRender($writer);
-			$this->renderChildren($writer);
-			$page->endFormRender($writer);
-
-			$cs->renderHiddenFieldsEnd($writer);
+			$cs->renderHiddenFields($writer);
+			$writer->write($content);
 		}
 
 		$writer->renderEndTag();
