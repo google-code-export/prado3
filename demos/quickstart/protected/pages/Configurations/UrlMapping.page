@@ -74,8 +74,9 @@ For example,
 </p>
 The example is equivalent to the following regular expression (it uses the "named group" feature in regular expressions available in PHP):
 <com:TTextHighlighter Language="xml" CssClass="source block-content" id="code_230100">
-<url ServiceParameter="ArticleView"
-     RegularExpression="/articles\/(?P<year>\d{4})\/(?P<month>\d{2})\/(?P<day>\d+)/u" />
+<url ServiceParameter="ArticleView"><![CDATA[
+	#articles/(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\d+)#u
+]]></url>
 </com:TTextHighlighter>
 <p id="230229" class="block-content">
 In the above example, the pattern contains 3 parameters named "<tt>year</tt>",
@@ -87,8 +88,18 @@ Essentially, the <tt>Parameters</tt> attribute name and values are used
 to form a complete regular expression string.
 </p>
 
-<div class="note"><b class="tip">Note:</b> If you intended to use the <tt>RegularExpression</tt>
-property you need to escape the slash in regular expressions.
+For simple (not parameterized) regular expressions you can use the <tt>RegularExpression</tt> property:
+<com:TTextHighlighter Language="xml" CssClass="source block-content">
+<url ServiceParameter="ArticleView"
+	RegularExpression="/articles\/best-of/u" />
+</com:TTextHighlighter>
+
+<div class="note"><b class="tip">Note:</b>
+	If you intended to use the <tt>RegularExpression</tt> property or regular expressions in CDATA sections,
+	notice that you need to escape the slash, if you are using the slash as regular expressions delimiter.
+	<br/>
+	If you are using the "<i>CDATA section</i>" version all whitespaces like
+	 <code>\n, \t, \r</code> and so on will be removed automaticly.
 </div>
 
 <p id="230230" class="block-content">Following from the above pattern example,

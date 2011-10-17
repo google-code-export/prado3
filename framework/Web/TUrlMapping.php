@@ -223,16 +223,33 @@ class TUrlMapping extends TUrlManager
 	 */
 	protected function loadUrlMappings($xml)
 	{
+		$defaultClass = $this->getDefaultMappingClass();
+		
 		foreach($xml->getElementsByTagName('url') as $url)
 		{
 			$properties=$url->getAttributes();
 			if(($class=$properties->remove('class'))===null)
-				$class=$this->getDefaultMappingClass();
+				$class=$defaultClass;
 			$pattern=Prado::createComponent($class,$this);
 			if(!($pattern instanceof TUrlMappingPattern))
 				throw new TConfigurationException('urlmapping_urlmappingpattern_required');
 			foreach($properties as $name=>$value)
 				$pattern->setSubproperty($name,$value);
+				
+			$text = $url -> getValue();
+			if($text) {
+				$text = preg_replace('/(\s+)/S', '', $text);
+				if(($regExp = $pattern->getRegularExpression()) !== '')
+					trigger_error(sPrintF('%s.RegularExpression property value "%s" for ServiceID="%s" and ServiceParameter="%s" was replaced by node value "%s"',
+											get_class($pattern),
+											$regExp,
+											$pattern->getServiceID(),
+											$pattern->getServiceParameter(),
+											$text),
+								E_USER_NOTICE);
+				$pattern->setRegularExpression($text);
+			}
+
 			$this->_patterns[]=$pattern;
 			$pattern->init($url);
 
@@ -367,7 +384,9 @@ class TUrlMapping extends TUrlManager
  * /^articles\/(?P<year>\d{4})\/(?P<month>\d{2})\/(?P<day>\d+)$/u
  * </code>
  * The above regular expression used the "named group" feature available in PHP.
- * Notice that you need to escape the slash in regular expressions.
+ * If you intended to use the <tt>RegularExpression</tt> property or
+ * regular expressions in CDATA sections, notice that you need to escape the slash,
+ * if you are using the slash as regular expressions delimiter.
  *
  * Thus, only an url that matches the pattern will be valid. For example,
  * a URL <tt>http://example.com/index.php/articles/2006/07/21</tt> will match the above pattern,

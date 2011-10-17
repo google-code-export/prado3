@@ -8,6 +8,8 @@ BUG: Issue#343 - New TTabPanel breaks compatibility (ctrlaltca)
 BUG: Issue#349 - Security problem in TActiveFileUpload control (Gabor)
 ENH: Merged a bit TPager's view style with TDataGridPager's one adding first/last buttons to TDataGridPagerStyle (ctrlaltca)
 ENH: Reworked the patch for #103 so that it actually fixes the use of TActiveCustomValidator with normal Postback controls (ctrlaltca)
+BUG: Issue #367 - Parameterized RegularExpression property in UrlMapping raise TPhpErrorException in DOMDocument::loadXML() (Yves)
+ENH: Performance (micro)optimization in TUrlMapping::loadUrlMappings - invoke `getDefaultMappingClass` outside of loop (Yves)
 
 Version 3.1.9 June 3, 2011
 BUG: Issue#280 - Documentation has been updated
