@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: b1e0bb7b6ed5dd7391d7c251e736bba1d14ce4b5 $
+ *  $Id: NullPointerException.php,v 1.4 2005/02/27 20:52:10 mrook Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -24,3 +24,4 @@
  */
 class NullPointerException extends Exception {}
 
+?>

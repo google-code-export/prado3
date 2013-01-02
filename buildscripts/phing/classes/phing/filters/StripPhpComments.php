@@ -1,7 +1,7 @@
 <?php
 
 /*
- *  $Id: 6c68ae0ad1aa7f2f7825087c1c54233bd2462124 $
+ *  $Id: StripPhpComments.php,v 1.6 2004/07/16 01:36:35 hlellelid Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -32,10 +32,11 @@ include_once 'phing/filters/ChainableReader.php';
  *
  * @author    <a href="mailto:yl@seasonfive.com">Yannick Lecaillez</a>
  * @author    hans lellelid, hans@velum.net
- * @version   $Id$
+ * @version   $Revision: 1.6 $ $Date: 2004/07/16 01:36:35 $
  * @access    public
  * @see       FilterReader
  * @package   phing.filters
+ * @todo -c use new PHP functions to perform this instead of regex.
  */
 class StripPhpComments extends BaseFilterReader implements ChainableReader {
     /**
@@ -170,7 +171,7 @@ class StripPhpComments extends BaseFilterReader implements ChainableReader {
     }
 
     /**
-     * Creates a new StripPhpComments using the passed in
+     * Creates a new StripJavaComments using the passed in
      * Reader for instantiation.
      * 
      * @param reader A Reader object providing the underlying stream.
@@ -186,3 +187,4 @@ class StripPhpComments extends BaseFilterReader implements ChainableReader {
     }
 }
 
+?>

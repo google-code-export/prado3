@@ -1,6 +1,6 @@
 <?php
-/**
- *  $Id: c31c503eb573b2f454071e9a97fa6a2323c128eb $
+/*
+ *  $Id: TaskContainer.php,v 1.5 2005/10/04 19:13:44 hlellelid Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -17,8 +17,6 @@
  * This software consists of voluntary contributions made by many individuals
  * and is licensed under the LGPL. For more information please see
  * <http://phing.info>.
- *
- * @package phing
  */
 
 /**
@@ -26,8 +24,8 @@
  *  Used to check if a class can contain tasks (via instanceof)
  *
  *  @author    Andreas Aderhold <andi@binarycloud.com>
- *  @copyright 2001,2002 THYRELL. All rights reserved
- *  @version   $Id$
+ *  @copyright © 2001,2002 THYRELL. All rights reserved
+ *  @version   $Revision: 1.5 $ $Date: 2005/10/04 19:13:44 $
  *  @access    public
  *  @package   phing
  */

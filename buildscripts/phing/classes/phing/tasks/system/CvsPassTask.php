@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: c1e02a8d43f62c584ba2f1cd5a6f0cc690bceb94 $
+ *  $Id: CvsPassTask.php 59 2006-04-28 14:49:47Z mrook $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -29,7 +29,7 @@ include_once 'phing/util/StringHelper.php';
  *
  * @author Hans Lellelid <hans@xmpl.org> (Phing)
  * @author Jeff Martin <jeff@custommonkey.org> (Ant)
- * @version $Id$
+ * @version $Revision: 1.7 $
  * @package phing.tasks.system
  */
 class CVSPassTask extends Task {
@@ -84,9 +84,9 @@ class CVSPassTask extends Task {
             throw new BuildException("password is required");
         }
 
-        $this->log("cvsRoot: " . $this->cvsRoot, Project::MSG_DEBUG);
-        $this->log("password: " . $this->password, Project::MSG_DEBUG);
-        $this->log("passFile: " . $this->passFile->__toString(), Project::MSG_DEBUG);
+        $this->log("cvsRoot: " . $this->cvsRoot, PROJECT_MSG_DEBUG);
+        $this->log("password: " . $this->password, PROJECT_MSG_DEBUG);
+        $this->log("passFile: " . $this->passFile->__toString(), PROJECT_MSG_DEBUG);
 
         $reader = null;
         $writer = null;
@@ -100,14 +100,14 @@ class CVSPassTask extends Task {
                 $line = null;
                 while (($line = $reader->readLine()) !== null) {
                     if (!StringHelper::startsWith($this->cvsRoot, $line)) {
-                        $buf .= $line . PHP_EOL;
+                        $buf .= $line . Phing::getProperty("line.separator");
                     }
                 }
             }
 
             $pwdfile = $buf . $this->cvsRoot . " A" . $this->mangle($this->password);
 
-            $this->log("Writing -> " . $pwdfile , Project::MSG_DEBUG);
+            $this->log("Writing -> " . $pwdfile , PROJECT_MSG_DEBUG);
 
             $writer = new BufferedWriter(new FileWriter($this->passFile));
             $writer->write($pwdfile);

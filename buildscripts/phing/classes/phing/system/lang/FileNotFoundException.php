@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: b5edc38a7438b81c032898ccf3c2be0e83d55203 $
+ *  $Id: FileNotFoundException.php,v 1.4 2005/02/27 20:52:10 mrook Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -24,3 +24,4 @@
  */
 class FileNotFoundException extends Exception {}
 
+?>

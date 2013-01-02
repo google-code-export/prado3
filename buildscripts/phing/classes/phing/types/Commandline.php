@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: 891b349dcd88b825ae99edf53ed4c7ac2c1c2467 $
+ *  $Id: Commandline.php,v 1.11 2005/05/26 13:10:53 mrook Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -41,7 +41,6 @@
  *
  * @author thomas.haas@softwired-inc.com
  * @author <a href="mailto:stefan.bodewig@epost.de">Stefan Bodewig</a>
- * @package phing.types
  */
 class Commandline {
 
@@ -157,10 +156,8 @@ class Commandline {
      * @exception BuildException if the argument contains both, single
      *                           and double quotes.
      */
-    public static function quoteArgument($argument, $escape = false) {
-        if ($escape) {
-            return escapeshellarg($argument);
-        } elseif (strpos($argument, "\"") !== false) {
+    public static function quoteArgument($argument) {
+        if (strpos($argument, "\"") !== false) {
             if (strpos($argument, "'") !== false) {
                 throw new BuildException("Can't handle single and double quotes in same argument");
             } else {
@@ -178,7 +175,7 @@ class Commandline {
      * Quotes the parts of the given array in way that makes them
      * usable as command line arguments.
      */
-    public static function toString($lines, $escape = false) {
+    public static function toString($lines) {
         // empty path return empty string
         if (!$lines) {
             return "";
@@ -190,7 +187,7 @@ class Commandline {
             if ($i > 0) {
                 $result .= ' ';
             }
-            $result .= self::quoteArgument($lines[$i], $escape);
+            $result .= self::quoteArgument($lines[$i]);
         }
         return $result;
     }
@@ -310,7 +307,7 @@ class Commandline {
     /**
      * Returns a String that describes the command and arguments
      * suitable for verbose output before a call to
-     * <code>Runtime.exec(String[])</code>.
+     * <code>Runtime.exec(String[])<code>.
      *
      * <p>This method assumes that the first entry in the array is the
      * executable to run.</p>
@@ -342,7 +339,7 @@ class Commandline {
     /**
      * Returns a String that describes the arguments suitable for
      * verbose output before a call to
-     * <code>Runtime.exec(String[])</code>
+     * <code>Runtime.exec(String[])<code>
      * @param $args arguments to use (default is to use current class args)
      * @param $offset ignore entries before this index
      * @return string
@@ -360,9 +357,9 @@ class Commandline {
         if (count($args) > $offset) {
             $buf .= "s";
         }
-        $buf .= ":" . PHP_EOL;
+        $buf .= ":" . Phing::getProperty("line.separator");
         for ($i = $offset, $alen=count($args); $i < $alen; $i++) {
-            $buf .= "'" . $args[$i] . "'" . PHP_EOL;
+            $buf .= "'" . $args[$i] . "'" . Phing::getProperty("line.separator");
         }
         $buf .= self::DISCLAIMER;
         return $buf;
@@ -372,8 +369,6 @@ class Commandline {
 
 /**
  * "Inner" class used for nested xml command line definitions.
- *
- * @package phing.types
  */
 class CommandlineArgument {
 
@@ -437,13 +432,10 @@ class CommandlineArgument {
 
 /**
  * Class to keep track of the position of an Argument.
- *
- * <p>This class is there to support the srcfile and targetfile
- * elements of &lt;execon&gt; and &lt;transform&gt; - don't know
- * whether there might be additional use cases.</p> --SB
- *
- * @package phing.types
  */
+// <p>This class is there to support the srcfile and targetfile
+// elements of &lt;execon&gt; and &lt;transform&gt; - don't know
+// whether there might be additional use cases.</p> --SB
 class CommandlineMarker {
 
     private $position;

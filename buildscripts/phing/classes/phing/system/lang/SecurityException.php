@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: 2df99e97af67f5f2cbe2ec930e8daddc8a10b406 $
+ *  $Id: SecurityException.php,v 1.4 2005/02/27 20:52:10 mrook Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -24,3 +24,4 @@
  */
 class SecurityException extends Exception {}
 
+?>

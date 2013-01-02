@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: 257bd788b6185a3561f10a8de40502473076b6dd $
+ *  $Id: RegularExpression.php,v 1.6 2003/12/24 12:38:42 hlellelid Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -23,7 +23,7 @@ include_once 'phing/types/DataType.php';
 include_once 'phing/Project.php';
 include_once 'phing/util/regexp/Regexp.php';
 
-/**
+/*
  * A regular expression datatype.  Keeps an instance of the
  * compiled expression for speed purposes.  This compiled
  * expression is lazily evaluated (it is compiled the first
@@ -31,7 +31,7 @@ include_once 'phing/util/regexp/Regexp.php';
  * regular expression type you are using.
  *
  * @author    <a href="mailto:yl@seasonfive.com">Yannick Lecaillez</a>
- * @version   $Id$
+ * @version   $Revision: 1.6 $ $Date: 2003/12/24 12:38:42 $
  * @access    public
  * @see       phing.util.regex.RegexMatcher
  * @package   phing.types
@@ -39,14 +39,7 @@ include_once 'phing/util/regexp/Regexp.php';
 class RegularExpression extends DataType {
 
     private $regexp   = null;
-    /**
-     * @todo Probably both $ignoreCase and $multiline should be removed
-     * from attribute list of RegularExpression class: 
-     * actual values are preserved on regexp *engine* level, not expression
-     * object itself.
-     */
     private $ignoreCase = false;
-    private $multiline = false;
     
     function __construct() {
         $this->regexp  = new Regexp();
@@ -59,7 +52,7 @@ class RegularExpression extends DataType {
     function setReplace($replace) {
         $this->regexp->setReplace($replace);
     }
-
+    
     function getPattern($p) {
         if ( $this->isReference() ) {
             $ref = $this->getRef($p);
@@ -76,14 +69,6 @@ class RegularExpression extends DataType {
 
         return $this->regexp->getReplace();
     }
-
-    function setModifiers($modifiers) {
-        $this->regexp->setModifiers($modifiers);
-    }
-
-    function getModifiers() {
-        return $this->regexp->getModifiers();
-    }
     
     function setIgnoreCase($bit) {
         $this->regexp->setIgnoreCase($bit);
@@ -91,14 +76,6 @@ class RegularExpression extends DataType {
     
     function getIgnoreCase() {
         return $this->regexp->getIgnoreCase();
-    }
-
-    function setMultiline($multiline) {
-        $this->regexp->setMultiline($multiline);
-    }
-
-    function getMultiline() {
-        return $this->regexp->getMultiline();
     }
     
     function getRegexp(Project $p) {
@@ -125,4 +102,4 @@ class RegularExpression extends DataType {
     }
 }
 
-
+?>

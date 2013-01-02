@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: 948cef29e65fb684d99cbddc7c633183740a91a8 $
+ *  $Id: AbstractSAXParser.php,v 1.13 2004/03/20 03:33:06 hlellelid Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -27,8 +27,8 @@
  *
  * @author    Andreas Aderhold <andi@binarycloud.com>
  * @author    Hans Lellelid <hans@xmpl.org>
- * @copyright 2001,2002 THYRELL. All rights reserved
- * @version   $Id$
+ * @copyright © 2001,2002 THYRELL. All rights reserved
+ * @version   $Revision: 1.13 $
  * @package   phing.parser
  */
 abstract class AbstractSAXParser {
@@ -60,18 +60,26 @@ abstract class AbstractSAXParser {
     /**
      * Method that gets invoked when the parser runs over a XML start element.
      *
-     * This method is called by PHP's internal parser functions and registered
+     * This method is called by PHP's internal parser funcitons and registered
      * in the actual parser implementation.
      * It gives control to the current active handler object by calling the
      * <code>startElement()</code> method.
      * 
+     * BECAUSE OF PROBLEMS WITH EXCEPTIONS BUBBLING UP THROUGH xml_parse() THIS
+     * METHOD WILL CALL Phing::halt(-1) ON EXCEPTION.
+     *
      * @param  object  the php's internal parser handle
      * @param  string  the open tag name
      * @param  array   the tag's attributes if any
-     * @throws Exception - Exceptions may be thrown by the Handler
      */
     function startElement($parser, $name, $attribs) {
-        $this->handler->startElement($name, $attribs);
+        try {
+            $this->handler->startElement($name, $attribs);        
+        } catch (Exception $e) {
+            print "[Exception in XML parsing]\n";
+            print $e;
+            Phing::halt(-1);
+        }
     }
 
     /**
@@ -83,12 +91,20 @@ abstract class AbstractSAXParser {
      * It gives control to the current active handler object by calling the
      * <code>endElement()</code> method.
      *
+     * BECAUSE OF PROBLEMS WITH EXCEPTIONS BUBBLING UP THROUGH xml_parse() THIS
+     * METHOD WILL CALL Phing::halt(-1) ON EXCEPTION.
+     * 
      * @param   object  the php's internal parser handle
      * @param   string  the closing tag name
-     * @throws Exception - Exceptions may be thrown by the Handler
      */
     function endElement($parser, $name) {
-        $this->handler->endElement($name);
+        try {
+            $this->handler->endElement($name);
+        } catch (Exception $e) {
+            print "[Exception in XML parsing]\n";
+            print $e;
+            Phing::halt(-1);
+        }
     }
 
     /**
@@ -100,12 +116,20 @@ abstract class AbstractSAXParser {
      * It gives control to the current active handler object by calling the
      * <code>characters()</code> method. That processes the given CDATA.
      *
+     * BECAUSE OF PROBLEMS WITH EXCEPTIONS BUBBLING UP THROUGH xml_parse() THIS
+     * METHOD WILL CALL Phing::halt(-1) ON EXCEPTION.
+     * 
      * @param resource $parser php's internal parser handle.
      * @param string $data the CDATA
-     * @throws Exception - Exceptions may be thrown by the Handler
      */
     function characters($parser, $data) {
-        $this->handler->characters($data);
+        try {     
+            $this->handler->characters($data);        
+        } catch (Exception $e) {
+            print "[Exception in XML parsing]\n";
+            print $e;
+            Phing::halt(-1);
+        }
     }
 
     /**

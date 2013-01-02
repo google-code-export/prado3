@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: 9b2bbe8e58b0a7de3d426b1dcc88b8cac4bc69e2 $
+ *  $Id: ProjectComponent.php,v 1.5 2003/12/24 13:02:08 hlellelid Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -25,44 +25,46 @@
  *
  * @author    Andreas Aderhold <andi@binarycloud.com>
  * @author    Hans Lellelid <hans@xmpl.org> 
- * @version   $Id$
+ * @version   $Revision: 1.5 $
  * @package   phing
  */
 abstract class ProjectComponent {
 
     /**
-     * Holds a reference to the project that a project component
-     * (a task, a target, etc.) belongs to
+     *  Holds a reference to the project that a project component
+     *  (a task, a target, etc.) belongs to
      *
-     * @var Project A reference to the current project instance
+     *  @var    object  A reference to the current project instance
      */
     protected $project = null;
 
     /**
-     * References the project to the current component.
+     *  References the project to the current component.
      *
-     * @param Project $project The reference to the current project
+     *  @param    object    The reference to the current project
+     *  @access   public
      */
-    public function setProject($project) {
+    function setProject($project) {
         $this->project = $project;
     }
 
     /**
-     * Returns a reference to current project
+     *  Returns a reference to current project
      *
-     * @return Project Reference to current porject object
+     *  @return   object   Reference to current porject object
+     *  @access   public
      */
-    public function getProject() {
+    function getProject() {
         return $this->project;
     }
 
     /**
-     * Logs a message with the given priority.
+     *  Logs a message with the given priority.
      *
-     * @param string $msg The message to be logged.
-     * @param integer $level The message's priority at this message should have
+     *  @param  string   The message to be logged.
+     *  @param  integer  The message's priority at this message should have
      */
-    public function log($msg, $level = Project::MSG_INFO) {
+    public function log($msg, $level = PROJECT_MSG_INFO) {
         if ($this->project !== null) {
             $this->project->log($msg, $level);
         }

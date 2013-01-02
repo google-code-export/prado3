@@ -1,7 +1,7 @@
 <?php
 
 /*
- *  $Id: c7412bfab167852910c4dfe935769e4b0c7ec9fe $
+ *  $Id: InputHandler.php,v 1.3 2003/12/24 12:38:39 hlellelid Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -24,7 +24,7 @@
  * Plugin to Phing to handle requests for user input.
  *
  * @author Stefan Bodewig <stefan.bodewig@epost.de>
- * @version $Id$
+ * @version $Revision: 1.3 $
  * @package phing.input
  */
 interface InputHandler {

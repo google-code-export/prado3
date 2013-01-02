@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: 7016dea93483cc99ad17a638e30f5ff57c37c78b $
+ *  $Id: Fileset.php 59 2006-04-28 14:49:47Z mrook $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -30,10 +30,16 @@ include_once 'phing/system/io/PhingFile.php';
  * @author   Greg Beaver 
  * @author   Hans Lellelid <hans@xmpl.org>
  * @package  phing.tasks.ext.pearpackage
- * @version  $Id$
+ * @version  $Revision: 1.7 $
  */
 class PEAR_PackageFileManager_Fileset {
 
+    /**
+     * @access private
+     * @var PEAR_PackageFileManager
+     */
+    private $parent;
+    
     /**
      * Curent Phing Project.
      * @var Project
@@ -54,12 +60,9 @@ class PEAR_PackageFileManager_Fileset {
      * @param PEAR_PackageFileManager
      * @param array
      */
-    function __construct($options)
+    function __construct($parent, $options)
     {
-        if (!is_array($options)) {
-            $options = $options->getOptions();
-        }
-        
+        $this->parent = $parent;
         $this->project = $options['phing_project'];
         $this->filesets = $options['phing_filesets'];
     }
@@ -106,7 +109,7 @@ class PEAR_PackageFileManager_Fileset {
                     $path = '/'; // for array index
                 }
                 
-                $parts = explode('.', basename($file));
+				$parts = explode('.', basename($file));
                 $ext = array_pop($parts);
                 if (strlen($ext) == strlen($file)) {
                     $ext = '';
@@ -225,4 +228,4 @@ class PEAR_PackageFileManager_Fileset {
         return strnatcasecmp($a,$b);
     }
 }
-
+?>

@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: 8721880badf6aee475a8cb87c88ca3dc4299efb8 $
+ *  $Id: ConditionBase.php 59 2006-04-28 14:49:47Z mrook $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -29,10 +29,10 @@ include_once 'phing/tasks/system/condition/Condition.php';
  *  conditions - ensures that the types of conditions inside the task
  *  and the "container" conditions are in sync.
  * 
- *  @author  Hans Lellelid <hans@xmpl.org>
+ *    @author    Hans Lellelid <hans@xmpl.org>
  *  @author    Andreas Aderhold <andi@binarycloud.com>
- *  @copyright 2001,2002 THYRELL. All rights reserved
- *  @version   $Id$
+ *  @copyright © 2001,2002 THYRELL. All rights reserved
+ *  @version   $Revision: 1.16 $
  *  @package   phing.tasks.system.condition
  */
 abstract class ConditionBase extends ProjectComponent implements IteratorAggregate {
@@ -156,8 +156,6 @@ abstract class ConditionBase extends ProjectComponent implements IteratorAggrega
 /**
  * "Inner" class for handling enumerations.
  * Uses build-in PHP5 iterator support.
- *
- * @package   phing.tasks.system.condition
  */
 class ConditionEnumeration implements Iterator {
     

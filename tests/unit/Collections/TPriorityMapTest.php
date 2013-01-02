@@ -1,6 +1,7 @@
 <?php
+require_once dirname(__FILE__).'/../phpunit.php';
 
-class TPriorityMapTest_MapItem {
+class MapItem {
   public $data='data';
 }
 
@@ -15,11 +16,11 @@ class TPriorityMapTest extends PHPUnit_Framework_TestCase {
   public function setUp() {
   	// test that TPriorityMap complies with TMap
     $this->map=new TPriorityMap;
-    $this->item1=new TPriorityMapTest_MapItem;
-    $this->item2=new TPriorityMapTest_MapItem;
-    $this->item3=new TPriorityMapTest_MapItem;
-    $this->item4=new TPriorityMapTest_MapItem;
-    $this->item5=new TPriorityMapTest_MapItem;
+    $this->item1=new MapItem;
+    $this->item2=new MapItem;
+    $this->item3=new MapItem;
+    $this->item4=new MapItem;
+    $this->item5=new MapItem;
     $this->map->add('key1',$this->item1);
     $this->map->add('key2',$this->item2);
     

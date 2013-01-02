@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: 8c46403ac685f362e310ffcceff5d4193bf09ef0 $
+ *  $Id: PhpEvalTask.php 59 2006-04-28 14:49:47Z mrook $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -29,7 +29,7 @@ require_once 'phing/Task.php';
  *        modify internal Phing classes unless you know what you are doing.
  *
  * @author   Hans Lellelid <hans@xmpl.org>
- * @version  $Id$
+ * @version  $Revision: 1.7 $
  * @package  phing.tasks.system
  *
  * @todo Add support for evaluating expressions
@@ -39,26 +39,8 @@ class PhpEvalTask extends Task {
     protected $expression; // Expression to evaluate
     protected $function; // Function to execute
     protected $class; // Class containing function to execute
-    protected $returnProperty = null; // name of property to set to return value 
+    protected $returnProperty; // name of property to set to return value 
     protected $params = array(); // parameters for function calls
-    
-    protected $logLevel = Project::MSG_INFO;
-    
-    /**
-     * Set level of log messages generated (default = info)
-     * @param string $level
-     */
-    public function setLevel($level)
-    {
-        switch ($level)
-        {
-            case "error": $this->logLevel = Project::MSG_ERR; break;
-            case "warning": $this->logLevel = Project::MSG_WARN; break;
-            case "info": $this->logLevel = Project::MSG_INFO; break;
-            case "verbose": $this->logLevel = Project::MSG_VERBOSE; break;
-            case "debug": $this->logLevel = Project::MSG_DEBUG; break;
-        }
-    }
     
     /** Main entry point. */
     function main() {
@@ -75,10 +57,15 @@ class PhpEvalTask extends Task {
             throw new BuildException("You cannot use nested <param> tags when evaluationg a PHP expression.", $this->location);
         }
         
+        $retval = null;
         if ($this->function !== null) {
-            $this->callFunction();                                    
+            $retval = $this->callFunction();                                    
         } elseif ($this->expression !== null) {
-            $this->evalExpression();
+            $retval = $this->evalExpression();
+        }
+        
+        if ($this->returnProperty !== null) {
+            $this->project->setProperty($this->returnProperty, $retval);
         }
     }
     
@@ -105,16 +92,13 @@ class PhpEvalTask extends Task {
             $params[] = $p->getValue();
         }
         
-        $this->log("Calling PHP function: " . $h_func . "()", $this->logLevel);
+        $this->log("Calling PHP function: " . $h_func . "()");
         foreach($params as $p) {
-            $this->log("  param: " . $p, Project::MSG_VERBOSE);
+            $this->log("  param: " . $p, PROJECT_MSG_VERBOSE);
         } 
         
         $return = call_user_func_array($user_func, $params);
-        
-        if ($this->returnProperty !== null) {
-            $this->project->setProperty($this->returnProperty, $return);
-        }
+        return $return;
     }
     
     /**
@@ -122,18 +106,13 @@ class PhpEvalTask extends Task {
      * @return mixed
      */
     protected function evalExpression() {
-        $this->log("Evaluating PHP expression: " . $this->expression, $this->logLevel);
+        $this->log("Evaluating PHP expression: " . $this->expression);
         if (!StringHelper::endsWith(';', trim($this->expression))) {
             $this->expression .= ';';
         }
-
-        if ($this->returnProperty !== null) {
-            $retval = null;
-            eval('$retval = ' . $this->expression);
-            $this->project->setProperty($this->returnProperty, $retval);
-        } else {
-            eval($this->expression);
-        }
+        $retval = null;
+        eval('$retval = ' . $this->expression);
+        return $retval;
     }
     
     /** Set function to execute */
@@ -171,8 +150,6 @@ class PhpEvalTask extends Task {
 
 /**
  * Supports the <param> nested tag for PhpTask.
- *
- * @package  phing.tasks.system
  */
 class FunctionParam {
 

@@ -1,7 +1,7 @@
 <?php
 
 /*
- *  $Id: 057af49d450e4c137127acc0f5331368e7a76183 $
+ *  $Id: XsltFilter.php,v 1.16 2005/12/07 20:05:01 hlellelid Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -31,7 +31,7 @@ include_once 'phing/filters/ChainableReader.php';
  * @author    Hans Lellelid <hans@velum.net>
  * @author    Yannick Lecaillez <yl@seasonfive.com>
  * @author    Andreas Aderhold <andi@binarycloud.com>
- * @version   $Id: 057af49d450e4c137127acc0f5331368e7a76183 $
+ * @version   $Revision: 1.16 $
  * @see       FilterReader
  * @package   phing.filters
  */
@@ -59,26 +59,6 @@ class XsltFilter extends BaseParamFilterReader implements ChainableReader {
      * Whether to use loadHTML() to parse the input XML file.
      */
     private $html = false;
-    
-    /**
-     * Whether to resolve entities in the XML document (see 
-     * {@link http://www.php.net/manual/en/class.domdocument.php#domdocument.props.resolveexternals} 
-     * for more details).
-     * 
-     * @var bool
-     * 
-     * @since 2.4
-     */
-    private $resolveDocumentExternals = false;
-    
-    /**
-     * Whether to resolve entities in the stylesheet.
-     * 
-     * @var bool
-     * 
-     * @since 2.4
-     */
-    private $resolveStylesheetExternals = false;
     
     /**
      * Create new XSLT Param object, to handle the <param/> nested element.
@@ -141,46 +121,6 @@ class XsltFilter extends BaseParamFilterReader implements ChainableReader {
     }
     
     /**
-     * Whether to resolve entities in document.
-     * 
-     * @param bool $resolveExternals
-     * 
-     * @since 2.4
-     */
-    function setResolveDocumentExternals($resolveExternals) {
-        $this->resolveDocumentExternals = (bool)$resolveExternals;
-    }
-    
-    /**
-     * @return bool
-     * 
-     * @since 2.4
-     */
-    function getResolveDocumentExternals() {
-        return $this->resolveDocumentExternals;
-    }
-    
-    /**
-     * Whether to resolve entities in stylesheet.
-     * 
-     * @param bool $resolveExternals
-     * 
-     * @since 2.4
-     */
-    function setResolveStylesheetExternals($resolveExternals) {
-        $this->resolveStylesheetExternals = (bool)$resolveExternals;
-    }
-    
-    /**
-     * @return bool
-     * 
-     * @since 2.4
-     */
-    function getResolveStylesheetExternals() {
-        return $this->resolveStylesheetExternals;
-    }
-    
-    /**
      * Reads stream, applies XSLT and returns resulting stream.
      * @return string transformed buffer.
      * @throws BuildException - if XSLT support missing, if error in xslt processing
@@ -210,7 +150,7 @@ class XsltFilter extends BaseParamFilterReader implements ChainableReader {
         }
 
         if(empty($_xml)) {
-            $this->log("XML file is empty!", Project::MSG_WARN);
+            $this->log("XML file is empty!", PROJECT_MSG_WARN);
             return ''; // return empty string, don't attempt to apply XSLT
         }
        
@@ -219,7 +159,7 @@ class XsltFilter extends BaseParamFilterReader implements ChainableReader {
         $xslFr = new FileReader($this->xslFile);
         $xslFr->readInto($_xsl);
         
-        $this->log("Tranforming XML " . $this->in->getResource() . " using style " . $this->xslFile->getPath(), Project::MSG_VERBOSE);
+        $this->log("Tranforming XML " . $this->in->getResource() . " using style " . $this->xslFile->getPath(), PROJECT_MSG_VERBOSE);
         
         $out = '';
         try {
@@ -245,13 +185,8 @@ class XsltFilter extends BaseParamFilterReader implements ChainableReader {
                 
         $processor = new XSLTProcessor();
         
-        // Create and setup document.
-        $xmlDom                   = new DOMDocument();
-        $xmlDom->resolveExternals = $this->resolveDocumentExternals;
-        
-        // Create and setup stylesheet.
-        $xslDom                   = new DOMDocument();
-        $xslDom->resolveExternals = $this->resolveStylesheetExternals;
+        $xmlDom = new DOMDocument();
+        $xslDom = new DOMDocument();        
         
         if ($this->html) {            
             $xmlDom->loadHTML($xml);
@@ -266,16 +201,13 @@ class XsltFilter extends BaseParamFilterReader implements ChainableReader {
         // ignoring param "type" attrib, because
         // we're only supporting direct XSL params right now
         foreach($this->xsltParams as $param) {
-            $this->log("Setting XSLT param: " . $param->getName() . "=>" . $param->getExpression(), Project::MSG_DEBUG);
+            $this->log("Setting XSLT param: " . $param->getName() . "=>" . $param->getExpression(), PROJECT_MSG_DEBUG);
             $processor->setParameter(null, $param->getName(), $param->getExpression());
         }
         
-        $errorlevel = error_reporting();
-        error_reporting($errorlevel & ~E_WARNING);
-        @$result = $processor->transformToXML($xmlDom);
-        error_reporting($errorlevel);
+        $result = $processor->transformToXML($xmlDom);
         
-        if (false === $result) {
+        if ( !$result ) {
             //$errno = xslt_errno($processor);
             //$err   = xslt_error($processor);    
             throw new BuildException("XSLT Error");            
@@ -330,8 +262,6 @@ class XsltFilter extends BaseParamFilterReader implements ChainableReader {
 
 /**
  * Class that holds an XSLT parameter.
- *
- * @package   phing.filters
  */
 class XSLTParam {
     
@@ -353,28 +283,6 @@ class XSLTParam {
      */
     public function getName() {
         return $this->name;
-    }
-    
-    /**
-     * Sets expression value (alias to the setExpression()) method. 
-     *
-     * @param string $v
-     * @see setExpression()
-     */
-    public function setValue($v)
-    {
-        $this->setExpression($v);
-    }
-    
-    /**
-     * Gets expression value (alias to the getExpression()) method. 
-     *
-     * @param string $v
-     * @see getExpression()
-     */
-    public function getValue()
-    {
-        return $this->getExpression();
     }
     
     /**
@@ -406,3 +314,4 @@ class XSLTParam {
     }        
 }
 
+?>

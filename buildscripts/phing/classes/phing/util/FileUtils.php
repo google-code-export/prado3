@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: fe077b4174763861e773f5e5e55bbfc5030cac4d $
+ *  $Id: FileUtils.php,v 1.10 2005/05/26 13:10:53 mrook Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -33,7 +33,7 @@ include_once 'phing/system/io/PhingFile.php';
  * - filter stuff
  *
  * @package  phing.util
- * @version  $Id$
+ * @version  $Revision: 1.10 $
  */
 class FileUtils {
         
@@ -46,7 +46,7 @@ class FileUtils {
      * @param Project $project
      * @return Reader Assembled Reader (w/ filter chains).
      */
-    public static function getChainedReader(Reader $in, &$filterChains, Project $project) {
+    function getChainedReader(Reader $in, &$filterChains, Project $project) {
         if (!empty($filterChains)) {
             $crh = new ChainReaderHelper();
             $crh->setBufferSize(65536); // 64k buffer, but isn't being used (yet?)
@@ -69,10 +69,9 @@ class FileUtils {
      * @param boolean $preserveLastModified
      * @param array $filterChains 
      * @param Project $project
-     * @param integer $mode
      * @return void
      */
-    function copyFile(PhingFile $sourceFile, PhingFile $destFile, $overwrite = false, $preserveLastModified = true, &$filterChains = null, Project $project, $mode = 0755) {
+    function copyFile(PhingFile $sourceFile, PhingFile $destFile, $overwrite = false, $preserveLastModified = true, &$filterChains = null, Project $project) {
        
         if ($overwrite || !$destFile->exists() || $destFile->lastModified() < $sourceFile->lastModified()) {
             if ($destFile->exists() && $destFile->isFile()) {
@@ -82,7 +81,7 @@ class FileUtils {
             // ensure that parent dir of dest file exists!
             $parent = $destFile->getParentFile();
             if ($parent !== null && !$parent->exists()) {
-                $parent->mkdirs($mode);
+                $parent->mkdirs();
             }
 
             if ((is_array($filterChains)) && (!empty($filterChains))) {
@@ -99,9 +98,6 @@ class FileUtils {
                     $in->close();
                 if ( $out !== null )
                     $out->close();
-
-                $destFile->setMode($sourceFile->getMode());
-
             } else {
                 // simple copy (no filtering)
                 $sourceFile->copyTo($destFile);
@@ -295,4 +291,4 @@ class FileUtils {
     }
     
 }
-
+?>

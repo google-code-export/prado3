@@ -9,8 +9,7 @@
  * the business logic from display / output logic.
  * 
  * @author Hans Lellelid <hans@xmpl.org>
- * @version $Id$
- * @package phing.lib
+ * @version $Revision: 1.9 $ $Date: 2004/08/31 20:12:02 $
  */
 class Capsule {
     

@@ -35,9 +35,7 @@ class TDataFieldAccessor
 	/**
 	 * Evaluates the data value at the specified field.
 	 * - If the data is an array, then the field is treated as an array index
-	 *   and the corresponding element value is returned; the field name can also include
-	 *   dots to access subarrays. For example a field named 'MyField.MySubField' will 
-	 *   first try to access $data['MyField.MySubField'], then try $data['MyField']['MySubField'].
+	 *   and the corresponding element value is returned;
 	 * - If the data is a TMap or TList object, then the field is treated as a key
 	 *   into the map or list, and the corresponding value is returned.
 	 * - If the data is an object, the field is treated as a property or sub-property
@@ -55,15 +53,7 @@ class TDataFieldAccessor
 		try
 		{
 			if(is_array($data) || ($data instanceof ArrayAccess))
-			{
-				if(isset($data[$field]))
-					return $data[$field];
-
-				$tmp = $data;
-				foreach (explode(".", $field) as $f)
-				    $tmp = $tmp[$f];
-				return $tmp;
-			}
+				return $data[$field];
 			else if(is_object($data))
 			{
 				if(strpos($field,'.')===false)  // simple field
@@ -89,3 +79,4 @@ class TDataFieldAccessor
 		throw new TInvalidDataValueException('datafieldaccessor_data_invalid',$field);
 	}
 }
+

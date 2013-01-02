@@ -1,6 +1,6 @@
 <?php
 /*
- * $Id: bea608bad3f8bd5733c7eac6451d15b1c937115c $
+ * $Id: AnsiColorLogger.php,v 1.13 2005/05/26 13:10:51 mrook Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -42,8 +42,8 @@ include_once 'phing/system/util/Properties.php';
  *
  * The default colors used for differentiating
  * the message levels can be changed by editing the
- * phing/listener/defaults.properties file.
- *
+ * /org/apache/tools/ant/listener/defaults.properties
+ * file.
  * This file contains 5 key/value pairs:
  * AnsiColorLogger.ERROR_COLOR=2;31
  * AnsiColorLogger.WARNING_COLOR=2;35
@@ -95,9 +95,9 @@ include_once 'phing/system/util/Properties.php';
  * @author     Hans Lellelid <hans@xmpl.org> (Phing)
  * @author     Magesh Umasankar (Ant)
  * @package    phing.listener
- * @version    $Id$
+ * @version    $Revision: 1.13 $
  */
-class AnsiColorLogger extends DefaultLogger {
+final class AnsiColorLogger extends DefaultLogger {
 
     const ATTR_NORMAL = 0;
     const ATTR_BRIGHT = 1;
@@ -144,11 +144,11 @@ class AnsiColorLogger extends DefaultLogger {
      */
     public function __construct() {
         parent::__construct();
-        $this->errColor = self::PREFIX . self::ATTR_NORMAL . self::SEPARATOR . self::FG_RED . self::SUFFIX;
-        $this->warnColor = self::PREFIX . self::ATTR_NORMAL . self::SEPARATOR . self::FG_MAGENTA . self::SUFFIX;
-        $this->infoColor = self::PREFIX . self::ATTR_NORMAL . self::SEPARATOR . self::FG_CYAN . self::SUFFIX;
-        $this->verboseColor = self::PREFIX . self::ATTR_NORMAL . self::SEPARATOR . self::FG_GREEN . self::SUFFIX;
-        $this->debugColor = self::PREFIX . self::ATTR_NORMAL . self::SEPARATOR . self::FG_BLUE . self::SUFFIX;
+        $this->errColor = self::PREFIX . self::ATTR_DIM . self::SEPARATOR . self::FG_RED . self::SUFFIX;
+        $this->warnColor = self::PREFIX . self::ATTR_DIM . self::SEPARATOR . self::FG_MAGENTA . self::SUFFIX;
+        $this->infoColor = self::PREFIX . self::ATTR_DIM . self::SEPARATOR . self::FG_CYAN . self::SUFFIX;
+        $this->verboseColor = self::PREFIX . self::ATTR_DIM . self::SEPARATOR . self::FG_GREEN . self::SUFFIX;
+        $this->debugColor = self::PREFIX . self::ATTR_DIM . self::SEPARATOR . self::FG_BLUE . self::SUFFIX;
     }
     
     /**
@@ -177,19 +177,19 @@ class AnsiColorLogger extends DefaultLogger {
             $verbose = $prop->getProperty("AnsiColorLogger.VERBOSE_COLOR");
             $debug = $prop->getProperty("AnsiColorLogger.DEBUG_COLOR");
             if ($err !== null) {
-                $this->errColor = self::PREFIX . $err . self::SUFFIX;
+                $errColor = self::PREFIX . $err . self::SUFFIX;
             }
             if ($warn !== null) {
-                $this->warnColor = self::PREFIX . $warn . self::SUFFIX;
+                $warnColor = self::PREFIX . $warn . self::SUFFIX;
             }
             if ($info !== null) {
-                $this->infoColor = self::PREFIX . $info . self::SUFFIX;
+                $infoColor = self::PREFIX . $info . self::SUFFIX;
             }
             if ($verbose !== null) {
-                $this->verboseColor = self::PREFIX . $verbose . self::SUFFIX;
+                $verboseColor = self::PREFIX . $verbose . self::SUFFIX;
             }
             if ($debug !== null) {
-                $this->debugColor = self::PREFIX . $debug . self::SUFFIX;
+                $debugColor = self::PREFIX . $debug . self::SUFFIX;
             }
         } catch (IOException $ioe) {
             //Ignore exception - we will use the defaults.
@@ -198,11 +198,9 @@ class AnsiColorLogger extends DefaultLogger {
 
     /**
      * @see DefaultLogger#printMessage
-     * @param string $message
-     * @param OutputStream $stream
-     * @param int $priority
      */
-    protected final function printMessage($message, OutputStream $stream, $priority) {
+    protected final function printMessage($message, $priority) {
+    
         if ($message !== null) {
         
             if (!$this->colorsSet) {
@@ -211,24 +209,23 @@ class AnsiColorLogger extends DefaultLogger {
             }
             
             switch ($priority) {
-                case Project::MSG_ERR:
+                case PROJECT_MSG_ERR:
                     $message = $this->errColor . $message . self::END_COLOR;
                     break;
-                case Project::MSG_WARN:
+                case PROJECT_MSG_WARN:
                     $message = $this->warnColor . $message . self::END_COLOR;                    
                     break;
-                case Project::MSG_INFO:
+                case PROJECT_MSG_INFO:
                     $message = $this->infoColor . $message . self::END_COLOR;
                     break;
-                case Project::MSG_VERBOSE:
+                case PROJECT_MSG_VERBOSE:
                     $message = $this->verboseColor . $message . self::END_COLOR;
                     break;
-                case Project::MSG_DEBUG:
+                case PROJECT_MSG_DEBUG:
                     $message = $this->debugColor . $message . self::END_COLOR;
                     break;
             }
-            
-            $stream->write($message . PHP_EOL);
+            print($message."\n");
         }
     }
 }

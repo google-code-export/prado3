@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: 46e871c830686838e509a3b0e173e7f4c0736ab3 $
+ *  $Id: BuildListener.php,v 1.6 2003/12/22 18:05:38 hlellelid Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -27,7 +27,7 @@
  *
  * @author    Andreas Aderhold <andi@binarycloud.com>
  * @author    Hans Lellelid <hans@xmpl.org>
- * @version   $Id$
+ * @version   $Revision: 1.6 $
  * @see       BuildEvent
  * @see       Project::addBuildListener()
  * @package   phing
@@ -37,55 +37,55 @@ interface BuildListener {
     /**
      * Fired before any targets are started.
      *
-     * @param BuildEvent $event The BuildEvent
+     * @param BuildEvent The BuildEvent
      */
-    public function buildStarted(BuildEvent $event);
+    function buildStarted(BuildEvent $event);
 
     /**
      * Fired after the last target has finished.
      *
-     * @param BuildEvent $event The BuildEvent
+     * @param BuildEvent The BuildEvent
      * @see BuildEvent::getException()
      */
-    public function buildFinished(BuildEvent $event);
+    function buildFinished(BuildEvent $event);
 
     /**
      * Fired when a target is started.
      *
-     * @param BuildEvent $event The BuildEvent
+     * @param BuildEvent The BuildEvent
      * @see BuildEvent::getTarget()
      */
-    public function targetStarted(BuildEvent $event);
+    function targetStarted(BuildEvent $event);
 
     /**
      * Fired when a target has finished.
      *
-     * @param BuildEvent $event The BuildEvent
+     * @param BuildEvent The BuildEvent
      * @see BuildEvent#getException()
      */
-    public function targetFinished(BuildEvent $event);
+    function targetFinished(BuildEvent $event);
 
     /**
      * Fired when a task is started.
      *
-     * @param BuildEvent $event The BuildEvent
+     * @param BuildEvent The BuildEvent
      * @see BuildEvent::getTask()
      */
-    public function taskStarted(BuildEvent $event);
+    function taskStarted(BuildEvent $event);
 
     /**
-     * Fired when a task has finished.
+     *  Fired when a task has finished.
      *
-     * @param BuildEvent $event The BuildEvent
-     * @see BuildEvent::getException()
+     *  @param BuildEvent The BuildEvent
+     *  @see BuildEvent::getException()
      */
-    public function taskFinished(BuildEvent $event);
+    function taskFinished(BuildEvent $event);
 
     /**
-     * Fired whenever a message is logged.
+     *  Fired whenever a message is logged.
      *
-     * @param BuildEvent $event The BuildEvent
-     * @see BuildEvent::getMessage()
+     *  @param BuildEvent The BuildEvent
+     *  @see BuildEvent::getMessage()
      */
-    public function messageLogged(BuildEvent $event);
+    function messageLogged(BuildEvent $event);
 }

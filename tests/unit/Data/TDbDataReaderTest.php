@@ -1,9 +1,10 @@
 <?php
 
+require_once(dirname(__FILE__).'/../phpunit2.php');
+
 Prado::using('System.Data.*');
 
-if(!defined('TEST_DB_FILE'))
-	define('TEST_DB_FILE',dirname(__FILE__).'/db/test.db');
+define('TEST_DB_FILE',dirname(__FILE__).'/db/test.db');
 
 class FooRecord extends TComponent
 {
@@ -30,7 +31,7 @@ class FooRecord extends TComponent
 /**
  * @package System.Data.PDO
  */
-class TDbDataReaderTest extends PHPUnit_Framework_TestCase
+class TDbDataReaderTest extends PHPUnit2_Framework_TestCase
 {
 	private $_connection;
 

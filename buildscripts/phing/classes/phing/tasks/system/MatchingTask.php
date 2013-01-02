@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: 1e1f6274f400b90c2344c8cdb5d3711030b8f44a $
+ *  $Id: MatchingTask.php 59 2006-04-28 14:49:47Z mrook $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -38,7 +38,7 @@ include_once 'phing/util/DirectoryScanner.php';
  * @author    Jon S. Stevens <jon@clearink.com> (Ant
  * @author    Stefan Bodewig <stefan.bodewig@epost.de> (Ant)
  * @author    Bruce Atherton <bruce@callenish.com> (Ant)
- * @version   $Id: 1e1f6274f400b90c2344c8cdb5d3711030b8f44a $
+ * @version   $Revision: 1.4 $
  * @package   phing.tasks.system
  */
 abstract class MatchingTask extends Task implements SelectorContainer {
@@ -59,7 +59,7 @@ abstract class MatchingTask extends Task implements SelectorContainer {
     /**
      * @see ProjectComponent::setProject()
      */
-    public function setProject($project) {
+    public function setProject(Project $project) {
         parent::setProject($project);
         $this->fileset->setProject($project);
     }

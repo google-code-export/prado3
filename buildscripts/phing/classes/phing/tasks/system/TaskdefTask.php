@@ -1,7 +1,7 @@
 <?php
 
 /*
- * $Id: df52def0bb44ce1b0909f5e8858e79b2ef88ca0f $
+ * $Id: TaskdefTask.php 59 2006-04-28 14:49:47Z mrook $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -21,7 +21,6 @@
  */
  
 require_once 'phing/Task.php';
-include_once 'phing/system/io/PhingFile.php';
 
 /**
  * Register a task for use within a buildfile.
@@ -43,7 +42,7 @@ include_once 'phing/system/io/PhingFile.php';
  *      (right now these are just too simple to really justify creating an abstract class)
  * 
  * @author    Hans Lellelid <hans@xmpl.org>
- * @version   $Id: df52def0bb44ce1b0909f5e8858e79b2ef88ca0f $
+ * @version   $Revision: 1.11 $
  * @package   phing.tasks.system
  */
 class TaskdefTask extends Task {
@@ -69,17 +68,11 @@ class TaskdefTask extends Task {
      * Refid to already defined classpath
      */
     private $classpathId;
-
-    /**
-     * Name of file to load multiple definitions from.
-     * @var string
-     */
-    private $typeFile;
     
     /**
      * Set the classpath to be used when searching for component being defined
      * 
-     * @param Path $classpath A Path object containing the classpath.
+     * @param Path $classpath An Path object containing the classpath.
      */
     public function setClasspath(Path $classpath) {
         if ($this->classpath === null) {
@@ -91,8 +84,6 @@ class TaskdefTask extends Task {
 
     /**
      * Create the classpath to be used when searching for component being defined
-     * 
-     * @return Path
      */ 
     public function createClasspath() {
         if ($this->classpath === null) {
@@ -125,41 +116,12 @@ class TaskdefTask extends Task {
         $this->classname = $class;
     }
     
-    /**
-     * Sets the file of definitionas to use to use.
-     * @param string $file
-     */
-    public function setFile($file) {
-        $this->typeFile = $file;
-    }
-    
     /** Main entry point */
     public function main() {
-        if ($this->typeFile === null && 
-            ($this->name === null || $this->classname === null)) {
+        if ($this->name === null || $this->classname === null) {
             throw new BuildException("You must specify name and class attributes for <taskdef>.");
         }
-        if ($this->typeFile == null) {
-            $this->log("Task " . $this->name . " will be handled by class " . $this->classname, Project::MSG_VERBOSE);
-            $this->project->addTaskDefinition($this->name, $this->classname, $this->classpath);
-        } else {
-            try { // try to load taskdefs given in file
-                $props = new Properties();
-                $in = new PhingFile((string) $this->typeFile);
-
-                if ($in === null) {
-                    throw new BuildException("Can't load task list {$this->typeFile}");
-                }
-                $props->load($in);
-
-                $enum = $props->propertyNames();
-                foreach($enum as $key) {
-                    $value = $props->getProperty($key);
-                    $this->project->addTaskDefinition($key, $value, $this->classpath);
-                }
-            } catch (IOException $ioe) {
-                throw new BuildException("Can't load task list {$this->typeFile}");
-            }
-        }
+        $this->log("Task " . $this->name . " will be handled by class " . $this->classname, PROJECT_MSG_VERBOSE);
+        $this->project->addTaskDefinition($this->name, $this->classname, $this->classpath);
     }
 }

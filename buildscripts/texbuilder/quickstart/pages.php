@@ -52,24 +52,23 @@ $pages['Configurations'] = array(
 
 $pages['Control Reference : Standard Controls'] = array(
 	'Controls/Standard.page',
-	'Controls/Accordion.page',
 	'Controls/Button.page',
 	'Controls/Captcha.page',
 	'Controls/CheckBox.page',
 	'Controls/ClientScript.page',
-	'Controls/ColorPicker.page',
+	'Controls/ClientScriptLoader.page',
 	'Controls/Conditional.page',
+	'Controls/ColorPicker.page',
 	'Controls/DatePicker.page',
 	'Controls/Expression.page',
 	'Controls/FileUpload.page',
-	'Controls/FlushOutput.page',
 	'Controls/Head.page',
 	'Controls/HiddenField.page',
 	'Controls/HtmlArea.page',
 	'Controls/HyperLink.page',
-	'Controls/Image.page',
 	'Controls/ImageButton.page',
 	'Controls/ImageMap.page',
+	'Controls/Image.page',
 	'Controls/InlineFrame.page',
 	'Controls/JavascriptLogger.page',
 	'Controls/Keyboard.page',
@@ -147,8 +146,7 @@ $pages['Write New Controls'] = array(
 	'Controls/NewControl.page');
 
 $pages['Service References'] = array(
-	'Services/SoapService.page',
-	'Services/RpcService.page');
+	'Services/SoapService.page');
 
 $pages['Working with Databases'] = array(
 	'Database/DAO.page',

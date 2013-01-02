@@ -276,7 +276,7 @@ EOS;
 			// tricky workaround to intercept "uploaded file too big" error: real uploads happens in onFileUpload instead
 			$this->_errorCode = UPLOAD_ERR_FORM_SIZE;
 			$localName = str_replace('\\', '/', tempnam(Prado::getPathOfNamespace($this->getTempPath()),''));
-			$fileName = addslashes($this->getFileName());
+			$filename = addslashes($this->getFileName());
 			
 			$params = new TActiveFileUploadCallbackParams;
 			$params->localName = $localName;

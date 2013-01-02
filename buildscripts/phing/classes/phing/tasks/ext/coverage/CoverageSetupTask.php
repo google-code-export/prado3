@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: da84ff4b224cdf3a8061e02d782320ccc492c253 $
+ * $Id: CoverageSetupTask.php 59 2006-04-28 14:49:47Z mrook $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -28,137 +28,136 @@ require_once 'phing/tasks/ext/coverage/CoverageMerger.php';
 /**
  * Initializes a code coverage database
  *
- * @author Michiel Rook <mrook@php.net>
- * @version $Id: da84ff4b224cdf3a8061e02d782320ccc492c253 $
+ * @author Michiel Rook <michiel@trendserver.nl>
+ * @version $Id: CoverageSetupTask.php 59 2006-04-28 14:49:47Z mrook $
  * @package phing.tasks.ext.coverage
  * @since 2.1.0
  */
 class CoverageSetupTask extends Task
 {
-    /** the list of filesets containing the .php filename rules */
-    private $filesets = array();
+	/** the list of filesets containing the .php filename rules */
+	private $filesets = array();
 
-    /** Any filelists of files containing the .php filenames */
-    private $filelists = array();
+	/** the filename of the coverage database */
+	private $database = "coverage.db";
 
-    /** the filename of the coverage database */
-    private $database = "coverage.db";
+	/** the classpath to use (optional) */
+	private $classpath = NULL;
 
-    /** the classpath to use (optional) */
-    private $classpath = NULL;
+	/**
+	 * Add a new fileset containing the .php files to process
+	 *
+	 * @param FileSet the new fileset containing .php files
+	 */
+	function addFileSet(FileSet $fileset)
+	{
+		$this->filesets[] = $fileset;
+	}
 
-    /**
-     * Add a new fileset containing the .php files to process
-     *
-     * @param FileSet the new fileset containing .php files
-     */
-    function addFileSet(FileSet $fileset)
-    {
-        $this->filesets[] = $fileset;
-    }
+	/**
+	 * Sets the filename of the coverage database to use
+	 *
+	 * @param string the filename of the database
+	 */
+	function setDatabase($database)
+	{
+		$this->database = $database;
+	}
 
-    /**
-     * Supports embedded <filelist> element.
-     * @return FileList
-     */
-    function createFileList() {
-        $num = array_push($this->filelists, new FileList());
-        return $this->filelists[$num-1];
-    }
+	function setClasspath(Path $classpath)
+	{
+		if ($this->classpath === null)
+		{
+			$this->classpath = $classpath;
+		}
+		else
+		{
+			$this->classpath->append($classpath);
+		}
+	}
 
-    /**
-     * Sets the filename of the coverage database to use
-     *
-     * @param string the filename of the database
-     */
-    function setDatabase($database)
-    {
-        $this->database = $database;
-    }
+	function createClasspath()
+	{
+		$this->classpath = new Path();
+		return $this->classpath;
+	}
+	
+	/**
+	 * Iterate over all filesets and return the filename of all files
+	 * that end with .php. This is to avoid loading an xml file
+	 * for example.
+	 *
+	 * @return array an array of (basedir, filenames) pairs
+	 */
+	private function getFilenames()
+	{
+		$files = array();
 
-    function setClasspath(Path $classpath)
-    {
-        if ($this->classpath === null)
-        {
-            $this->classpath = $classpath;
-        }
-        else
-        {
-            $this->classpath->append($classpath);
-        }
-    }
+		foreach ($this->filesets as $fileset)
+		{
+			$ds = $fileset->getDirectoryScanner($this->project);
+			$ds->scan();
 
-    function createClasspath()
-    {
-        $this->classpath = new Path();
-        return $this->classpath;
-    }
-    
-    /**
-     * Iterate over all filesets and return the filename of all files.
-     *
-     * @return array an array of (basedir, filenames) pairs
-     */
-    private function getFilenames()
-    {
-        $files = array();
+			$includedFiles = $ds->getIncludedFiles();
 
-        foreach($this->filelists as $fl) {
-            try {
-                $list = $fl->getFiles($this->project);
-                foreach($list as $file) {
-                    $fs = new PhingFile(strval($fl->getDir($this->project)), $file);
-                    $files[] = array('key' => strtolower($fs->getAbsolutePath()), 'fullname' => $fs->getAbsolutePath());
-                }
-            } catch (BuildException $be) {
-                $this->log($be->getMessage(), Project::MSG_WARN);
-            }
-        }
+			foreach ($includedFiles as $file)
+			{
+				if (strstr($file, ".php"))
+				{
+					$fs = new PhingFile(realpath($ds->getBaseDir()), $file);
+					
+					$files[] = array('key' => strtolower($fs->getAbsolutePath()), 'fullname' => $fs->getAbsolutePath());
+				}
+			}
+		}
 
+		return $files;
+	}
+	
+	function init()
+	{
+		include_once 'PHPUnit2/Framework/TestCase.php';
+		if (!class_exists('PHPUnit2_Framework_TestCase')) {
+			throw new Exception("PHPUnit2Task depends on PEAR PHPUnit2 package being installed.");
+		}
+	}
 
-        foreach ($this->filesets as $fileset)
-        {
-            $ds = $fileset->getDirectoryScanner($this->project);
-            $ds->scan();
+	function main()
+	{
+		$files = $this->getFilenames();
 
-            $includedFiles = $ds->getIncludedFiles();
+		$this->log("Setting up coverage database for " . count($files) . " files");
 
-            foreach ($includedFiles as $file)
-            {
-                $fs = new PhingFile(realpath($ds->getBaseDir()), $file);
-                    
-                $files[] = array('key' => strtolower($fs->getAbsolutePath()), 'fullname' => $fs->getAbsolutePath());
-            }
-        }
+		$props = new Properties();
 
-        return $files;
-    }
-    
-    function init()
-    {
-    }
+		foreach ($files as $file)
+		{
+			$fullname = $file['fullname'];
+			$filename = $file['key'];
+			
+			$props->setProperty($filename, serialize(array('fullname' => $fullname, 'coverage' => array())));
+		}
 
-    function main()
-    {
-        $files = $this->getFilenames();
+		$dbfile = new PhingFile($this->database);
 
-        $this->log("Setting up coverage database for " . count($files) . " files");
+		$props->store($dbfile);
 
-        $props = new Properties();
-
-        foreach ($files as $file)
-        {
-            $fullname = $file['fullname'];
-            $filename = $file['key'];
-            
-            $props->setProperty($filename, serialize(array('fullname' => $fullname, 'coverage' => array())));
-        }
-
-        $dbfile = new PhingFile($this->database);
-
-        $props->store($dbfile);
-
-        $this->project->setProperty('coverage.database', $dbfile->getAbsolutePath());
-    }
+		$this->project->setProperty('coverage.database', $dbfile->getAbsolutePath());
+	
+		foreach ($files as $file)
+		{
+			$fullname = $file['fullname'];
+			
+			xdebug_start_code_coverage(XDEBUG_CC_UNUSED);
+			
+			Phing::__import($fullname, $this->classpath);
+			
+			$coverage = xdebug_get_code_coverage();
+			
+			xdebug_stop_code_coverage();
+			
+			CoverageMerger::merge($this->project, array($coverage));
+		}
+	}
 }
-
+?>

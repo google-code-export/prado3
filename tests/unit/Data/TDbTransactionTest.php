@@ -1,9 +1,10 @@
 <?php
 
+require_once(dirname(__FILE__).'/../phpunit.php');
+
 Prado::using('System.Data.*');
 
-if(!defined('TEST_DB_FILE'))
-	define('TEST_DB_FILE',dirname(__FILE__).'/db/test.db');
+define('TEST_DB_FILE',dirname(__FILE__).'/db/test.db');
 
 /**
  * @package System.Data.PDO

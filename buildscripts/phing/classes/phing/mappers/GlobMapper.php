@@ -1,6 +1,6 @@
 <?php
 /* 
- *  $Id: 464f98975210eee84faed74ef4a53c83d23aa079 $
+ *  $Id: GlobMapper.php,v 1.10 2004/01/22 03:29:13 hlellelid Exp $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -25,7 +25,7 @@ include_once 'phing/mappers/FileNameMapper.php';
  * description here
  *
  * @author   Andreas Aderhold, andi@binarycloud.com
- * @version  $Id$
+ * @version  $Revision: 1.10 $
  * @package   phing.mappers
  */
 class GlobMapper implements FileNameMapper {

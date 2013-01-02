@@ -1,6 +1,6 @@
 <?php
 /*
- *  $Id: 7388bc66c9574987edd02ad3b2d6f14462f6b157 $
+ *  $Id: AvailableTask.php 59 2006-04-28 14:49:47Z mrook $
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -28,25 +28,23 @@ include_once 'phing/tasks/system/condition/ConditionBase.php';
  *  Note: implements condition interface (see condition/Condition.php)
  *
  *  @author    Andreas Aderhold <andi@binarycloud.com>
- *  @copyright 2001,2002 THYRELL. All rights reserved
- *  @version   $Id$
+ *  @copyright © 2001,2002 THYRELL. All rights reserved
+ *  @version   $Revision: 1.11 $
  *  @package   phing.tasks.system
  */
 class AvailableTask extends Task {
 
     /** Property to check for. */
     private $property;
-
+    
     /** Value property should be set to. */
     private $value = "true";
-
+    
     /** Resource to check for */
     private $resource;
-
+    
     private $type = null;
     private $filepath = null;
-    
-    private $followSymlinks = false;
 
     function setProperty($property) {
         $this->property = (string) $property;
@@ -67,36 +65,6 @@ class AvailableTask extends Task {
     function setType($type) {
         $this->type = (string) strtolower($type);
     }
-    
-    public function setFollowSymlinks($followSymlinks)
-    {
-        $this->followSymlinks = (bool) $followSymlinks;
-    }
-    
-    /**
-     * Set the path to use when looking for a file.
-     * 
-     * @param Path $filepath a Path instance containing the search path for files.
-     */
-    public function setFilepath(Path $filepath) {
-        if ($this->filepath === null) {
-            $this->filepath = $filepath;
-        } else {
-            $this->filepath->append($filepath);
-        }
-    }
-
-    /**
-     * Creates a path to be configured
-     * 
-     * @return Path
-     */ 
-    public function createFilepath() {
-        if ($this->filepath === null) {
-            $this->filepath = new Path($this->project);
-        }
-        return $this->filepath->createPath();
-    }
 
     function main() {
         if ($this->property === null) {
@@ -109,20 +77,20 @@ class AvailableTask extends Task {
 
     function evaluate() {
         if ($this->file === null && $this->resource === null) {
-            throw new BuildException("At least one of (file|resource) is required", $this->location);
+            throw new BuildException("At least one of (file|resource) is required", $this->location);            
         }
 
         if ($this->type !== null && ($this->type !== "file" && $this->type !== "dir")) {
             throw new BuildException("Type must be one of either dir or file", $this->location);
         }
-
+        
         if (($this->file !== null) && !$this->_checkFile()) {
-            $this->log("Unable to find " . $this->file->__toString() . " to set property " . $this->property, Project::MSG_VERBOSE);
+            $this->log("Unable to find " . $this->file->__toString() . " to set property " . $this->property, PROJECT_MSG_VERBOSE);
             return false;
         }
 
         if (($this->resource !== null) && !$this->_checkResource($this->resource)) {
-            $this->log("Unable to load resource " . $this->resource . " to set property " . $this->property, Project::MSG_VERBOSE);
+            $this->log("Unable to load resource " . $this->resource . " to set property " . $this->property, PROJECT_MSG_VERBOSE);
             return false;
         }
 
@@ -130,13 +98,13 @@ class AvailableTask extends Task {
     }
 
     // this is prepared for the path type
-    private function _checkFile() {
+    function _checkFile() {
         if ($this->filepath === null) {
             return $this->_checkFile1($this->file);
         } else {
-            $paths = $this->filepath->listPaths();
+            $paths = $this->filepath->listDir();
             for($i=0,$pcnt=count($paths); $i < $pcnt; $i++) {
-                $this->log("Searching " . $paths[$i], Project::MSG_VERBOSE);
+                $this->log("Searching " . $paths[$i], PROJECT_MSG_VERBOSE);
                 $tmp = new PhingFile($paths[$i], $this->file->getName());
                 if($tmp->isFile()) {
                     return true;
@@ -146,12 +114,7 @@ class AvailableTask extends Task {
         return false;
     }
 
-    private function _checkFile1(PhingFile $file) {
-        // Resolve symbolic links
-        if ($this->followSymlinks && $file->isLink()) {
-            $file = new PhingFile($file->getLinkTarget());
-        }
-        
+    function _checkFile1($file) {
         if ($this->type !== null) {
             if ($this->type === "dir") {
                 return $file->isDirectory();
@@ -161,12 +124,9 @@ class AvailableTask extends Task {
         }
         return $file->exists();
     }
-    
-    private function _checkResource($resource) {
-        if (null != ($resourcePath = Phing::getResourcePath($resource))) {
-            return $this->_checkFile1(new PhingFile($resourcePath));
-        } else {
-            return false;
-        }
+
+    function _checkResource($resource) {
+        return $this->_checkFile1(new PhingFile(Phing::getResourcePath($resource)));
     }
+
 }
