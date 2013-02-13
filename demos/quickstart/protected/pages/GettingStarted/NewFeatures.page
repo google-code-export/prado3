@@ -9,6 +9,7 @@ This page summarizes the main new features that are introduced in each PRADO rel
 <h2>Version 3.2.2</h2>
 <ul>
 <li>TUrlMappingPattern support for constant parameters</li>
+<li>Added EnableCache property to THttpRequest to enable caching of the TUrlManager and any TMappingUrl pattern</li>
 <li>Lazy module loading in application configuration</li>
 </ul>
 
