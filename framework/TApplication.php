@@ -611,7 +611,7 @@ class TApplication extends TComponent
 	}
 	
 	/**
-	 * @return string the applictaion configuration type. default is 'xml'
+	 * @return string the application configuration type. default is 'xml'
 	 */
 	public function getConfigurationFileExt()
 	{
