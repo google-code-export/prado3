@@ -284,7 +284,6 @@ class TWizard extends TWebControl implements INamingContainer
 	public function setShowSideBar($value)
 	{
 		$this->setViewState('ShowSideBar',TPropertyValue::ensureBoolean($value),true);
-		$this->requiresControlsRecreation();
 	}
 
 	/**
