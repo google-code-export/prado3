@@ -10,6 +10,7 @@ ENH: Issue #439 - Module lazy loading (ctrlaltca)
 BUG: Issue #441 - TAccordion's ActiveViewIndex property is not honored on postback (ctrlatca)
 BUG: Issue #442 - TWizard's ShowSideBar property can't be changed from php (ctrlaltca)
 BUG: Issue #444 - Input validation vulnerability in unit test (ctrlaltca)
+BUG: Issue #446 - THtmlArea can't be updated in a callback (ctrlaltca)
 
 Version 3.2.1 Jan 19, 2013
 
