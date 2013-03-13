@@ -12,6 +12,7 @@ BUG: Issue #442 - TWizard's ShowSideBar property can't be changed from php (ctrl
 BUG: Issue #444 - Input validation vulnerability in unit test (ctrlaltca)
 BUG: Issue #446 - THtmlArea can't be updated in a callback (ctrlaltca)
 BUG: Issue #447 - Array to string conversion notice in TClientScriptManager (ctrlaltca)
+ENH: Issue #448 - Add TEACache eAccellerator cache module (drigolin)
 
 Version 3.2.1 Jan 19, 2013
 

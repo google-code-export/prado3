@@ -115,6 +115,16 @@ $requirements = array(
 		'APC extension optional'),
 	array(
 		false,
+		function_exists('eaccelerator_get'),
+		'eAccelerator extension check',
+		'eAccelerator extension optional'),
+	array(
+		false,
+		function_exists('xcache_isset'),
+		'XCache extension check',
+		'XCache extension optional'),
+	array(
+		false,
 		extension_loaded("mcrypt"),
 		'Mcrypt extension check',
 		'Mcrypt extension optional'),
