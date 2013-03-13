@@ -103,11 +103,7 @@ class TAPCCache extends TCache
 	 */
 	protected function addValue($key,$value,$expire)
 	{
-		if(function_exists('apc_add')) {
-			return apc_add($key,$value,$expire);
-		} else {
-			throw new TNotSupportedException('apccache_add_unsupported');
-		}
+		return apc_add($key,$value,$expire);
 	}
 
 	/**
