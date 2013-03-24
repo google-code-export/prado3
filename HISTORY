@@ -13,6 +13,7 @@ BUG: Issue #444 - Input validation vulnerability in unit test (ctrlaltca)
 BUG: Issue #446 - THtmlArea can't be updated in a callback (ctrlaltca)
 BUG: Issue #447 - Array to string conversion notice in TClientScriptManager (ctrlaltca)
 ENH: Issue #448 - Add TEACache eAccellerator cache module (drigolin)
+BUG: Issue #315 - TEmailAddressValidator regex (ctrlaltca)
 
 Version 3.2.1 Jan 19, 2013
 
