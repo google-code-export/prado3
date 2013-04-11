@@ -14,6 +14,7 @@ BUG: Issue #446 - THtmlArea can't be updated in a callback (ctrlaltca)
 BUG: Issue #447 - Array to string conversion notice in TClientScriptManager (ctrlaltca)
 ENH: Issue #448 - Add TEACache eAccellerator cache module (drigolin)
 BUG: Issue #315 - TEmailAddressValidator regex (ctrlaltca)
+ENH: Issue #455 - Support PDO::sqlsrv to support MS SQL database servers for PHP5.2+ (jonathan.martens)
 
 Version 3.2.1 Jan 19, 2013
 
