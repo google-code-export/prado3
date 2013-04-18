@@ -16,6 +16,7 @@ ENH: Issue #448 - Add TEACache eAccellerator cache module (drigolin)
 BUG: Issue #315 - TEmailAddressValidator regex (ctrlaltca)
 ENH: Issue #454 - TDraggableConstraint missing (ctrlaltca)
 ENH: Issue #455 - Support PDO::sqlsrv to support MS SQL database servers for PHP5.2+ (jonathan.martens)
+ENH: Issue #456 - Add ImageAlign to THyperLink (raoul@bhatia.at)
 
 Version 3.2.1 Jan 19, 2013
 

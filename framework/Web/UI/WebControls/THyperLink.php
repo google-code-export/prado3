@@ -17,7 +17,10 @@
  * via the {@link setNavigateUrl NavigateUrl} property, and link text is via
  * the {@link setText Text} property. It is also possible to display an image
  * by setting the {@link setImageUrl ImageUrl} property. In this case,
- * {@link getText Text} is displayed as the alternate text of the image.
+ * the alignment of the image displayed is set by the
+ * {@link setImageAlign ImageAlign} property and {@link getText Text} is
+ * displayed as the alternate text of the image.
+ * 
  * The link target is specified via the {@link setTarget Target} property.
  * If both {@link getImageUrl ImageUrl} and {@link getText Text} are empty,
  * the content enclosed within the control tag will be rendered.
@@ -92,6 +95,8 @@ class THyperLink extends TWebControl implements IDataRenderer
 			$image->setToolTip($toolTip);
 		if(($text=$this->getText())!=='')
 			$image->setAlternateText($text);
+		if(($align=$this->getImageAlign())!=='')
+			$image->setImageAlign($align);
 		$image->setBorderWidth('0');
 		return $image;
 	}
@@ -111,6 +116,26 @@ class THyperLink extends TWebControl implements IDataRenderer
 	public function setText($value)
 	{
 		$this->setViewState('Text',$value,'');
+	}
+
+	/**
+	 * @return string the alignment of the image with respective to other elements on the page, defaults to empty.
+	 */
+	public function getImageAlign()
+	{
+		return $this->getViewState('ImageAlign','');
+	}
+
+	/**
+	 * Sets the alignment of the image with respective to other elements on the page.
+	 * Possible values include: absbottom, absmiddle, baseline, bottom, left,
+	 * middle, right, texttop, and top. If an empty string is passed in,
+	 * imagealign attribute will not be rendered.
+	 * @param string the alignment of the image
+	 */
+	public function setImageAlign($value)
+	{
+		$this->setViewState('ImageAlign',$value,'');
 	}
 
 	/**
