@@ -896,7 +896,7 @@ class TUrlMappingPattern extends TComponent
 		// for the GET variables matching the pattern, put them in the URL path
 		foreach($getItems as $key=>$value)
 		{
-			if($this->_parameters && ($this->_parameters->contains($key) || $key==='*' && $this->getIsWildCardPattern()))
+			if(($this->_parameters && $this->_parameters->contains($key)) || ($key==='*' && $this->getIsWildCardPattern()))
 				$replace['{'.$key.'}']=$encodeGetItems ? rawurlencode($value) : $value;
 			else
 				$extra[$key]=$value;
