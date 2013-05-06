@@ -109,7 +109,15 @@ class TUrlMapping extends TUrlManager
 			$this->loadConfigFile();
 		$this->loadUrlMappings($config);
 		if($this->_urlPrefix==='')
-			$this->_urlPrefix=$this->getRequest()->getApplicationUrl();
+		{
+			$request=$this->getRequest();
+			if($request->getUrlFormat()===THttpRequestUrlFormat::HiddenPath)
+			{
+				$this->_urlPrefix=dirname($request->getApplicationUrl());
+			} else {
+				$this->_urlPrefix=$request->getApplicationUrl();
+			}
+		}
 		$this->_urlPrefix=rtrim($this->_urlPrefix,'/');
 	}
 
@@ -331,6 +339,9 @@ class TUrlMapping extends TUrlManager
 	 * If {@link THttpRequest::setUrlFormat THttpRequest.UrlFormat} is 'Path',
 	 * the following format is used instead:
 	 * /entryscript.php/serviceID/serviceParameter/get1,value1/get2,value2...
+	 * If {@link THttpRequest::setUrlFormat THttpRequest.UrlFormat} is 'HiddenPath',
+	 * the following format is used instead:
+	 * /serviceID/serviceParameter/get1,value1/get2,value2...
 	 * @param string service ID
 	 * @param string service parameter
 	 * @param array GET parameters, null if not provided
