@@ -219,7 +219,7 @@ class TJavaScript
 			($g=Prado::getApplication()->getGlobalization(false))!==null &&
 			strtoupper($enc=$g->getCharset())!='UTF-8')
 			$value=iconv($enc, 'UTF-8', $value);
-		$s = json_encode($value,$options);
+		$s = @json_encode($value,$options);
 		self::checkJsonError();
 		return $s;
 	}
@@ -234,7 +234,7 @@ class TJavaScript
 	 */
 	public static function jsonDecode($value, $assoc = false, $depth = 512)
 	{
-		$s= json_decode($value, $assoc, $depth);
+		$s= @json_decode($value, $assoc, $depth);
 		self::checkJsonError();
 		return $s;
 	}
