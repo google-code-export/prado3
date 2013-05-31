@@ -20,6 +20,7 @@ ENH: Issue #456 - Add ImageAlign to THyperLink (raoul@bhatia.at)
 ENH: Issue #459 - Add ToolTip and AlternateText to TButtonColumn (raoul@bhatia.at)
 ENH: Issue #451 - TRequiredFieldValidator should (automatically?) consider PromptValue as error (ctrlaltca)
 BUG: Issue #460 - Minor error in TUrlMappingPattern (raoul@bhatia.at)
+BUG: Issue #464 - Do not issue a callback request if an ActiveControl is disabled (ctrlaltca)
 
 Version 3.2.1 Jan 19, 2013
 

@@ -118,9 +118,36 @@ class TActiveLinkButton extends TLinkButton implements IActiveControl, ICallback
 	{
 		parent::addAttributesToRender($writer);
 		$writer->addAttribute('id',$this->getClientID());
-		$this->renderLinkButtonHref($writer);
-		$this->getActiveControl()->registerCallbackClientScript(
-			$this->getClientClassName(), $this->getPostBackOptions());
+
+		if($this->getEnabled(true))
+		{
+			$this->getActiveControl()->registerCallbackClientScript(
+				$this->getClientClassName(), $this->getPostBackOptions());
+		}
+	}
+
+	/**
+	 * Ensures that the anchor is rendered correctly when its Enabled property
+	 * changes in a callback
+	 * @param bool enabled
+	 */
+	public function setEnabled($value)
+	{
+		parent::setEnabled($value);
+		if($this->getActiveControl()->canUpdateClientSide())
+		{
+			if($this->getEnabled(true))
+			{
+				$nop = "javascript:;//".$this->getClientID();
+				$this->getPage()->getCallbackClient()->setAttribute($this, 'href', $nop);
+
+				$this->getActiveControl()->registerCallbackClientScript(
+					$this->getClientClassName(), $this->getPostBackOptions());
+
+			} else {
+				$this->getPage()->getCallbackClient()->setAttribute($this, 'href', false);				
+			}
+		}
 	}
 
 	/**
