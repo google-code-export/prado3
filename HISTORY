@@ -1,4 +1,4 @@
-Version 3.2.2 to be released
+Version 3.2.2 Jul xx, 2013
 
 ENH: Issue  #50 - TUrlMapping - implement caching for loadUrlMappings (ctrlaltca)
 ENH: Issue #433 - Prado object-creation performance micro-optimizations (gabor)
