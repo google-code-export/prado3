@@ -75,6 +75,9 @@ Prado::using('System.Util.TDataFieldAccessor');
  * used to format how the item should be displayed. See {@link formatDataValue()}
  * for an explanation of the format string.
  *
+ * The {@link setPromptText PromptText} and {@link setPromptValue PromptValue} properties can
+ * be used to add a dummy list item that will be rendered first.
+ *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @version $Id$
  * @package System.Web.UI.WebControls

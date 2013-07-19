@@ -70,6 +70,7 @@ abstract class TDbMetaData extends TComponent
 				Prado::using('System.Data.Common.Sqlite.TSqliteMetaData');
 				return new TSqliteMetaData($conn);
 			case 'mssql': // Mssql driver on windows hosts
+			case 'sqlsrv': // sqlsrv driver on windows hosts
 			case 'dblib': // dblib drivers on linux (and maybe others os) hosts
 				Prado::using('System.Data.Common.Mssql.TMssqlMetaData');
 				return new TMssqlMetaData($conn);
