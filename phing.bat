@@ -1,1 +1,1 @@
-buildscripts/phing/bin/phing %*
+vendor/bin/phing %*
