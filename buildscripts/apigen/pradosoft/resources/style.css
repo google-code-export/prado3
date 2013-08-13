@@ -10,11 +10,6 @@
  */
 
 body {
-	font: 13px/1.5 Verdana, 'Geneva CE', lucida, sans-serif;
-	margin: 0;
-	padding: 0;
-	background: #ffffff;
-	color: #333333;
 }
 
 h1, h2, h3, h4, caption {
@@ -71,7 +66,7 @@ hr {
 	height: 0;
 }
 
-a {
+.maintable a {
 	color: #CD2C27;
 	padding: 3px 1px;
 	text-decoration: none;
@@ -81,7 +76,7 @@ h1 a {
 	color: #821B18;
 }
 
-a:hover, a:active, a:focus, a:hover b, a:hover var {
+.maintable a:hover, .maintable a:active, .maintable a:focus, .maintable a:hover b, .maintable a:hover var {
 	color: #821B18;
 	text-decoration: underline;
 	background-color:#FFDBDB;
@@ -117,12 +112,15 @@ code a b {
 	display: none;
 }
 
+#maintable {
+	width:100%;
+}
+
 /* Left side */
 #left {
 	overflow: auto;
 	width: 270px;
-	height: 100%;
-	position: fixed;
+	vertical-align: top;
 }
 
 /* Menu */
@@ -147,7 +145,7 @@ code a b {
 
 #menu a {
 	display: block;
-	padding: 0 2px;
+	padding: 0 6px;
 }
 
 #menu .active > a, #menu > span {
@@ -166,8 +164,8 @@ code a b {
 
 #menu #groups span {
 	position: absolute;
-	top: 4px;
-	right: 2px;
+	top: 2px;
+	left: -10px;
 	cursor: pointer;
 	display: block;
 	width: 12px;
@@ -194,11 +192,8 @@ code a b {
 /* Right side */
 #right {
 	overflow: auto;
-	margin-left: 275px;
 	height: 100%;
-	position: fixed;
-	left: 0;
-	right: 0;
+	vertical-align: top;
 }
 
 #rightInner {
@@ -296,6 +291,12 @@ code a b {
 	font-weight: bold;
 }
 
+#navigation ul li.active span{
+	color: #ffffff;
+	font-weight: bold;
+	padding: 4px;
+}
+
 #navigation ul li a {
 	color: #000000;
 	font-weight: bold;
@@ -304,7 +305,7 @@ code a b {
 
 #navigation ul li span {
 	float: left;
-	padding: 0 3px;
+	padding: 4px;
 }
 
 #navigation ul li a:hover span, #navigation ul li a:active span, #navigation ul li a:focus span {
@@ -457,6 +458,7 @@ div.invalid {
 
 /* Splitter */
 #splitter {
+	display:none;
 	position: fixed;
 	height: 100%;
 	width: 5px;
@@ -477,7 +479,7 @@ div.invalid {
 	font-size: 8pt;
 	text-align: center;
 	padding: 20px 0 0;
-	margin: 3em 0 0;
+	margin: 0;
 	height: 90px;
 	background: #ffffff url('footer.png') no-repeat center top;
 }

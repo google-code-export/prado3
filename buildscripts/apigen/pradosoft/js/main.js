@@ -189,13 +189,14 @@ $(function() {
 
 			return false;
 		});
+	/*
 	var splitterPosition = $.cookie('splitter');
 	if (null !== splitterPosition) {
 		setSplitterPosition(parseInt(splitterPosition));
 	}
 	setNavigationPosition();
 	$(window).resize(setNavigationPosition);
-
+*/
 	// Select selected lines
 	var matches = window.location.hash.substr(1).match(/^\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*$/);
 	if (null !== matches) {
