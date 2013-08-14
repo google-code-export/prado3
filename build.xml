@@ -203,6 +203,9 @@
       php="false"
       templateconfig="buildscripts/apigen/pradosoft/config.neon"
     />
+    <echo>Cleaning svn directories from API manuals...</echo>
+    <delete dir="${build.doc.dir}/manual/resources/.svn" includeemptydirs="true" verbose="true" failonerror="true" />
+
     <echo>Indexing API manuals...</echo>
     <prado-api-index docdir="${build.doc.dir}/manual" todir="${build.doc.dir}/manual"/>
     <copy file="buildscripts/index/search.php" todir="${build.doc.dir}/manual" />

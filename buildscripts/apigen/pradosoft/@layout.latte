@@ -82,8 +82,6 @@ the file LICENSE.md that was distributed with this source code.
 	<tr>
 		<td id="left">
 	<div id="menu">
-		<a n:tag-if="'overview' !== $active" href="index.html" title="Overview"><h3>Overview</h3></a>
-
 		{define #group}
 			<ul>
 				{foreach $groups as $group}
@@ -103,10 +101,10 @@ the file LICENSE.md that was distributed with this source code.
 
 		<div id="groups">
 			{if $namespaces}
-			<h4>Namespaces</h4>
+			<h3>Namespaces</h3>
 			{include #group, groups => $namespaces, actualGroup => $namespace}
 			{elseif $packages}
-			<h4>Packages</h4>
+			<h3>Packages</h3>
 			{include #group, groups => $packages, actualGroup => $package}
 			{/if}
 		</div>
