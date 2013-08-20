@@ -90,7 +90,8 @@ class Wsdl
 	{
 		$this->_encoding = $encoding;
 		$this->serviceName = $name;
-		if ($serviceUri == '') $serviceUri = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
+		$protocol=(isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS']!=='off'))?'https://':'http://';
+		if ($serviceUri === '') $serviceUri = $protocol.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
 		$this->serviceUri = str_replace('&amp;', '&', $serviceUri);
 		$this->types = new ArrayObject();
 		$this->targetNamespace = 'urn:'.$name.'wsdl';
