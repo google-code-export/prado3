@@ -13,7 +13,9 @@
 if(!isset($_SERVER['argv']) || php_sapi_name()!=='cli')
 	die('Must be run from the command line');
 
-require_once(dirname(__FILE__).'/prado.php');
+$frameworkPath = realpath(dirname(dirname(__FILE__))).DIRECTORY_SEPARATOR.'framework'.DIRECTORY_SEPARATOR;
+
+require_once($frameworkPath.'prado.php');
 
 //stub application class
 class PradoShellApplication extends TApplication
@@ -33,7 +35,7 @@ if(count($_SERVER['argv']) > 1 && strtolower($_SERVER['argv'][1])==='shell')
 	{
 		if(!$shell->has_semicolon) echo Prado::varDump($var);
 	}
-	include_once(dirname(__FILE__).'/3rdParty/PhpShell/php-shell-init.php');
+	include_once($frameworkPath.'/3rdParty/PhpShell/php-shell-init.php');
 }
 
 
@@ -281,7 +283,7 @@ class PradoCommandLineCreateProject extends PradoCommandLineAction
 
 	protected function renderIndexFile()
 	{
-		$framework = realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'prado.php';
+		$framework = realpath(dirname(dirname(__FILE__))).DIRECTORY_SEPARATOR.'framework'.DIRECTORY_SEPARATOR.'prado.php';
 return '<?php
 
 $frameworkPath=\''.$framework.'\';
@@ -419,7 +421,7 @@ class PradoCommandLineCreateTests extends PradoCommandLineAction
 
 	protected function renderUnitTestFixture()
 	{
-		$tester = realpath(dirname(__FILE__).'/../tests/test_tools/unit_tests.php');
+		$tester = realpath(dirname(dirname(__FILE__))).'/tests/test_tools/unit_tests.php';
 return '<?php
 
 include_once \''.$tester.'\';
@@ -435,7 +437,7 @@ $tester->run(new HtmlReporter());
 
 	protected function renderFunctionalTestFixture()
 	{
-		$tester = realpath(dirname(__FILE__).'/../tests/test_tools/functional_tests.php');
+		$tester = realpath(dirname(dirname(__FILE__))).'/tests/test_tools/functional_tests.php';
 return '<?php
 
 include_once \''.$tester.'\';
@@ -500,7 +502,7 @@ class PradoCommandLineUnitTest extends PradoCommandLineAction
 
 	protected function initializeTestRunner()
 	{
-		$TEST_TOOLS = realpath(dirname(__FILE__).'/../tests/test_tools/');
+		$TEST_TOOLS = realpath(dirname(dirname(__FILE__))).'/tests/test_tools/';
 
 		require_once($TEST_TOOLS.'/simpletest/unit_tester.php');
 		require_once($TEST_TOOLS.'/simpletest/web_tester.php');
@@ -877,5 +879,5 @@ if(class_exists('PHP_Shell_Commands', false))
 	$__shell_exts->registerExtensions(array(
 		    "active-record"        => new PHP_Shell_Extensions_ActiveRecord)); /* the :set command */
 
-	include_once(dirname(__FILE__).'/3rdParty/PhpShell/php-shell-cmd.php');
+	include_once(realpath(dirname(dirname(__FILE__))).'/framework/3rdParty/PhpShell/php-shell-cmd.php');
 }

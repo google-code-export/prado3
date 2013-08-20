@@ -1,8 +1,0 @@
-#!/bin/sh
-
-if [ ! -e ./vendor/bin/phing ]
-then
-  echo "Phing non installed; use \"composer install --dev\""
-fi
-
-./vendor/bin/phing $@

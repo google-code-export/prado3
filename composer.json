@@ -52,23 +52,23 @@
         "ext-xsl" : "*",
         "ext-zlib" : "*"
     },
-    "FIXME___autoload": {
+    "autoload": {
         "psr-0" : {
-            "Prado"              : "lib",
-            "Prado\\Caching"     : "lib",
-            "Prado\\Collections" : "lib",
-            "Prado\\Exceptions"  : "lib",
-            "Prado\\I18N"        : "lib",
-            "Prado\\IO"          : "lib",
-            "Prado\\Security"    : "lib",
-            "Prado\\Util"        : "lib",
-            "Prado\\Web"         : "lib",
-            "Prado\\Web\\Javascripts"        : "lib",
-            "Prado\\Web\\Services"           : "lib",
-            "Prado\\Web\\UI"                 : "lib",
-            "Prado\\Web\\UI\\ActiveControls" : "lib",
-            "Prado\\Web\\UI\\WebControls"    : "lib",
-            "Prado\\Xml"                     : "lib"
+            "Prado"              : "framework",
+            "Prado\\Caching"     : "framework",
+            "Prado\\Collections" : "framework",
+            "Prado\\Exceptions"  : "framework",
+            "Prado\\I18N"        : "framework",
+            "Prado\\IO"          : "framework",
+            "Prado\\Security"    : "framework",
+            "Prado\\Util"        : "framework",
+            "Prado\\Web"         : "framework",
+            "Prado\\Web\\Javascripts"        : "framework",
+            "Prado\\Web\\Services"           : "framework",
+            "Prado\\Web\\UI"                 : "framework",
+            "Prado\\Web\\UI\\ActiveControls" : "framework",
+            "Prado\\Web\\UI\\WebControls"    : "framework",
+            "Prado\\Xml"                     : "framework"
         }
     },
     "support" : {
@@ -76,9 +76,9 @@
         "source" : "https://code.google.com/p/prado3/source"
     },
     "bin" : [
-        "framework/prado-cli"
+        "bin/prado-cli"
     ],
-    "FIXME___config" : {
+    "config" : {
         "bin-dir" : "./bin"
     }
 }

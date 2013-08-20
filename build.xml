@@ -156,7 +156,7 @@
 
     <copy file="buildscripts/classtree/ExtensionReadme.html" tofile="${build.src.dir}/editors/ExtensionReadme.html"/>
     <copy file="framework/pradolite.php" tofile="${build.src.dir}/framework/pradolite.php"/>
-    <copy file="framework/prado-cli.php" tofile="${build.src.dir}/framework/prado-cli.php"/>
+    <copy file="bin/prado-cli.php" tofile="${build.src.dir}/bin/prado-cli.php"/>
 
     <echo>Changing file permissions...</echo>
     <chmod mode="0777">
@@ -174,7 +174,31 @@
 
   <target name="rebuild" depends="clean,build"/>
 
-  <target name="docs" depends="build">
+  <target name="api-manual" depends="build">
+    <echo>Building API manuals...</echo>
+    <delete dir="${build.doc.dir}/manual"/>
+    <mkdir dir="${build.doc.dir}/manual"/>
+    <apigen
+      executable="bin/apigen.php"
+      source="${build.src.dir}/framework"
+      destination="${build.doc.dir}/manual"
+      exclude="*pradolite.php,*prado-cli.php,*3rdParty/*,*Javascripts/source/*,*packages.php,*JSMin.php,*I18N/core/*,*WebControls/assets/*"
+      title="PRADO v${prado.version} API Manual"
+      deprecated="true"
+      todo="true"
+      sourcecode="false"
+      php="false"
+      templateconfig="buildscripts/apigen/pradosoft/config.neon"
+    />
+    <echo>Cleaning svn directories from API manuals...</echo>
+    <delete dir="${build.doc.dir}/manual/resources/.svn" includeemptydirs="true" failonerror="true" />
+
+    <echo>Indexing API manuals...</echo>
+    <prado-api-index docdir="${build.doc.dir}/manual" todir="${build.doc.dir}/manual"/>
+    <copy file="buildscripts/index/search.php" todir="${build.doc.dir}/manual" />
+  </target>
+
+  <target name="docs" depends="build,api-manual">
     <echo>Build PDF + HTML Docs, it may take about 5 mins</echo>
 
     <echo>Building quickstart.pdf...</echo>
@@ -187,28 +211,6 @@
     <!-- use -interaction=nonstopmode to see compilation errors in the shell output -->
     <exec command="${pdflatex} -interaction=batchmode quickstart.tex" dir="buildscripts/texbuilder/quickstart" passthru="true"/>
     <move file="buildscripts/texbuilder/quickstart/quickstart.pdf" todir="${build.doc.dir}"/>
-
-    <echo>Building API manuals...</echo>
-    <delete dir="${build.doc.dir}/manual"/>
-    <mkdir dir="${build.doc.dir}/manual"/>
-    <apigen
-      executable="${php} -d memory_limit=256M vendor/bin/apigen.php"
-      source="${build.src.dir}/framework"
-      destination="${build.doc.dir}/manual"
-      exclude="*pradolite.php,*prado-cli.php,*3rdParty/*,*Javascripts/source/*,*packages.php,*JSMin.php,*I18N/core/*,*WebControls/assets/*"
-      title="PRADO v${prado.version} API Manual"
-      deprecated="true"
-      todo="true"
-      sourcecode="false"
-      php="false"
-      templateconfig="buildscripts/apigen/pradosoft/config.neon"
-    />
-    <echo>Cleaning svn directories from API manuals...</echo>
-    <delete dir="${build.doc.dir}/manual/resources/.svn" includeemptydirs="true" verbose="true" failonerror="true" />
-
-    <echo>Indexing API manuals...</echo>
-    <prado-api-index docdir="${build.doc.dir}/manual" todir="${build.doc.dir}/manual"/>
-    <copy file="buildscripts/index/search.php" todir="${build.doc.dir}/manual" />
 
     <exec command="${php} build.php" dir="buildscripts/classtree" passthru="true"/>
   </target>
