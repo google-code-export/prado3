@@ -168,6 +168,12 @@ class Wsdl
 					$e = $dom->createElementNS('http://www.w3.org/2001/XMLSchema', 'xsd:element');
 					$e->setAttribute('name', $elem['name']);
 					$e->setAttribute('type', $elem['type']);
+					if($elem['minOc']!==false)
+						$e->setAttribute('minOccurs',$elem['minOc']);
+					if($elem['maxOc']!==false)
+						$e->setAttribute('maxOccurs',$elem['maxOc']);
+					if($elem['nil']!==false)
+						$e->setAttribute('nillable',$elem['nil']);
 					$all->appendChild($e);
 				}
 				$complexType->appendChild($all);

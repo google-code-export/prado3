@@ -6,6 +6,7 @@ BUG: Issue #468 - Update prototype to workaround IE10 bug (Raoul Bhatia)
 BUG: Issue #469 - JS Update to TDatePicker (Jürgen Aloy)
 BUG: Issue #465 - Textmate editor plugin template error (ctrlaltca)
 BUG: Issue #472 - No https support from wsdl generator (Marcin Piotrowski)
+ENH: Issue #473 - wsdl support for additional attributes of a custom type's property (Marcin Piotrowski)
 
 Version 3.2.2 Jul 20, 2013
 
