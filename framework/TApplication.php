@@ -972,7 +972,8 @@ class TApplication extends TComponent
 			$module->setSubProperty($name,$value);
 		}
 		$this->setModule($id,$module);
-		unset($this->_lazyModules[$id]);
+		// keep the key to avoid reuse of the old module id
+		$this->_lazyModules[$id]=null;
 
 		return array($module,$configElement);
 	}
