@@ -8,6 +8,7 @@ BUG: Issue #465 - Textmate editor plugin template error (ctrlaltca)
 BUG: Issue #472 - No https support from wsdl generator (Marcin Piotrowski)
 ENH: Issue #473 - wsdl support for additional attributes of a custom type's property (Marcin Piotrowski)
 BUG: Issue #476 - Demo's don't work out of box (ctrlaltca)
+BUG: TDatePicker can't render css attributes class "datepicker_year_options" (m_rizki_r)
 
 Version 3.2.2 Jul 20, 2013
 

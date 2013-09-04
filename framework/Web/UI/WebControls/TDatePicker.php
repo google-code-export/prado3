@@ -774,10 +774,10 @@ class TDatePicker extends TTextBox
 			$years[$i] = $i;
 		$writer->addAttribute('id', $this->getClientID().TControl::CLIENT_ID_SEPARATOR.'year');
 		$writer->addAttribute('name', $this->getUniqueID().TControl::ID_SEPARATOR.'year');
+		$writer->addAttribute('class', 'datepicker_year_options');
 		if($this->getReadOnly() || !$this->getEnabled(true))
 			$writer->addAttribute('disabled', 'disabled');
 		$writer->renderBeginTag('select');
-		$writer->addAttribute('class', 'datepicker_year_options');
 		$this->renderDropDownListOptions($writer, $years, $selected);
 		$writer->renderEndTag();
 	}
