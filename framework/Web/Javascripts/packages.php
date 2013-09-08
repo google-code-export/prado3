@@ -83,6 +83,10 @@ $packages = array(
 		'prado/controls/htmlarea.js'
 	),
 
+	'htmlarea4'=>array(
+		'prado/controls/htmlarea4.js'
+	),
+
 	'ratings' => array(
 		'prado/ratings/ratings.js',
 	),
@@ -113,6 +117,7 @@ $dependencies = array(
 		'dragdropextra'		=> array('prototype', 'prado', 'effects', 'ajax', 'dragdrop','dragdropextra'),
 		'accordion'			=> array('prototype', 'prado', 'effects', 'accordion'),
 		'htmlarea'			=> array('prototype', 'prado', 'htmlarea'),
+		'htmlarea4'			=> array('prototype', 'prado', 'htmlarea4'),
 		'ratings'			=> array('prototype', 'prado', 'effects', 'ajax', 'ratings'),
 		'inlineeditor'		=> array('prototype', 'prado', 'effects', 'ajax', 'inlineeditor'),
 );
