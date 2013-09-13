@@ -40,7 +40,7 @@
     },
     "suggest" : {
         "ext-apc" : "*",
-        "ext-eaccellerator" : "*",
+        "ext-eaccelerator" : "*",
         "ext-hash" : "*",
         "ext-iconv" : "*",
         "ext-mbstring" : "*",
