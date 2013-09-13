@@ -169,7 +169,7 @@ class PradoBase
 	 */
 	public static function setApplication($application)
 	{
-		if(self::$_application!==null)
+		if(self::$_application!==null && !defined('PRADO_TEST_RUN'))
 			throw new TInvalidOperationException('prado_application_singleton_required');
 		self::$_application=$application;
 	}
@@ -381,7 +381,7 @@ class PradoBase
 	 */
 	public static function setPathOfAlias($alias,$path)
 	{
-		if(isset(self::$_aliases[$alias]))
+		if(isset(self::$_aliases[$alias]) && !defined('PRADO_TEST_RUN'))
 			throw new TInvalidOperationException('prado_alias_redefined',$alias);
 		else if(($rp=realpath($path))!==false && is_dir($rp))
 		{
