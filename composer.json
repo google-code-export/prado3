@@ -52,6 +52,7 @@
         "ext-xsl" : "*",
         "ext-zlib" : "*"
     },
+    "include-path": ["framework"],
     "autoload": {
         "psr-0" : {
             "Prado"              : "framework",
