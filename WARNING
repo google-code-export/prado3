@@ -1,0 +1,15 @@
+WARNING
+
+You are browsing an obsolete version of Prado's repository.
+The Prado project's repository has been moved to GitHub:
+
+	https://github.com/pradosoft/prado
+
+Please switch to the Git repository using the following command:
+
+	git clone https://github.com/pradosoft/prado.git
+
+If you still want to use subversion, you should be able to use the
+mirrored subversion repository located at:
+
+	https://github.com/pradosoft/prado
